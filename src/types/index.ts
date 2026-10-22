@@ -526,6 +526,8 @@ export interface CartCalculationResult {
   discountSavings: number;
   couponCode?: string;
   couponDiscount: number;
+  /** Set when a coupon code was supplied but could not be applied (expired, limit reached, …). */
+  couponError?: string;
   shippingFee: number;
   isFreeShipping: boolean;
   freeShippingThreshold: number;

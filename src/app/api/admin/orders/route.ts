@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateAdmin } from '@/lib/admin-auth';
 import { OrderRepository } from '@/repositories/order.repository';
+import { OrderService } from '@/services/order.service';
 import { OrderStatus, PaymentStatus, PermissionKey } from '@/types';
 import { handleApiError } from '@/lib/errors';
 
@@ -9,6 +10,9 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     await authenticateAdmin(req, PermissionKey.MANAGE_ORDERS);
+    // Best-effort lazy cleanup so abandoned checkouts don't pile up even if
+    // the cron job isn't configured. Never block the listing on failure.
+    await OrderService.expireStalePendingOrders().catch(() => {});
     const { searchParams } = new URL(req.url);
     const orderStatus = (searchParams.get('status') as OrderStatus) || undefined;
     const paymentStatus = (searchParams.get('paymentStatus') as PaymentStatus) || undefined;

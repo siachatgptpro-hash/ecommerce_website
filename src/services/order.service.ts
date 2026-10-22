@@ -45,18 +45,12 @@ export class OrderService {
     amountInPaise?: number;
     keyId?: string;
   }> {
-    // 1. Recompute cart pricing and validate real-time stock on the server
-    const pricing = await PricingService.calculateCart(input.items, input.couponCode, input.userId);
+    // 1. Recompute cart pricing and validate real-time stock on the server.
+    // strictCoupon: an unusable coupon fails the checkout loudly instead of
+    // silently charging full price.
+    const pricing = await PricingService.calculateCart(input.items, input.couponCode, input.userId, { strictCoupon: true });
     if (pricing.items.length === 0) {
       throw new ValidationError('Your cart contains no valid items');
-    }
-
-    // 2. Validate inventory for all items
-    for (const item of pricing.items) {
-      const stock = await InventoryRepository.getVariantStock(item.variantId);
-      if (stock < item.quantity) {
-        throw new ValidationError(`Insufficient stock for ${item.productName} (${item.sizeLabel}). Available: ${stock}`);
-      }
     }
 
     const paymentGateway = input.paymentGateway || PaymentGateway.RAZORPAY;
@@ -102,6 +96,17 @@ export class OrderService {
       orderItemsSnapshot
     );
 
+    // 4b. Reserve the stock while the customer completes payment, so the same
+    // units cannot be promised to two checkouts. The reservation is converted
+    // to a sale on payment success and released on failure/cancel/expiry.
+    const reservationItems = pricing.items.map((i) => ({ variantId: i.variantId, quantity: i.quantity, sku: i.sku }));
+    try {
+      await InventoryRepository.reserveForOrder(reservationItems, order.orderNumber);
+    } catch (error) {
+      await OrderRepository.updateOrderStatus(order.id, OrderStatus.CANCELLED, 'Stock became unavailable during checkout');
+      throw error;
+    }
+
     // 5. If Prepaid (Razorpay), create Razorpay Order
     if (paymentGateway === PaymentGateway.RAZORPAY) {
       try {
@@ -124,6 +129,7 @@ export class OrderService {
           keyId: rzpOrder.keyId,
         };
       } catch (error) {
+        await InventoryRepository.releaseReservation(reservationItems).catch(() => {});
         await OrderRepository.updateOrderStatus(order.id, OrderStatus.CANCELLED, 'Online payment initialization failed');
         throw error;
       }
@@ -131,11 +137,8 @@ export class OrderService {
 
     // Cash on Delivery flow
     if (paymentGateway === PaymentGateway.CASH_ON_DELIVERY) {
-      // For COD, confirm order immediately and decrement stock
-      await InventoryRepository.decrementForOrder(
-        pricing.items.map((i) => ({ variantId: i.variantId, quantity: i.quantity, sku: i.sku })),
-        order.orderNumber
-      );
+      // For COD, confirm order immediately and convert the reservation to a sale
+      await InventoryRepository.commitReservationForOrder(reservationItems, order.orderNumber);
 
       if (pricing.couponCode) {
         const coupon = await CouponRepository.findByCode(pricing.couponCode);
@@ -149,6 +152,33 @@ export class OrderService {
     }
 
     return { order };
+  }
+
+  /**
+   * Records coupon usage after a payment has been captured. A usage-limit
+   * failure here must NEVER fail the order — the customer's money is already
+   * taken and the discount was already granted in the charged amount — so
+   * errors are audited for reconciliation instead of thrown.
+   */
+  private static async recordCouponUsageSafely(order: Order): Promise<void> {
+    if (!order.couponCode) return;
+    try {
+      const coupon = await CouponRepository.findByCode(order.couponCode);
+      if (!coupon) return;
+      if (order.userId) await CouponRepository.recordUsage(coupon.id, order.userId, order.id);
+      else await CouponRepository.recordGuestUsage(coupon.id);
+    } catch (error) {
+      console.error(`Coupon usage recording failed for order ${order.orderNumber}:`, error);
+      await AuditRepository.log(
+        'COUPON_USAGE_RECORD_FAILED',
+        'Order',
+        order.id,
+        order.userId || null,
+        order.customerEmail,
+        null,
+        { couponCode: order.couponCode, error: error instanceof Error ? error.message : String(error) }
+      ).catch(() => {});
+    }
   }
 
   /**
@@ -181,28 +211,22 @@ export class OrderService {
       const completed=await OrderRepository.completePaymentAtomically(order.id,razorpayOrderId,razorpayPaymentId,razorpaySignature);
       if(!completed.order)throw new NotFoundError('Order');
       if(!completed.alreadyPaid){
-        if(order.couponCode){const coupon=await CouponRepository.findByCode(order.couponCode);if(coupon){if(order.userId)await CouponRepository.recordUsage(coupon.id,order.userId,order.id);else await CouponRepository.recordGuestUsage(coupon.id);}}
+        await this.recordCouponUsageSafely(order);
         await AuditRepository.log('ORDER_PAYMENT_CAPTURED','Order',order.id,order.userId||null,order.customerEmail,{paymentStatus:'PENDING'},{paymentStatus:'PAID',razorpayPaymentId});
       }
       return completed.order;
     }
 
-    // Atomic Stock Decrement & Ledger Logging
+    // Convert the checkout reservation into a sale (stock + reserved decrease)
     const items = order.items.map((item) => ({
       variantId: item.variantId,
       quantity: item.quantity,
       sku: item.skuSnapshot,
     }));
-    await InventoryRepository.decrementForOrder(items, order.orderNumber);
+    await InventoryRepository.commitReservationForOrder(items, order.orderNumber);
 
     // Record Coupon Usage if applicable
-    if (order.couponCode) {
-      const coupon = await CouponRepository.findByCode(order.couponCode);
-      if (coupon) {
-        if (order.userId) await CouponRepository.recordUsage(coupon.id, order.userId, order.id);
-        else await CouponRepository.recordGuestUsage(coupon.id);
-      }
-    }
+    await this.recordCouponUsageSafely(order);
 
     // Update Payment & Order Statuses
     await OrderRepository.updatePayment(order.id, {
@@ -251,17 +275,14 @@ export class OrderService {
     if (isPostgresConfigured()) {
       const completed = await OrderRepository.completePaymentAtomically(order.id, razorpayOrderId, razorpayPaymentId, 'webhook-verified', true);
       if (!completed.order) throw new NotFoundError('Order');
-      if (!completed.alreadyPaid && order.couponCode) {
-        const coupon = await CouponRepository.findByCode(order.couponCode);
-        if (coupon) {
-          if (order.userId) await CouponRepository.recordUsage(coupon.id, order.userId, order.id);
-          else await CouponRepository.recordGuestUsage(coupon.id);
-        }
+      if (!completed.alreadyPaid) {
+        await this.recordCouponUsageSafely(order);
       }
       return completed.order;
     }
 
-    await InventoryRepository.decrementForOrder(order.items.map((item) => ({ variantId: item.variantId, quantity: item.quantity, sku: item.skuSnapshot })), order.orderNumber);
+    await InventoryRepository.commitReservationForOrder(order.items.map((item) => ({ variantId: item.variantId, quantity: item.quantity, sku: item.skuSnapshot })), order.orderNumber);
+    await this.recordCouponUsageSafely(order);
     await OrderRepository.updatePayment(order.id, { razorpayPaymentId, status: PaymentStatus.PAID, gatewayResponse: { source: 'razorpay_webhook', razorpayPaymentId } });
     return (await OrderRepository.updateOrderStatus(order.id, OrderStatus.CONFIRMED, 'Payment confirmed by Razorpay webhook'))!;
   }
@@ -311,6 +332,13 @@ export class OrderService {
 
   /**
    * 4. Cancellation & Refund Workflow
+   *
+   * Ordering matters and every step is safe to retry:
+   * 1. Refund FIRST (if it fails, nothing else has changed).
+   * 2. Return stock to the pool (restore sold units, or release the
+   *    reservation of an unpaid order).
+   * 3. Give the coupon back.
+   * 4. Mark the order cancelled. Re-cancelling is a no-op.
    */
   public static async cancelOrder(
     orderId: string,
@@ -322,18 +350,18 @@ export class OrderService {
       throw new NotFoundError('Order');
     }
 
+    if (order.orderStatus === OrderStatus.CANCELLED) {
+      return order; // Idempotent — never restock or refund twice
+    }
+
     if (order.orderStatus === OrderStatus.SHIPPED || order.orderStatus === OrderStatus.DELIVERED) {
       throw new ValidationError('Order has already been shipped and cannot be cancelled directly.');
     }
 
-    // Restore stock if previously decremented
-    if (order.orderStatus === OrderStatus.CONFIRMED || order.orderStatus === OrderStatus.PACKED) {
-      const items = order.items.map((i) => ({ variantId: i.variantId, quantity: i.quantity }));
-      await InventoryRepository.restoreForOrder(items, order.orderNumber, InventoryChangeReason.ORDER_CANCELLATION);
-    }
+    const wasPaid = order.paymentStatus === PaymentStatus.PAID;
 
-    // If Prepaid, initiate Razorpay Refund
-    if (order.paymentStatus === PaymentStatus.PAID && order.payment?.razorpayPaymentId) {
+    // 1. Refund first. Skipped if a previous partial attempt already refunded.
+    if (wasPaid && order.payment?.status !== PaymentStatus.REFUNDED && order.payment?.razorpayPaymentId) {
       const refund = await RazorpayService.processRefund(
         order.payment.razorpayPaymentId,
         order.totalPayableAmount,
@@ -347,6 +375,26 @@ export class OrderService {
       });
     }
 
+    // 2. Stock: paid orders sold units (restore them); unpaid orders only
+    // hold a reservation (release it).
+    const items = order.items.map((i) => ({ variantId: i.variantId, quantity: i.quantity }));
+    if (wasPaid) {
+      await InventoryRepository.restoreForOrder(items, order.orderNumber, InventoryChangeReason.ORDER_CANCELLATION);
+    } else {
+      await InventoryRepository.releaseReservation(items);
+    }
+
+    // 3. Return the coupon to the customer (usage is only recorded once paid).
+    if (wasPaid && order.couponCode) {
+      const coupon = await CouponRepository.findByCode(order.couponCode).catch(() => null);
+      if (coupon) {
+        await CouponRepository.releaseUsage(coupon.id, order.id, !order.userId).catch((error) => {
+          console.error(`Coupon release failed for order ${order.orderNumber}:`, error);
+        });
+      }
+    }
+
+    // 4. Mark cancelled
     const cancelledOrder = await OrderRepository.updateOrderStatus(
       order.id,
       OrderStatus.CANCELLED,
@@ -364,6 +412,33 @@ export class OrderService {
     );
 
     return cancelledOrder!;
+  }
+
+  /**
+   * 5. Expire checkouts that were abandoned on the payment page so their
+   * stock reservations don't lock inventory forever. Safe to call often
+   * (cron + lazy invocation); each expired order is cancelled without refund
+   * because no payment was captured.
+   */
+  public static async expireStalePendingOrders(maxAgeMs = 2 * 60 * 60 * 1000): Promise<number> {
+    const cutoff = Date.now() - maxAgeMs;
+    const { orders } = await OrderRepository.findMany({
+      orderStatus: OrderStatus.PENDING,
+      paymentStatus: PaymentStatus.PENDING,
+      limit: 500,
+    });
+
+    let expired = 0;
+    for (const order of orders) {
+      if (new Date(order.createdAt).getTime() > cutoff) continue;
+      try {
+        await this.cancelOrder(order.id, 'Checkout abandoned — payment not completed in time');
+        expired++;
+      } catch (error) {
+        console.error(`Failed to expire stale order ${order.orderNumber}:`, error);
+      }
+    }
+    return expired;
   }
 
   public initiateCheckout(input: any) { return OrderService.initiateCheckout(input); }

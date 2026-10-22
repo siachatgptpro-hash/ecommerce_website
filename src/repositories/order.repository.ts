@@ -43,11 +43,20 @@ async function hydrateDbOrder(row:any):Promise<Order>{
   return mapDbOrder(row,itemsResult.rows.map(mapDbOrderItem),paymentResult.rows[0]?mapDbPayment(paymentResult.rows[0]):null,shipment);
 }
 
+// In-memory order numbers must be monotonic within the process — deriving
+// them from db.orders.size repeats numbers whenever orders are removed.
+let lastInMemoryOrderSequence = 10000;
+
 export class OrderRepository {
   public static generateOrderNumber(): string {
     const year = new Date().getFullYear();
-    const count = db.orders.size + 10001;
-    return `SV-${year}-${count}`;
+    let maxExisting = lastInMemoryOrderSequence;
+    for (const order of db.orders.values()) {
+      const suffix = Number(String(order.orderNumber).split('-').pop());
+      if (Number.isFinite(suffix) && suffix > maxExisting) maxExisting = suffix;
+    }
+    lastInMemoryOrderSequence = maxExisting + 1;
+    return `SV-${year}-${lastInMemoryOrderSequence}`;
   }
 
   public static async createOrder(
@@ -238,7 +247,7 @@ export class OrderRepository {
       if(!payment.rows[0]||payment.rows[0].razorpayOrderId!==razorpayOrderId)throw new Error('Payment record does not match this order.');
       const items=await client.query('SELECT * FROM "OrderItem" WHERE "orderId"=$1 ORDER BY "id" FOR UPDATE',[orderId]);
       for(const item of items.rows){
-        const stock=await client.query('UPDATE "ProductVariant" SET "stockQuantity"="stockQuantity"-$2,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=$1 AND "stockQuantity">=$2 RETURNING "stockQuantity"',[item.variantId,item.quantity]);
+        const stock=await client.query('UPDATE "ProductVariant" SET "stockQuantity"="stockQuantity"-$2,"reservedQuantity"=GREATEST("reservedQuantity"-$2,0),"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=$1 AND "stockQuantity">=$2 RETURNING "stockQuantity"',[item.variantId,item.quantity]);
         if(!stock.rows[0]){const current=await client.query('SELECT "stockQuantity" FROM "ProductVariant" WHERE "id"=$1',[item.variantId]);throw new StockUnavailableError(item.skuSnapshot,item.quantity,current.rows[0]?.stockQuantity??0);}
         await client.query('INSERT INTO "InventoryLedger" ("id","variantId","changeQty","resultingQty","reason","referenceId","notes","createdAt") VALUES ($1,$2,$3,$4,$5,$6,$7,CURRENT_TIMESTAMP)',[`inv_${crypto.randomUUID()}`,item.variantId,-item.quantity,stock.rows[0].stockQuantity,InventoryChangeReason.SALE,order.orderNumber,`Purchased under Order #${order.orderNumber}`]);
       }

@@ -10,7 +10,14 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    await requireAdminPermission(req, PermissionKey.MANAGE_PRODUCTS);
     const product = await ProductRepository.findProductById(params.id);
+    if (!product) {
+      return NextResponse.json(
+        { success: false, error: { code: 'NOT_FOUND', message: 'Product not found' } },
+        { status: 404 }
+      );
+    }
     return NextResponse.json({ success: true, data: product });
   } catch (error) {
     const err = handleApiError(error);

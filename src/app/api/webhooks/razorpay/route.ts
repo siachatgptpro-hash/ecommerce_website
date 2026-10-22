@@ -33,8 +33,15 @@ export async function POST(req: NextRequest) {
         if (existing.rows[0]?.status === 'PROCESSED') return NextResponse.json({ received: true, duplicate: true });
       }
     }
+    const markProcessed = async () => {
+      if (isPostgresConfigured()) {
+        await pgQuery('UPDATE "RazorpayWebhookEvent" SET "status"=$2,"processedAt"=CURRENT_TIMESTAMP,"error"=NULL WHERE "id"=$1', [eventId, 'PROCESSED']);
+      }
+    };
+
     const payment = event?.payload?.payment?.entity;
     if (!payment || !['payment.captured', 'payment.failed'].includes(event.event)) {
+      await markProcessed();
       return NextResponse.json({ received: true, ignored: true });
     }
 
@@ -45,7 +52,10 @@ export async function POST(req: NextRequest) {
     }
 
     const order = await OrderRepository.findByRazorpayOrderId(razorpayOrderId);
-    if (!order) return NextResponse.json({ received: true, ignored: true });
+    if (!order) {
+      await markProcessed();
+      return NextResponse.json({ received: true, ignored: true });
+    }
 
     if (event.event === 'payment.failed') {
       if (order.paymentStatus !== PaymentStatus.PAID) {
@@ -65,9 +75,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (isPostgresConfigured()) {
-      await pgQuery('UPDATE "RazorpayWebhookEvent" SET "status"=$2,"processedAt"=CURRENT_TIMESTAMP,"error"=NULL WHERE "id"=$1', [eventId, 'PROCESSED']);
-    }
+    await markProcessed();
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error('[Razorpay Webhook Error]', error instanceof Error ? error.message : 'unknown error');

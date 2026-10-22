@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PricingService } from '@/services/pricing.service';
 import { AuthService } from '@/services/auth.service';
+import { CartSyncSchema } from '@/schemas';
 import { handleApiError } from '@/lib/errors';
 
 export async function POST(req: NextRequest) {
   try {
     const json = await req.json();
-    const items = json.items || [];
-    const couponCode = json.couponCode;
+    // Validate shape (integer quantities etc.) — raw JSON must never flow
+    // straight into the pricing engine.
+    const { items, couponCode } = CartSyncSchema.parse({ items: json.items || [], couponCode: json.couponCode });
 
     // Optional user token
     let userId: string | undefined = undefined;

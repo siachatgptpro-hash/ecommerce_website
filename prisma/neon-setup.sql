@@ -784,4 +784,18 @@ INSERT INTO "ProductImage" ("id", "productId", "imageUrl", "altText", "sortOrder
   ('pdfimg_wheat_grass', 'pdf_wheat_grass', '/products/pdf-p10-i6.webp', 'Wheat Grass - Sholkveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_wonder_berries', 'pdf_wonder_berries', '/products/pdf-p9-i11.webp', 'Wonder Berries - Sholkveda', 0, TRUE, CURRENT_TIMESTAMP);
 
+-- Razorpay webhook idempotency log (required by /api/webhooks/razorpay —
+-- previously only created by prisma/migrations/20261014_add_razorpay_webhook_events.sql,
+-- so a setup following this file alone failed every webhook with a 500).
+CREATE TABLE IF NOT EXISTS "RazorpayWebhookEvent" (
+  "id" TEXT PRIMARY KEY,
+  "event" TEXT NOT NULL,
+  "status" TEXT NOT NULL DEFAULT 'PROCESSING',
+  "receivedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "processedAt" TIMESTAMP(3),
+  "error" TEXT
+);
+CREATE INDEX IF NOT EXISTS "RazorpayWebhookEvent_event_idx" ON "RazorpayWebhookEvent" ("event");
+CREATE INDEX IF NOT EXISTS "RazorpayWebhookEvent_status_idx" ON "RazorpayWebhookEvent" ("status");
+
 COMMIT;

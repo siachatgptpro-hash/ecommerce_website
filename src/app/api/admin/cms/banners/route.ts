@@ -6,8 +6,9 @@ import { handleApiError } from '@/lib/errors';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    await requireAdminPermission(req, PermissionKey.MANAGE_CMS);
     const banners = await CMSRepository.listBanners(false);
     return NextResponse.json({
       success: true,

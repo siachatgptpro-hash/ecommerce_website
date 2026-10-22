@@ -16,15 +16,30 @@ import {
 // AUTH SCHEMAS
 // ------------------------------------------------------------------------------
 
+/**
+ * Normalises Indian mobile numbers to bare 10 digits, so inputs users
+ * actually type ("+91 98765 43210", "09876543210", "98765 43210") validate
+ * identically in the browser and on the server instead of failing with a
+ * generic checkout error.
+ */
+export function normalizeIndianPhone(value: string): string {
+  let digits = value.replace(/\D/g, '');
+  if (digits.length === 12 && digits.startsWith('91')) digits = digits.slice(2);
+  if (digits.length === 11 && digits.startsWith('0')) digits = digits.slice(1);
+  return digits;
+}
+
+const indianPhone = (message = 'Valid 10-digit mobile number required') =>
+  z
+    .string()
+    .trim()
+    .transform((value) => normalizeIndianPhone(value))
+    .refine((value) => /^[6-9]\d{9}$/.test(value), message);
+
 export const RegisterSchema = z.object({
   fullName: z.string().trim().min(2, 'Full name must be at least 2 characters'),
   email: z.string().trim().toLowerCase().email('Invalid email address'),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^[6-9]\d{9}$/, 'Invalid 10-digit Indian phone number')
-    .optional()
-    .or(z.literal('')),
+  phone: indianPhone('Invalid 10-digit Indian phone number').optional().or(z.literal('')),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
@@ -40,7 +55,7 @@ export const LoginSchema = z.object({
 
 export const AddressSchema = z.object({
   fullName: z.string().trim().min(2, 'Recipient name is required'),
-  phone: z.string().trim().regex(/^[6-9]\d{9}$/, 'Valid 10-digit mobile number required'),
+  phone: indianPhone(),
   addressLine1: z.string().trim().min(5, 'Street address is required'),
   addressLine2: z.string().trim().optional(),
   landmark: z.string().trim().optional(),
@@ -135,7 +150,7 @@ export const CheckoutInitiateSchema = z.object({
   couponCode: z.string().trim().optional(),
   customerName: z.string().trim().min(2, 'Customer name is required'),
   customerEmail: z.string().trim().email('Valid email required'),
-  customerPhone: z.string().trim().regex(/^[6-9]\d{9}$/, 'Valid 10-digit mobile number required'),
+  customerPhone: indianPhone(),
   shippingAddress: AddressSchema,
   paymentGateway: z.nativeEnum(PaymentGateway).default(PaymentGateway.RAZORPAY),
 });
@@ -158,19 +173,39 @@ export const StockAdjustmentSchema = z.object({
   notes: z.string().trim().optional(),
 });
 
-export const CouponSchema = z.object({
-  code: z.string().trim().min(3).toUpperCase(),
-  description: z.string().trim().optional(),
-  discountType: z.nativeEnum(DiscountType),
-  discountValue: z.number().positive('Discount value must be positive'),
-  minOrderValue: z.number().nonnegative().default(0),
-  maxDiscountCap: z.number().positive().optional().nullable(),
-  usageLimit: z.number().int().positive().optional().nullable(),
-  perUserLimit: z.number().int().positive().default(1),
-  startDate: z.string().datetime().or(z.string().min(10)),
-  endDate: z.string().datetime().or(z.string().min(10)),
-  isActive: z.boolean().default(true),
+/** Payload accepted by the admin inventory quick-adjust endpoint used by the UI. */
+export const InventoryAdjustSchema = z.object({
+  variantId: z.string().trim().min(3, 'Valid variant ID required'),
+  quantityChange: z.coerce
+    .number({ invalid_type_error: 'Quantity change must be a number' })
+    .int('Quantity change must be a whole number')
+    .refine((val) => val !== 0, 'Quantity change cannot be zero'),
+  reason: z.string().trim().optional(),
+  notes: z.string().trim().optional(),
 });
+
+export const CouponSchema = z
+  .object({
+    code: z.string().trim().min(3).toUpperCase(),
+    description: z.string().trim().optional(),
+    discountType: z.nativeEnum(DiscountType),
+    discountValue: z.number().positive('Discount value must be positive'),
+    minOrderValue: z.number().nonnegative().default(0),
+    maxDiscountCap: z.number().positive().optional().nullable(),
+    usageLimit: z.number().int().positive().optional().nullable(),
+    perUserLimit: z.number().int().positive().default(1),
+    startDate: z.string().datetime().or(z.string().min(10)),
+    endDate: z.string().datetime().or(z.string().min(10)),
+    isActive: z.boolean().default(true),
+  })
+  .refine((data) => data.discountType !== DiscountType.PERCENTAGE || data.discountValue <= 100, {
+    message: 'Percentage discount cannot exceed 100%',
+    path: ['discountValue'],
+  })
+  .refine((data) => new Date(data.endDate) >= new Date(data.startDate), {
+    message: 'Coupon end date must be after its start date',
+    path: ['endDate'],
+  });
 
 // ------------------------------------------------------------------------------
 // REVIEWS & CMS SCHEMAS
