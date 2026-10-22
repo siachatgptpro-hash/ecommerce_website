@@ -17,7 +17,7 @@ import {
 
 const iso=(value:Date|string)=>new Date(value).toISOString();
 const createId=(prefix:string)=>`${prefix}_${crypto.randomUUID()}`;
-function mapBanner(r:any):Banner{return{id:r.id,title:r.title,subtitle:r.subtitle??null,imageUrl:r.imageUrl,mobileImgUrl:r.mobileImgUrl??null,linkUrl:r.linkUrl??null,buttonText:r.buttonText??null,sortOrder:r.sortOrder,isActive:r.isActive,createdAt:iso(r.createdAt),updatedAt:iso(r.updatedAt),ctaText:r.buttonText??undefined,ctaLink:r.linkUrl??undefined}}
+function mapBanner(r:any):Banner{return{id:r.id,title:r.title,subtitle:r.subtitle??null,imageUrl:r.imageUrl,mobileImgUrl:r.mobileImgUrl??null,linkUrl:r.linkUrl??null,buttonText:r.buttonText??null,sortOrder:r.sortOrder,isActive:r.isActive,createdAt:iso(r.createdAt),updatedAt:iso(r.updatedAt),secondaryCtaText:r.secondaryCtaText??null,secondaryCtaLink:r.secondaryCtaLink??null,ctaText:r.buttonText??undefined,ctaLink:r.linkUrl??undefined}}
 function mapSection(r:any):HomepageSection{let metadata=r.metadata??undefined;if(typeof metadata==='string'){try{metadata=JSON.parse(metadata)}catch{}}return{id:r.id,sectionKey:r.sectionKey,title:r.title,subtitle:r.subtitle??null,sortOrder:r.sortOrder,isActive:r.isActive,metadata,updatedAt:iso(r.updatedAt)}}
 function mapTestimonial(r:any):Testimonial{return{id:r.id,authorName:r.authorName,location:r.location??null,rating:r.rating,reviewQuote:r.reviewQuote,avatarUrl:r.avatarUrl??null,isActive:r.isActive,sortOrder:r.sortOrder,createdAt:iso(r.createdAt)}}
 function mapFaq(r:any):FaqItem{return{id:r.id,category:r.category,question:r.question,answer:r.answer,sortOrder:r.sortOrder,isActive:r.isActive,createdAt:iso(r.createdAt)}}
@@ -47,7 +47,7 @@ export class CMSRepository {
   }
 
   public static async createBanner(data: Omit<Banner, 'id' | 'createdAt' | 'updatedAt'>): Promise<Banner> {
-    if (isPostgresConfigured()) { const r=await pgQuery('INSERT INTO "Banner" ("id","title","subtitle","imageUrl","mobileImgUrl","linkUrl","buttonText","sortOrder","isActive","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) RETURNING *',[createId('ban'),data.title,data.subtitle??null,data.imageUrl,data.mobileImgUrl??null,data.linkUrl??data.ctaLink??null,data.buttonText??data.ctaText??null,data.sortOrder,data.isActive]); return mapBanner(r.rows[0]); }
+    if (isPostgresConfigured()) { const r=await pgQuery('INSERT INTO "Banner" ("id","title","subtitle","imageUrl","mobileImgUrl","linkUrl","buttonText","secondaryCtaText","secondaryCtaLink","sortOrder","isActive","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) RETURNING *',[createId('ban'),data.title,data.subtitle??null,data.imageUrl,data.mobileImgUrl??null,data.linkUrl??data.ctaLink??null,data.buttonText??data.ctaText??null,data.secondaryCtaText??null,data.secondaryCtaLink??null,data.sortOrder,data.isActive]); return mapBanner(r.rows[0]); }
     const id = `ban_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const now = new Date().toISOString();
     const banner: Banner = { ...data, id, createdAt: now, updatedAt: now };
@@ -56,7 +56,7 @@ export class CMSRepository {
   }
 
   public static async updateBanner(id: string, updates: Partial<Banner>): Promise<Banner | null> {
-    if (isPostgresConfigured()) return updateRow('Banner',id,updates as Record<string,unknown>,{title:'title',subtitle:'subtitle',imageUrl:'imageUrl',mobileImgUrl:'mobileImgUrl',linkUrl:'linkUrl',buttonText:'buttonText',ctaText:'buttonText',ctaLink:'linkUrl',sortOrder:'sortOrder',isActive:'isActive'},mapBanner);
+    if (isPostgresConfigured()) return updateRow('Banner',id,updates as Record<string,unknown>,{title:'title',subtitle:'subtitle',imageUrl:'imageUrl',mobileImgUrl:'mobileImgUrl',linkUrl:'linkUrl',buttonText:'buttonText',ctaText:'buttonText',ctaLink:'linkUrl',secondaryCtaText:'secondaryCtaText',secondaryCtaLink:'secondaryCtaLink',sortOrder:'sortOrder',isActive:'isActive'},mapBanner);
     const banner = db.banners.get(id);
     if (!banner) return null;
     const updated: Banner = { ...banner, ...updates, updatedAt: new Date().toISOString() };

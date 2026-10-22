@@ -249,6 +249,9 @@ export const BannerWriteSchema = z.object({
   ctaLink: z.string().trim().optional(),
   buttonText: z.string().trim().optional(),
   ctaText: z.string().trim().optional(),
+  // Nullable so the admin form can clear an existing secondary button.
+  secondaryCtaText: z.string().trim().optional().nullable(),
+  secondaryCtaLink: z.string().trim().optional().nullable(),
   sortOrder: z.coerce.number().int().optional(),
   isActive: z.boolean().optional(),
   slot: z.string().trim().optional(),
@@ -261,6 +264,8 @@ export const BannerSchema = z.object({
   mobileImgUrl: imageReference().optional().or(z.literal('')),
   linkUrl: z.string().trim().optional(),
   buttonText: z.string().trim().optional(),
+  secondaryCtaText: z.string().trim().optional().nullable(),
+  secondaryCtaLink: z.string().trim().optional().nullable(),
   sortOrder: z.number().int().default(0),
   isActive: z.boolean().default(true),
 });

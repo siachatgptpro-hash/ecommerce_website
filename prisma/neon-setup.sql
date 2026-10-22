@@ -290,6 +290,8 @@ CREATE TABLE "Banner" (
   "mobileImgUrl" TEXT,
   "linkUrl" TEXT,
   "buttonText" TEXT,
+  "secondaryCtaText" TEXT,
+  "secondaryCtaLink" TEXT,
   "sortOrder" INTEGER NOT NULL DEFAULT 0,
   "isActive" BOOLEAN NOT NULL DEFAULT TRUE,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -784,6 +786,14 @@ INSERT INTO "ProductImage" ("id", "productId", "imageUrl", "altText", "sortOrder
   ('pdfimg_wheat_grass_with_moringa', 'pdf_wheat_grass_with_moringa', '/products/pdf-p10-i6.webp', 'Wheat Grass with Moringa - Sholkveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_wheat_grass', 'pdf_wheat_grass', '/products/pdf-p10-i6.webp', 'Wheat Grass - Sholkveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_wonder_berries', 'pdf_wonder_berries', '/products/pdf-p9-i11.webp', 'Wonder Berries - Sholkveda', 0, TRUE, CURRENT_TIMESTAMP);
+
+-- Homepage hero banners (editable afterwards in Admin -> CMS -> Banners).
+INSERT INTO "Banner" ("id", "title", "subtitle", "imageUrl", "mobileImgUrl", "linkUrl", "buttonText", "secondaryCtaText", "secondaryCtaLink", "sortOrder", "isActive", "createdAt", "updatedAt") VALUES
+  ('ban_hero_personal_care', 'Natural Personal Care for a Healthier You', 'Gentle herbal personal care essentials from our Ayurvedic catalogue, made to fit your everyday routine.', '/banners/natural-care.jpg', NULL, '/category/personal-care', 'Shop Personal Care', 'Explore Categories', '/#categories', 1, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('ban_hero_daily_wellness', 'Everyday Wellness, Rooted in Ayurveda', 'Classical Ayurvedic formulations for daily balance - clear pack sizes and printed prices on every product.', '/banners/daily-immunity.jpg', NULL, '/category/immunity-rasayana', 'Explore Wellness', 'Shop Bestsellers', '/shop', 2, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('ban_hero_herbal_oils', 'Ancient Wisdom. Everyday Care.', 'Traditional herbal oils and liniments for massage and everyday self-care, prepared the classical way.', '/banners/herbal-oils.jpg', NULL, '/category/herbal-oils', 'Shop Herbal Oils', 'Discover More', '/about', 3, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('ban_hero_catalogue', 'Bring the Goodness of Ayurveda Home', 'Syrups, juices, arks, oils, capsules and more - our complete Ayurvedic catalogue in one place.', '/banners/ayurvedic-wellness.jpg', NULL, '/shop', 'Shop All Products', 'Browse Categories', '/#categories', 4, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT ("id") DO NOTHING;
 
 -- Razorpay webhook idempotency log (required by /api/webhooks/razorpay —
 -- previously only created by prisma/migrations/20261014_add_razorpay_webhook_events.sql,

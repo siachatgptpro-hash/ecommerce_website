@@ -18,6 +18,8 @@ export default function AdminCmsPage() {
   const [subtitle, setSubtitle] = useState('');
   const [ctaText, setCtaText] = useState('Explore Formulations');
   const [ctaLink, setCtaLink] = useState('/shop');
+  const [secondaryCtaText, setSecondaryCtaText] = useState('');
+  const [secondaryCtaLink, setSecondaryCtaLink] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [imageUploading, setImageUploading] = useState(false);
   const [slot, setSlot] = useState('HERO_PRIMARY');
@@ -49,6 +51,8 @@ export default function AdminCmsPage() {
     setImageUrl(banner.imageUrl);
     setCtaText(banner.ctaText || banner.buttonText || 'Explore');
     setCtaLink(banner.ctaLink || banner.linkUrl || '/shop');
+    setSecondaryCtaText(banner.secondaryCtaText || '');
+    setSecondaryCtaLink(banner.secondaryCtaLink || '');
     setSlot(banner.slot || 'HERO_PRIMARY');
     setIsActive(banner.isActive);
     setSortOrder(banner.sortOrder || 0);
@@ -90,6 +94,8 @@ export default function AdminCmsPage() {
           subtitle: subtitle.trim() || undefined,
           ctaText: ctaText.trim() || undefined,
           ctaLink: ctaLink.trim() || '/shop',
+          secondaryCtaText: secondaryCtaText.trim() || null,
+          secondaryCtaLink: secondaryCtaLink.trim() || null,
           imageUrl: imageUrl.trim(),
           slot,
           isActive,
@@ -107,6 +113,8 @@ export default function AdminCmsPage() {
       setEditingId(null);
       setTitle('');
       setSubtitle('');
+      setSecondaryCtaText('');
+      setSecondaryCtaLink('');
     } catch (err: any) {
       setErrorMsg(err.message || 'Error saving banner');
     } finally {
@@ -270,6 +278,34 @@ export default function AdminCmsPage() {
                     type="text"
                     value={ctaLink}
                     onChange={(e) => setCtaLink(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                    Secondary Button Label
+                  </label>
+                  <input
+                    type="text"
+                    value={secondaryCtaText}
+                    onChange={(e) => setSecondaryCtaText(e.target.value)}
+                    placeholder="e.g. Explore Categories"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                    Secondary Button Link
+                  </label>
+                  <input
+                    type="text"
+                    value={secondaryCtaLink}
+                    onChange={(e) => setSecondaryCtaLink(e.target.value)}
+                    placeholder="e.g. /#categories"
                     className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs"
                   />
                 </div>

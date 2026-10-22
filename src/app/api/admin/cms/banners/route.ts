@@ -34,6 +34,8 @@ export async function POST(req: NextRequest) {
       mobileImgUrl: input.mobileImgUrl || null,
       linkUrl: input.ctaLink || input.linkUrl || '/shop',
       buttonText: input.ctaText || input.buttonText || 'Explore',
+      secondaryCtaText: input.secondaryCtaText || null,
+      secondaryCtaLink: input.secondaryCtaLink || null,
       sortOrder: input.sortOrder ?? 0,
       isActive: input.isActive !== undefined ? input.isActive : true,
       slot: input.slot || 'HERO_PRIMARY',

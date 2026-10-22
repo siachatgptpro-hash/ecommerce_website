@@ -530,14 +530,16 @@ model Review {
 // ------------------------------------------------------------------------------
 
 model Banner {
-  id           String   @id @default(uuid())
-  title        String
-  subtitle     String?
-  imageUrl     String
-  mobileImgUrl String?
-  linkUrl      String?
-  buttonText   String?
-  sortOrder    Int      @default(0)
+  id               String   @id @default(uuid())
+  title            String
+  subtitle         String?
+  imageUrl         String
+  mobileImgUrl     String?
+  linkUrl          String?
+  buttonText       String?
+  secondaryCtaText String?
+  secondaryCtaLink String?
+  sortOrder        Int      @default(0)
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

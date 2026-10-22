@@ -1,56 +1,105 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ProductCard } from '@/components/storefront/ProductCard';
 import { HeroCarousel } from '@/components/storefront/HeroCarousel';
 import { productRepository } from '@/repositories/product.repository';
 import { cmsRepository } from '@/repositories/cms.repository';
+import { SettingsRepository } from '@/repositories/settings.repository';
 import { toPublicProduct } from '@/lib/public-dto';
+import { toHeroSlides } from '@/lib/hero-slides';
+import { jsonLdScriptContent } from '@/lib/seo';
 import {
   ShieldCheck,
   Leaf,
   Truck,
-  Sparkles,
   ArrowRight,
   CheckCircle2,
-  Award,
   BookOpen,
+  Headphones,
+  Users,
 } from 'lucide-react';
 
 export const revalidate = 60; // 1 minute ISR
 
+export const metadata: Metadata = {
+  title: { absolute: 'SHLOKVEDA | Authentic Ayurvedic Products & Herbal Wellness' },
+  description:
+    'Shop authentic Ayurvedic products at SHLOKVEDA — herbal syrups & juices, arks & drops, oils, capsules, tablets and natural personal care, rooted in classical Ayurvedic tradition.',
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    url: '/',
+    siteName: 'SHLOKVEDA',
+    title: 'SHLOKVEDA | Authentic Ayurvedic Products & Herbal Wellness',
+    description:
+      'Herbal syrups & juices, arks & drops, oils, capsules, tablets and natural personal care — rooted in classical Ayurvedic tradition.',
+    images: [
+      {
+        url: '/banners/natural-care.jpg',
+        alt: 'Ayurvedic personal care products with aloe vera, herbal jars and a mortar and pestle',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SHLOKVEDA | Authentic Ayurvedic Products & Herbal Wellness',
+    description:
+      'Herbal syrups & juices, arks & drops, oils, capsules, tablets and natural personal care — rooted in classical Ayurvedic tradition.',
+    images: ['/banners/natural-care.jpg'],
+  },
+};
+
 export default async function HomePage() {
-  const [featuredResult, banners, catalogueCount] = await Promise.all([
+  const [featuredResult, banners, catalogueCount, settings] = await Promise.all([
     productRepository.findMany({ isFeatured: true, limit: 8 }),
     cmsRepository.getActiveBanners(),
     productRepository.findMany({ limit: 1 }),
+    SettingsRepository.getBusinessSettings(),
   ]);
   const featuredProducts = { ...featuredResult, products: featuredResult.products.map(toPublicProduct) };
 
-  const primaryBanner = banners.find((b) => b.slot === 'HERO_PRIMARY') || {
-    title: 'A thoughtful catalogue for everyday wellness',
-    subtitle: 'Explore the herbal products, pack sizes and printed prices shown in the brochure—brought together in one clear, easy-to-use storefront.',
-    ctaText: 'Explore the catalogue',
-    ctaLink: '/shop',
-    linkUrl: '/shop',
-    buttonText: 'Explore the catalogue',
-    imageUrl: '/products/pdf-p5-i3.webp',
-  };
+  // Admin-managed banners (Admin → CMS) drive the hero; built-in default
+  // slides from src/lib/hero-slides.ts are used when none are active.
+  const heroSlides = toHeroSlides(banners);
 
-  const heroSlides = banners.length > 0
-    ? banners.map((banner) => ({
-        title: banner.title,
-        subtitle: banner.subtitle || 'Explore our Ayurvedic wellness catalogue.',
-        imageUrl: banner.imageUrl,
-        ctaText: banner.ctaText || banner.buttonText || 'Explore the catalogue',
-        ctaLink: banner.ctaLink || banner.linkUrl || '/shop',
-      }))
-    : [
-        { title: primaryBanner.title, subtitle: primaryBanner.subtitle || 'Explore our Ayurvedic wellness catalogue.', imageUrl: primaryBanner.imageUrl || '/products/pdf-p5-i3.webp', ctaText: primaryBanner.ctaText || 'Explore the catalogue', ctaLink: primaryBanner.ctaLink || '/shop' },
-        { title: 'Everyday herbal wellness, made simple', subtitle: 'Browse carefully organized Ayurvedic formulations, pack sizes and listed prices in one easy catalogue.', imageUrl: '/banners/herbal-oils.jpg', ctaText: 'Shop herbal oils', ctaLink: '/shop' },
-        { title: 'Classical formulations for modern routines', subtitle: 'Discover juices, arks, capsules, churnas and wellness products from the Sholkveda collection.', imageUrl: '/banners/natural-care.jpg', ctaText: 'Browse all products', ctaLink: '/shop' },
-        { title: 'Find your daily wellness essentials', subtitle: 'Explore product information, pack options and availability before adding items to your bag.', imageUrl: '/banners/daily-immunity.jpg', ctaText: 'View catalogue', ctaLink: '/shop' },
-      ];
+  // The Free Shipping claim always reflects the live store setting.
+  const freeShippingThreshold = settings.freeShippingThreshold;
+  const benefits = [
+    { icon: Leaf, title: 'Authentic Products', text: 'Genuine Ayurvedic formulations' },
+    {
+      icon: Truck,
+      title: 'Free Shipping',
+      text: freeShippingThreshold > 0 ? `On orders of ₹${freeShippingThreshold} & above` : 'On every order',
+    },
+    { icon: ShieldCheck, title: 'Secure Payments', text: 'Safe & protected checkout' },
+    { icon: Headphones, title: 'Customer Support', text: 'Help whenever you need it' },
+    { icon: Users, title: 'Trusted by Families', text: 'For everyday wellness' },
+  ];
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+  const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: settings.storeName || 'SHLOKVEDA',
+    url: siteUrl || '/',
+    logo: `${siteUrl}/logo.png`,
+  };
+  const websiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: settings.storeName || 'SHLOKVEDA',
+    url: siteUrl || '/',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${siteUrl}/shop?search={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
 
   const classicalCategories = [
     { title: 'Syrups & Juices', slug: 'syrups-juices', desc: 'Browse the liquid products listed in the source catalogue.', image: '/products/pdf-p6-i10.webp', tone: 'from-[#0c4a2b] via-[#176d3f] to-[#0b3024]', label: 'LIQUID WELLNESS' },
@@ -61,59 +110,36 @@ export default async function HomePage() {
 
   return (
     <div className="relative space-y-16 sm:space-y-24">
-      {/* AUTO-SWIPING HERO BANNERS */}
-      <HeroCarousel
-        slides={heroSlides}
-      />
+      {/* HERO + OVERLAPPING BENEFITS STRIP (one block so page spacing
+          never overrides the strip's negative overlap margin) */}
+      <div>
+        <HeroCarousel slides={heroSlides} />
 
-      {/* VALUE PROPOSITIONS BAR */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="flex items-start gap-4 p-6 rounded-2xl bg-[#FAF7F2] border border-[#F3EFE6]">
-            <div className="p-3 bg-[#1B4332] text-white rounded-xl shadow-xs shrink-0">
-              <Leaf className="w-6 h-6 text-[#C5A880]" />
-            </div>
-            <div>
-              <h4 className="font-bold text-sm text-gray-900">A clear product catalogue</h4>
-              <p className="text-xs text-gray-600 mt-1">Names and pack options transcribed from the supplied brochure.</p>
-            </div>
+        <section
+          aria-label="Store benefits"
+          className="relative z-20 mx-auto -mt-12 max-w-7xl px-4 sm:px-6 lg:px-8"
+        >
+          <h2 className="sr-only">Why shop with SHLOKVEDA</h2>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-5 rounded-2xl border border-[#F3EFE6] bg-white p-5 shadow-[0_18px_45px_-18px_rgba(27,67,50,0.35)] sm:p-6 md:grid-cols-3 lg:grid-cols-5">
+            {benefits.map(({ icon: Icon, title, text }) => (
+              <div key={title} className="flex items-center gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#1B4332]/[0.07]">
+                  <Icon className="h-5 w-5 text-[#1B4332]" aria-hidden="true" />
+                </span>
+                <div>
+                  <h3 className="text-[13px] font-bold leading-tight text-gray-900">{title}</h3>
+                  <p className="mt-0.5 text-[11px] leading-snug text-gray-500">{text}</p>
+                </div>
+              </div>
+            ))}
           </div>
-
-          <div className="flex items-start gap-4 p-6 rounded-2xl bg-[#FAF7F2] border border-[#F3EFE6]">
-            <div className="p-3 bg-[#1B4332] text-white rounded-xl shadow-xs shrink-0">
-              <ShieldCheck className="w-6 h-6 text-[#C5A880]" />
-            </div>
-            <div>
-              <h4 className="font-bold text-sm text-gray-900">Printed prices shown</h4>
-              <p className="text-xs text-gray-600 mt-1">The listed MRP is shown without invented sale discounts.</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-4 p-6 rounded-2xl bg-[#FAF7F2] border border-[#F3EFE6]">
-            <div className="p-3 bg-[#1B4332] text-white rounded-xl shadow-xs shrink-0">
-              <Award className="w-6 h-6 text-[#C5A880]" />
-            </div>
-            <div>
-              <h4 className="font-bold text-sm text-gray-900">Original pack images</h4>
-              <p className="text-xs text-gray-600 mt-1">Source photography is preserved from the provided product brochure.</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-4 p-6 rounded-2xl bg-[#FAF7F2] border border-[#F3EFE6]">
-            <div className="p-3 bg-[#1B4332] text-white rounded-xl shadow-xs shrink-0">
-              <Truck className="w-6 h-6 text-[#C5A880]" />
-            </div>
-            <div>
-              <h4 className="font-bold text-sm text-gray-900">Careful product information</h4>
-              <p className="text-xs text-gray-600 mt-1">Always read the package label and ask a qualified professional before use.</p>
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       {/* CLASSICAL CATEGORIES EXPLORATION */}
       <section
-        className="relative min-h-[620px] overflow-hidden bg-[#031c16] py-12 sm:py-16 space-y-8"
+        id="categories"
+        className="relative min-h-[620px] scroll-mt-28 overflow-hidden bg-[#031c16] py-12 sm:py-16 space-y-8"
       >
         <div className="pointer-events-none absolute inset-0 hidden bg-[url('/banners/category-wellness-banner.png')] bg-cover bg-center sm:block" />
         
@@ -254,6 +280,16 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Structured data: brand entity + site search (no invented ratings) */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdScriptContent(organizationJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdScriptContent(websiteJsonLd) }}
+      />
     </div>
   );
 }

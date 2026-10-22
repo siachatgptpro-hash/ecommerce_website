@@ -19,6 +19,8 @@ export async function PUT(
       imageUrl: input.imageUrl,
       linkUrl: input.ctaLink || input.linkUrl || '/shop',
       buttonText: input.ctaText || input.buttonText || 'Explore',
+      secondaryCtaText: input.secondaryCtaText || null,
+      secondaryCtaLink: input.secondaryCtaLink || null,
       sortOrder: input.sortOrder ?? 0,
       isActive: input.isActive !== undefined ? input.isActive : true,
     });

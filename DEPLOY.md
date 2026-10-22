@@ -15,7 +15,10 @@ In the Neon SQL Editor (or `psql "$DATABASE_URL"` locally):
 - **Fresh database:** run the whole of `prisma/neon-setup.sql`
   (creates all tables incl. `Shipment.trackingUrl`, seeds the catalogue).
 - **Existing database created before Oct 2026:** run only
-  `prisma/migrations/20261022_add_shipment_tracking_url.sql`.
+  `prisma/migrations/20261022_add_shipment_tracking_url.sql` and
+  `prisma/migrations/20261022_add_banner_secondary_cta.sql` (homepage hero
+  secondary button — banner **saves** fail against an un-migrated database
+  until this runs; storefront reads keep working).
 
 ## 2. Create the first admin (one time, from your computer)
 ```bash

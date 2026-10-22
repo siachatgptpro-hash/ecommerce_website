@@ -382,6 +382,8 @@ export interface Banner {
   mobileImgUrl?: string | null;
   linkUrl?: string | null;
   buttonText?: string | null;
+  secondaryCtaText?: string | null;
+  secondaryCtaLink?: string | null;
   sortOrder: number;
   isActive: boolean;
   createdAt: string;

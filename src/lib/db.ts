@@ -234,7 +234,86 @@ class DatabaseStore {
     // No coupon codes are active until configured and approved in the admin tools.
 
     // 6. CMS BANNERS & HOMEPAGE SECTIONS SEED
-    // Marketing banners are left empty until verified Sholkveda content is provided.
+    // Default homepage hero slides (mirrors DEFAULT_HERO_SLIDES in
+    // src/lib/hero-slides.ts); editable later in Admin -> CMS -> Banners.
+    if (this.banners.size === 0) {
+      const heroNow = new Date().toISOString();
+      const heroBanners: Banner[] = [
+        {
+          id: 'ban_hero_personal_care',
+          title: 'Natural Personal Care for a Healthier You',
+          subtitle: 'Gentle herbal personal care essentials from our Ayurvedic catalogue, made to fit your everyday routine.',
+          imageUrl: '/banners/natural-care.jpg',
+          mobileImgUrl: null,
+          linkUrl: '/category/personal-care',
+          buttonText: 'Shop Personal Care',
+          secondaryCtaText: 'Explore Categories',
+          secondaryCtaLink: '/#categories',
+          sortOrder: 1,
+          isActive: true,
+          createdAt: heroNow,
+          updatedAt: heroNow,
+          slot: 'HERO_PRIMARY',
+          ctaText: 'Shop Personal Care',
+          ctaLink: '/category/personal-care',
+        },
+        {
+          id: 'ban_hero_daily_wellness',
+          title: 'Everyday Wellness, Rooted in Ayurveda',
+          subtitle: 'Classical Ayurvedic formulations for daily balance - clear pack sizes and printed prices on every product.',
+          imageUrl: '/banners/daily-immunity.jpg',
+          mobileImgUrl: null,
+          linkUrl: '/category/immunity-rasayana',
+          buttonText: 'Explore Wellness',
+          secondaryCtaText: 'Shop Bestsellers',
+          secondaryCtaLink: '/shop',
+          sortOrder: 2,
+          isActive: true,
+          createdAt: heroNow,
+          updatedAt: heroNow,
+          slot: 'HERO_PRIMARY',
+          ctaText: 'Explore Wellness',
+          ctaLink: '/category/immunity-rasayana',
+        },
+        {
+          id: 'ban_hero_herbal_oils',
+          title: 'Ancient Wisdom. Everyday Care.',
+          subtitle: 'Traditional herbal oils and liniments for massage and everyday self-care, prepared the classical way.',
+          imageUrl: '/banners/herbal-oils.jpg',
+          mobileImgUrl: null,
+          linkUrl: '/category/herbal-oils',
+          buttonText: 'Shop Herbal Oils',
+          secondaryCtaText: 'Discover More',
+          secondaryCtaLink: '/about',
+          sortOrder: 3,
+          isActive: true,
+          createdAt: heroNow,
+          updatedAt: heroNow,
+          slot: 'HERO_PRIMARY',
+          ctaText: 'Shop Herbal Oils',
+          ctaLink: '/category/herbal-oils',
+        },
+        {
+          id: 'ban_hero_catalogue',
+          title: 'Bring the Goodness of Ayurveda Home',
+          subtitle: 'Syrups, juices, arks, oils, capsules and more - our complete Ayurvedic catalogue in one place.',
+          imageUrl: '/banners/ayurvedic-wellness.jpg',
+          mobileImgUrl: null,
+          linkUrl: '/shop',
+          buttonText: 'Shop All Products',
+          secondaryCtaText: 'Browse Categories',
+          secondaryCtaLink: '/#categories',
+          sortOrder: 4,
+          isActive: true,
+          createdAt: heroNow,
+          updatedAt: heroNow,
+          slot: 'HERO_PRIMARY',
+          ctaText: 'Shop All Products',
+          ctaLink: '/shop',
+        },
+      ];
+      for (const heroBanner of heroBanners) this.banners.set(heroBanner.id, heroBanner);
+    }
 
     // Testimonials Seed
     // No testimonials or health/compliance claims are seeded without verified source material.
