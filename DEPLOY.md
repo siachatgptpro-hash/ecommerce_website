@@ -24,6 +24,23 @@ DATABASE_URL='postgresql://…' ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='min-
 This creates the SUPER_ADMIN/ADMIN roles, all permissions, and your login.
 It refuses to promote/reset an existing account.
 
+
+## Fastest path: one-click deploy of the `arena/07899005-ecommerce-website` branch
+Click (you'll log in with your own Vercel/GitHub account — no token sharing):
+
+**[Deploy this branch to Vercel](https://vercel.com/new/clone?repository-url=https://github.com/siachatgptpro-hash/ecommerce_website/tree/arena/07899005-ecommerce-website&env=DATABASE_URL,AUTH_SECRET,Razorpay_KEY_ID,Razorpay_KEY_SECRET,Razorpay_WEBHOOK_SECRET,CRON_SECRET,NEXT_PUBLIC_SITE_URL&project-name=sholkveda&repository-name=ecommerce_website)**
+
+- Vercel imports the repo **at that branch** and prompts you for the env values from step 4 below.
+- It first creates a **Preview** deployment of the branch. To make it live, pick one:
+  - **Recommended:** merge PR #1 into `main` (production deploys from `main`), or
+  - Vercel → Deployments → ⋯ on the branch deployment → **Promote to Production**, or
+  - Vercel → Settings → Git → **Production Branch** = `arena/07899005-ecommerce-website`.
+- Do steps 1–2 (database SQL + admin bootstrap) before or right after — the
+  store builds without them but needs `DATABASE_URL` at runtime.
+- Cron note: the order-expiry cron runs **daily** (`0 0 * * *`) because
+  Vercel Hobby (free) rejects sub-daily schedules. On Pro, change it to
+  `*/30 * * * *` in `vercel.json`.
+
 ## 3. Import the project in Vercel
 vercel.com → **Add New → Project** → import this GitHub repository.
 `vercel.json` is already configured (framework, security headers/CSP,
