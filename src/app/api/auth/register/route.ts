@@ -6,13 +6,13 @@ import { enforceRateLimit } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
   try {
-    const limited = await enforceRateLimit(req, 'auth:register', 5, 900);
-    if (limited) return limited;
     const json = await req.json();
     const payload = RegisterSchema.parse(json);
+    const limited = await enforceRateLimit(req, 'auth:register', 5, 900, true, payload.email);
+    if (limited) return limited;
     const result = await AuthService.register(payload);
 
-    const response = NextResponse.json({ success: true, data: result }, { status: 201 });
+    const response = NextResponse.json({ success: true, data: { user: result.user } }, { status: 201 });
     response.cookies.set('shlokveda_session_token', result.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

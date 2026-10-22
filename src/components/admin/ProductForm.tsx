@@ -88,7 +88,7 @@ export function ProductForm({ initialProduct, categories }: ProductFormProps) {
       sellingPrice: v.sellingPrice,
       costPrice: v.costPrice || Math.round(v.sellingPrice * 0.5),
       stockQuantity: v.stockQuantity,
-      reorderThreshold: v.reorderThreshold || 10,
+      reorderThreshold: v.lowStockThreshold ?? v.reorderThreshold ?? 5,
     })) || [
       {
         sku: "HERB-100G",

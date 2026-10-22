@@ -234,6 +234,7 @@ CREATE TABLE "Shipment" (
   "orderId" TEXT NOT NULL,
   "carrierName" TEXT NOT NULL,
   "trackingNumber" TEXT NOT NULL,
+  "trackingUrl" TEXT,
   "status" "ShipmentStatus" NOT NULL DEFAULT 'LABEL_CREATED',
   "dispatchedAt" TIMESTAMP(3),
   "deliveredAt" TIMESTAMP(3),

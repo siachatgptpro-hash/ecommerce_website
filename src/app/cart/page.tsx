@@ -25,6 +25,8 @@ export default function CartPage() {
     removeItem,
     applyCoupon,
     removeCoupon,
+    couponError,
+    cartError,
   } = useCart();
 
   const [couponCode, setCouponCode] = useState('');
@@ -268,7 +270,21 @@ export default function CartPage() {
                 {couponMsg.text}
               </p>
             )}
+
+            {!couponMsg && couponError && (
+              <p className="text-xs text-red-600 flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>Your coupon was removed: {couponError}</span>
+              </p>
+            )}
           </div>
+
+          {cartError && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-xs font-medium flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{cartError}</span>
+            </div>
+          )}
 
           {/* Pricing Breakdown */}
           <div className="p-6 bg-[#FAF7F2] rounded-3xl border border-[#F3EFE6] space-y-4 shadow-sm">

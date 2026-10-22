@@ -135,9 +135,18 @@ export class UserRepository {
     }
     const user = db.users.get(id);
     if (!user) return null;
+    // Allow-list mutable fields (mirrors the Postgres path) and never let an
+    // update overwrite identity columns.
+    const allowedKeys = ['email', 'phone', 'passwordHash', 'fullName', 'isActive', 'isVerified', 'roles', 'permissions'] as const;
+    const safeUpdates: Partial<User> = {};
+    for (const key of allowedKeys) {
+      if ((updates as any)[key] !== undefined) (safeUpdates as any)[key] = (updates as any)[key];
+    }
     const updated: User = {
       ...user,
-      ...updates,
+      ...safeUpdates,
+      id: user.id,
+      createdAt: user.createdAt,
       updatedAt: new Date().toISOString(),
     };
     db.users.set(id, updated);

@@ -327,15 +327,23 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         <div className="p-6 sm:p-8">
           {activeTab === 'desc' && (
             <div className="space-y-4 text-sm text-gray-700 leading-relaxed font-light">
-              <p>{product.description}</p>
-              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-1">
-                <h4 className="font-bold text-xs text-emerald-950 uppercase tracking-wider">
-                  Source note:
-                </h4>
-                <p className="text-xs text-emerald-900">
-                  {product.shortDescription}
-                </p>
-              </div>
+              <p>{product.fullDescription || product.shortDescription || 'Product information will be updated soon.'}</p>
+              {product.benefits && (
+                <div className="space-y-1">
+                  <h4 className="font-bold text-xs text-gray-900 uppercase tracking-wider">Benefits</h4>
+                  <p>{product.benefits}</p>
+                </div>
+              )}
+              {product.shortDescription && product.fullDescription && (
+                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-1">
+                  <h4 className="font-bold text-xs text-emerald-950 uppercase tracking-wider">
+                    Source note:
+                  </h4>
+                  <p className="text-xs text-emerald-900">
+                    {product.shortDescription}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -359,7 +367,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 Directions for use
               </h4>
               <p className="text-sm text-gray-700 leading-relaxed">
-                {product.dosage || 'Follow the directions printed on the product package.'}
+                {product.usageInstructions || 'Follow the directions printed on the product package.'}
               </p>
               <p className="text-xs text-gray-500">
                 If directions are not shown on this page, follow the package label or seek advice from a qualified healthcare professional.
@@ -372,6 +380,9 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               <h4 className="font-bold text-sm text-gray-900">
                 Storage & Precautions:
               </h4>
+              {product.precautions && (
+                <p className="text-sm text-gray-700 leading-relaxed">{product.precautions}</p>
+              )}
               <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1.5 font-light">
                 <li>Store in a cool, dry place away from direct sunlight.</li>
                 <li>Keep jar/bottle tightly closed after each use to prevent moisture absorption.</li>

@@ -21,7 +21,10 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [announcementText, setAnnouncementText] = useState('Free shipping on ₹500+ orders for new customers');
+  // Initial value mirrors the server-side default so the bar never flashes a
+  // wrong offer (it previously promised "₹500+ free shipping" while the real
+  // threshold is ₹499 and no such new-customer restriction exists).
+  const [announcementText, setAnnouncementText] = useState('Sholkveda product names, pack sizes and listed MRPs from the supplied brochure');
   const [storeName, setStoreName] = useState('SHOLKVEDA');
   const [logoUrl, setLogoUrl] = useState('/logo.png');
 

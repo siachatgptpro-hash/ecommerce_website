@@ -4,7 +4,7 @@ import { BannerSchema, BlogPostSchema } from '@/schemas';
 import { CMSRepository } from '@/repositories/cms.repository';
 import { AuditRepository } from '@/repositories/audit.repository';
 import { PermissionKey } from '@/types';
-import { handleApiError } from '@/lib/errors';
+import { ValidationError, handleApiError } from '@/lib/errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,6 +42,9 @@ export async function POST(req: NextRequest) {
     } else if (type === 'blog') {
       const payload = BlogPostSchema.parse(json);
       created = await CMSRepository.createBlogPost(payload);
+    } else {
+      // Previously fell through and returned 201 with `data: undefined`.
+      throw new ValidationError(`Unsupported CMS content type: ${type}`);
     }
 
     await AuditRepository.log(

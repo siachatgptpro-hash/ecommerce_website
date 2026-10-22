@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ReviewCreateSchema } from '@/schemas';
 import { CMSRepository } from '@/repositories/cms.repository';
 import { OrderRepository } from '@/repositories/order.repository';
+import { ProductRepository } from '@/repositories/product.repository';
 import { AuthService } from '@/services/auth.service';
-import { AuthenticationError, handleApiError } from '@/lib/errors';
+import { AuthenticationError, ConflictError, NotFoundError, handleApiError } from '@/lib/errors';
+import { toPublicReview } from '@/lib/public-dto';
 import sanitizeHtml from 'sanitize-html';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +18,8 @@ export async function GET(req: NextRequest) {
     const reviews = await CMSRepository.listReviews(productId, true);
     return NextResponse.json({
       success: true,
-      data: reviews,
+      // Never expose reviewer userIds or email addresses publicly.
+      data: reviews.map(toPublicReview),
     });
   } catch (error) {
     const err = handleApiError(error);
@@ -37,6 +40,16 @@ export async function POST(req: NextRequest) {
     const json = await req.json();
     const payload = ReviewCreateSchema.parse(json);
 
+    const product = await ProductRepository.findProductById(payload.productId);
+    if (!product) {
+      throw new NotFoundError('Product');
+    }
+
+    const existingReviews = await CMSRepository.listReviews(payload.productId, false);
+    if (existingReviews.some((review) => review.userId === user.id)) {
+      throw new ConflictError('You have already reviewed this product.');
+    }
+
     const isVerified = await OrderRepository.hasUserPurchasedProduct(user.id, payload.productId);
     const cleanComment = sanitizeHtml(payload.comment, { allowedTags: [], allowedAttributes: {} });
     const cleanTitle = payload.title ? sanitizeHtml(payload.title, { allowedTags: [], allowedAttributes: {} }) : null;
@@ -55,7 +68,7 @@ export async function POST(req: NextRequest) {
       {
         success: true,
         message: 'Thank you! Your review has been submitted and will appear after moderation.',
-        data: review,
+        data: toPublicReview(review),
       },
       { status: 201 }
     );

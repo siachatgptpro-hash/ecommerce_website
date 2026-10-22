@@ -55,7 +55,11 @@ export class OrderService {
 
     const paymentGateway = input.paymentGateway || PaymentGateway.RAZORPAY;
     if (paymentGateway === PaymentGateway.CASH_ON_DELIVERY) {
-      throw new ValidationError('Online payment is required. Cash on Delivery is not available.');
+      // Controlled by the ENABLE_COD business setting (online-only by default).
+      const business = await SettingsRepository.getBusinessSettings();
+      if (!business.enableCod) {
+        throw new ValidationError('Online payment is required. Cash on Delivery is not available.');
+      }
     }
     if (paymentGateway === PaymentGateway.RAZORPAY) {
       await RazorpayService.assertConfigured();
@@ -295,7 +299,8 @@ export class OrderService {
     status: OrderStatus,
     trackingCarrier?: string,
     trackingNumber?: string,
-    adminNotes?: string
+    adminNotes?: string,
+    trackingUrl?: string
   ): Promise<Order> {
     const order = await OrderRepository.findById(orderId);
     if (!order) {
@@ -322,7 +327,8 @@ export class OrderService {
         order.id,
         trackingCarrier,
         trackingNumber,
-        status === OrderStatus.DELIVERED ? ShipmentStatus.DELIVERED : ShipmentStatus.IN_TRANSIT
+        status === OrderStatus.DELIVERED ? ShipmentStatus.DELIVERED : ShipmentStatus.IN_TRANSIT,
+        trackingUrl || null
       );
     }
 
@@ -445,8 +451,8 @@ export class OrderService {
   public verifyAndCompletePayment(orderId: string, rzpOrderId: string, rzpPaymentId: string, sig: string) {
     return OrderService.verifyAndCompletePayment(orderId, rzpOrderId, rzpPaymentId, sig);
   }
-  public updateFulfillment(orderId: string, status: any, carrier?: string, trackingNumber?: string, adminNotes?: string) {
-    return OrderService.updateFulfillment(orderId, status, carrier, trackingNumber, adminNotes);
+  public updateFulfillment(orderId: string, status: any, carrier?: string, trackingNumber?: string, adminNotes?: string, trackingUrl?: string) {
+    return OrderService.updateFulfillment(orderId, status, carrier, trackingNumber, adminNotes, trackingUrl);
   }
   public cancelOrder(orderId: string, reason: string, actorId?: string) {
     return OrderService.cancelOrder(orderId, reason, actorId);

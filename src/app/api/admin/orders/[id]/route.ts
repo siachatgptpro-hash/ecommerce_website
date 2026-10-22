@@ -10,6 +10,7 @@ const OrderPutSchema = z.object({
   status: z.nativeEnum(OrderStatus),
   carrier: z.string().trim().optional(),
   trackingNumber: z.string().trim().optional(),
+  trackingUrl: z.string().trim().url('Tracking URL must be a valid URL').optional().or(z.literal('')),
   adminNotes: z.string().trim().optional(),
 });
 
@@ -50,7 +51,8 @@ export async function PUT(
             payload.status,
             payload.carrier,
             payload.trackingNumber,
-            payload.adminNotes
+            payload.adminNotes,
+            payload.trackingUrl || undefined
           );
 
     return NextResponse.json({

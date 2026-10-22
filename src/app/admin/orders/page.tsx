@@ -5,18 +5,32 @@ import Link from 'next/link';
 import { Order, OrderStatus } from '@/types';
 import { ShoppingCart, Search, Eye, Filter, CheckCircle2, Clock } from 'lucide-react';
 
+const PAGE_SIZE = 25;
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(0);
 
-  const fetchOrders = async () => {
+  // Filtering/searching happens server-side — previously only the first 25
+  // orders were downloaded and filtered in the browser, so anything older
+  // was undiscoverable.
+  const fetchOrders = async (targetPage = page, status = statusFilter, query = search) => {
+    setLoading(true);
     try {
-      const res = await fetch('/api/admin/orders');
+      const params = new URLSearchParams({ page: String(targetPage), limit: String(PAGE_SIZE) });
+      if (status !== 'ALL') params.set('status', status);
+      if (query.trim()) params.set('q', query.trim());
+      const res = await fetch(`/api/admin/orders?${params.toString()}`);
       const data = await res.json();
       if (data.success && data.data) {
         setOrders(data.data.orders || []);
+        setTotalPages(data.data.totalPages || 1);
+        setTotalOrders(data.data.total ?? (data.data.orders || []).length);
       }
     } catch (err) {
       console.error('Error fetching admin orders:', err);
@@ -26,19 +40,25 @@ export default function AdminOrdersPage() {
   };
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    fetchOrders(1, statusFilter, '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
 
-  const filteredOrders = orders.filter((ord) => {
-    const matchesSearch =
-      ord.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
-      ord.shippingAddress.fullName.toLowerCase().includes(search.toLowerCase()) ||
-      ord.shippingAddress.city.toLowerCase().includes(search.toLowerCase());
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+      fetchOrders(1, statusFilter, search);
+    }, 300);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
-    const matchesStatus = statusFilter === 'ALL' || ord.status === statusFilter;
+  const changePage = (nextPage: number) => {
+    setPage(nextPage);
+    fetchOrders(nextPage, statusFilter, search);
+  };
 
-    return matchesSearch && matchesStatus;
-  });
+  const filteredOrders = orders;
 
   return (
     <div className="space-y-6">
@@ -54,10 +74,10 @@ export default function AdminOrdersPage() {
         </div>
 
         <div className="flex gap-2">
-          {['ALL', 'PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'].map((st) => (
+          {['ALL', 'PENDING', 'CONFIRMED', 'PACKED', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((st) => (
             <button
               key={st}
-              onClick={() => setStatusFilter(st)}
+              onClick={() => { setPage(1); setStatusFilter(st); }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 statusFilter === st
                   ? 'bg-[#1B4332] text-white'
@@ -143,7 +163,7 @@ export default function AdminOrdersPage() {
                             ? 'bg-emerald-100 text-emerald-800'
                             : ord.status === 'SHIPPED'
                             ? 'bg-blue-100 text-blue-800'
-                            : ord.status === 'PROCESSING'
+                            : ord.status === 'PACKED'
                             ? 'bg-amber-100 text-amber-800'
                             : 'bg-gray-100 text-gray-800'
                         }`}
@@ -165,6 +185,31 @@ export default function AdminOrdersPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-2 pt-4">
+            <span className="text-xs text-gray-500">
+              Page {page} of {totalPages} · {totalOrders} orders
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => changePage(Math.max(1, page - 1))}
+                disabled={page <= 1 || loading}
+                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#FAF7F2] text-gray-700 hover:bg-gray-200 disabled:opacity-40"
+              >
+                ← Previous
+              </button>
+              <button
+                onClick={() => changePage(Math.min(totalPages, page + 1))}
+                disabled={page >= totalPages || loading}
+                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#FAF7F2] text-gray-700 hover:bg-gray-200 disabled:opacity-40"
+              >
+                Next →
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -33,21 +33,25 @@ export class SettingsRepository {
 
   public static async getBusinessSettings(): Promise<BusinessSettings> {
     const all = await this.getAll();
-    const value = (key: string, fallback: string) => all[key] !== undefined ? all[key] : fallback;
+    // Legacy aliases (BUSINESS_*, DEFAULT_SHIPPING_FEE, COD_ENABLED) are still
+    // honoured so databases seeded before the key unification keep working.
+    const value = (key: string, fallback: string, legacyKey?: string) =>
+      all[key] !== undefined ? all[key] : legacyKey && all[legacyKey] !== undefined ? all[legacyKey] : fallback;
     return {
-      storeName: value('STORE_NAME', 'Sholkveda'),
-      gstin: value('GSTIN', '09ANCPV6879P1ZP'),
-      phone: value('PHONE', '7017840020'),
-      email: value('EMAIL', ''),
-      addressLine1: value('ADDRESS_LINE1', 'B.H Oil Meal Road, Next to Bank of Maharashtra'),
-      addressLine2: value('ADDRESS_LINE2', 'Dobra Bal Colony'),
-      city: value('CITY', 'Hathras'),
-      state: value('STATE', 'Uttar Pradesh'),
-      postalCode: value('POSTAL_CODE', '204101'),
+      storeName: value('STORE_NAME', 'Sholkveda', 'BUSINESS_NAME'),
+      gstin: value('GSTIN', '09ANCPV6879P1ZP', 'BUSINESS_GSTIN'),
+      phone: value('PHONE', '7017840020', 'BUSINESS_PHONE'),
+      email: value('EMAIL', '', 'SUPPORT_EMAIL'),
+      addressLine1: value('ADDRESS_LINE1', 'B.H Oil Meal Road, Next to Bank of Maharashtra', 'BUSINESS_ADDRESS_LINE1'),
+      addressLine2: value('ADDRESS_LINE2', 'Dobra Bal Colony', 'BUSINESS_ADDRESS_LINE2'),
+      city: value('CITY', 'Hathras', 'BUSINESS_CITY'),
+      state: value('STATE', 'Uttar Pradesh', 'BUSINESS_STATE'),
+      postalCode: value('POSTAL_CODE', '204101', 'BUSINESS_PINCODE'),
       freeShippingThreshold: Number(all['FREE_SHIPPING_THRESHOLD'] ?? 499),
-      baseShippingFee: Number(all['BASE_SHIPPING_FEE'] ?? 50),
+      baseShippingFee: Number(all['BASE_SHIPPING_FEE'] ?? all['DEFAULT_SHIPPING_FEE'] ?? 50),
       taxIncluded: all['TAX_INCLUDED'] !== 'false',
-      enableCod: all['ENABLE_COD'] !== 'false',
+      // Online-payment-only unless an admin explicitly enables COD.
+      enableCod: (all['ENABLE_COD'] ?? all['COD_ENABLED']) === 'true',
       announcementText: value('ANNOUNCEMENT_TEXT', 'Sholkveda product names, pack sizes and listed MRPs from the supplied brochure'),
       logoUrl: value('LOGO_URL', '/logo.png'),
       privacyPolicy: value('POLICY_PRIVACY', 'Checkout may collect your name, email address, phone number and delivery address. Registration also collects account details.\n\nOnline payment processing is available only when a valid payment gateway is configured. This storefront does not store card or UPI credentials.'),
@@ -83,9 +87,16 @@ export class SettingsRepository {
     return this.getBusinessSettings();
   }
 
-  public static async set(key: string, value: string, isPublic = true, description?: string): Promise<BusinessSetting> {
+  public static async set(key: string, value: string, isPublic?: boolean, description?: string): Promise<BusinessSetting> {
+    // Secret-looking settings can NEVER be public, and an unspecified
+    // `isPublic` preserves the stored visibility instead of silently
+    // flipping private settings (e.g. RAZORPAY_KEY_SECRET) into the payload
+    // served publicly by /api/cms.
+    const looksSecret = /SECRET|TOKEN|PASSWORD|PRIVATE|_KEY$/i.test(key) && !/KEY_ID$/i.test(key);
     if (isPostgresConfigured()) {
-      const result = await pgQuery('INSERT INTO "BusinessSetting" ("id","key","value","description","isPublic","updatedAt") VALUES ($1,$2,$3,$4,$5,CURRENT_TIMESTAMP) ON CONFLICT ("key") DO UPDATE SET "value"=EXCLUDED."value","description"=COALESCE(EXCLUDED."description","BusinessSetting"."description"),"isPublic"=EXCLUDED."isPublic","updatedAt"=CURRENT_TIMESTAMP RETURNING *', [`set_${crypto.randomUUID()}`,key,value,description ?? null,isPublic]);
+      const existing = await pgQuery('SELECT "isPublic" FROM "BusinessSetting" WHERE "key"=$1 LIMIT 1', [key]);
+      const resolvedPublic = looksSecret ? false : isPublic ?? existing.rows[0]?.isPublic ?? true;
+      const result = await pgQuery('INSERT INTO "BusinessSetting" ("id","key","value","description","isPublic","updatedAt") VALUES ($1,$2,$3,$4,$5,CURRENT_TIMESTAMP) ON CONFLICT ("key") DO UPDATE SET "value"=EXCLUDED."value","description"=COALESCE(EXCLUDED."description","BusinessSetting"."description"),"isPublic"=EXCLUDED."isPublic","updatedAt"=CURRENT_TIMESTAMP RETURNING *', [`set_${crypto.randomUUID()}`,key,value,description ?? null,resolvedPublic]);
       const row=result.rows[0];
       return { id:row.id,key:row.key,value:row.value,description:row.description ?? null,isPublic:row.isPublic,updatedAt:new Date(row.updatedAt).toISOString() };
     }
@@ -95,7 +106,7 @@ export class SettingsRepository {
       key,
       value,
       description: description || existing?.description || null,
-      isPublic: isPublic !== undefined ? isPublic : existing?.isPublic || true,
+      isPublic: looksSecret ? false : isPublic ?? existing?.isPublic ?? true,
       updatedAt: new Date().toISOString(),
     };
     db.businessSettings.set(key, updated);

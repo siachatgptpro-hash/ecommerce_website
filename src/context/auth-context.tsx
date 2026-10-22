@@ -23,9 +23,21 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const USER_STORAGE_KEY = 'shlokveda_user';
+// Pre-fix builds wrote the profile under this misspelling; clear it too so no
+// stale account data survives logout.
+const LEGACY_USER_STORAGE_KEY = 'sholkveda_user';
+
 function persistSession(user: User) {
   // Keep only non-sensitive display data locally. The session token remains HttpOnly server-side.
-  localStorage.setItem('sholkveda_user', JSON.stringify(user));
+  localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+  localStorage.removeItem(LEGACY_USER_STORAGE_KEY);
+}
+
+function clearPersistedSession() {
+  localStorage.removeItem(USER_STORAGE_KEY);
+  localStorage.removeItem(LEGACY_USER_STORAGE_KEY);
+  localStorage.removeItem('shlokveda_token');
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -45,8 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch(() => {
         setUser(null);
         setToken(null);
-        localStorage.removeItem('shlokveda_user');
-        localStorage.removeItem('shlokveda_token');
+        clearPersistedSession();
       })
       .finally(() => setIsLoading(false));
   }, []);
@@ -73,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(data.error?.message || 'Invalid email or password');
       }
 
-      setToken(data.data.token);
+      setToken(data.data.token || null);
       setUser(data.data.user);
       persistSession(data.data.user);
       return;
@@ -100,16 +111,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem('shlokveda_token');
-    localStorage.removeItem('shlokveda_user');
-    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+    clearPersistedSession();
+    // keepalive: the request must reach the server (to clear the HttpOnly
+    // cookie) even if the caller navigates away immediately.
+    fetch('/api/auth/logout', { method: 'POST', keepalive: true }).catch(() => {});
   };
 
   const updateUser = (updates: Partial<User>) => {
     if (!user) return;
     const updated = { ...user, ...updates };
     setUser(updated as User);
-    localStorage.setItem('shlokveda_user', JSON.stringify(updated));
+    persistSession(updated as User);
   };
 
   return (

@@ -22,6 +22,7 @@ export default function AccountPage() {
   const router = useRouter();
   const { user, logout, loading: authLoading } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [totalOrders, setTotalOrders] = useState(0);
   const [loadingOrders, setLoadingOrders] = useState(true);
 
   useEffect(() => {
@@ -34,10 +35,11 @@ export default function AccountPage() {
     async function fetchUserOrders() {
       if (!user) return;
       try {
-        const res = await fetch('/api/orders');
+        const res = await fetch('/api/orders?limit=100');
         const data = await res.json();
         if (data.success && data.data) {
           setOrders(data.data.orders || []);
+          setTotalOrders(data.data.total ?? (data.data.orders || []).length);
         }
       } catch (err) {
         console.error('Error fetching user orders:', err);
@@ -58,6 +60,12 @@ export default function AccountPage() {
     );
   }
 
+  // Role names must match the backend SystemRole enum.
+  const ADMIN_ROLE_NAMES = ['SUPER_ADMIN', 'ADMIN', 'PRODUCT_MANAGER', 'ORDER_MANAGER', 'CONTENT_MANAGER'];
+  const isAdminUser =
+    user.roles?.some((role: string) => ADMIN_ROLE_NAMES.includes(role)) ||
+    (user.role ? ADMIN_ROLE_NAMES.includes(user.role) : false);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
       {/* Account Header Hero */}
@@ -69,7 +77,7 @@ export default function AccountPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-serif text-2xl font-bold text-gray-900">{user.fullName || user.name || 'Ayurvedic Member'}</h1>
-              {user.roles?.includes('SUPER_ADMIN' as any) || user.role === 'SUPER_ADMIN' || user.role === 'STORE_ADMIN' ? (
+              {isAdminUser ? (
                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
                   {user.role || user.roles?.[0]}
                 </span>
@@ -84,7 +92,7 @@ export default function AccountPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {(user.roles?.includes('SUPER_ADMIN' as any) || user.role === 'SUPER_ADMIN' || user.role === 'STORE_ADMIN' || user.role === 'ORDER_FULFILLMENT') && (
+          {isAdminUser && (
             <Link
               href="/admin"
               className="px-5 py-2.5 rounded-xl bg-amber-600 text-white font-bold text-xs hover:bg-amber-700 transition-all shadow-sm flex items-center gap-1.5"
@@ -114,7 +122,7 @@ export default function AccountPage() {
             <span className="text-xs font-bold uppercase tracking-wider">Orders Placed</span>
             <Package className="w-5 h-5 text-[#1B4332]" />
           </div>
-          <p className="text-2xl font-serif font-black text-gray-900">{orders.length}</p>
+          <p className="text-2xl font-serif font-black text-gray-900">{totalOrders}</p>
         </div>
 
         <div className="p-6 bg-white rounded-3xl border border-[#F3EFE6] space-y-1 shadow-xs">

@@ -12,7 +12,8 @@ export async function GET(req: NextRequest) {
   try {
     await authenticateAdmin(req, PermissionKey.MANAGE_REVIEWS);
     const { searchParams } = new URL(req.url);
-    const approvedOnly = searchParams.get('all') === 'true' ? false : false;
+    // Moderation needs every review by default; ?approvedOnly=true narrows it.
+    const approvedOnly = searchParams.get('approvedOnly') === 'true';
 
     const reviews = await CMSRepository.listReviews(undefined, approvedOnly);
     return NextResponse.json({ success: true, data: { reviews } });

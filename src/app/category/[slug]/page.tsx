@@ -3,18 +3,24 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ProductCard } from '@/components/storefront/ProductCard';
 import { productRepository } from '@/repositories/product.repository';
+import { toPublicProduct } from '@/lib/public-dto';
 import { ArrowLeft } from 'lucide-react';
 
 interface CategoryPageProps {
   params: {
     slug: string;
   };
+  searchParams: {
+    page?: string;
+  };
 }
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function CategoryPage({ params }: CategoryPageProps) {
+const PAGE_SIZE = 24;
+
+export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
   const { slug } = params;
   const categories = await productRepository.getAllCategories();
   const category = categories.find((c) => c.slug === slug);
@@ -23,11 +29,16 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
-  const { products, total } = await productRepository.findMany({
+  const parsedPage = parseInt(searchParams.page || '1', 10);
+  const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+
+  const { products: rawProducts, total, totalPages } = await productRepository.findMany({
     categorySlug: slug,
     sortBy: 'newest',
-    limit: 20,
+    page,
+    limit: PAGE_SIZE,
   });
+  const products = rawProducts.map(toPublicProduct);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
@@ -71,11 +82,34 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-6">
+              {Array.from({ length: totalPages }).map((_, i) => {
+                const pNum = i + 1;
+                return (
+                  <Link
+                    key={pNum}
+                    href={`/category/${slug}?page=${pNum}`}
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${
+                      pNum === page
+                        ? 'bg-[#1B4332] text-white shadow-md'
+                        : 'bg-[#FAF7F2] text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {pNum}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

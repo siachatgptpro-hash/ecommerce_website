@@ -12,8 +12,16 @@ export default function RegisterPage() {
   const { register } = useAuth();
   const [logoUrl, setLogoUrl] = useState('/logo.png');
   const [storeName, setStoreName] = useState('SHOLKVEDA');
+  const [nextPath, setNextPath] = useState('/account');
 
   useEffect(() => {
+    // Honour ?next= (same-site paths only) so shoppers sent here mid-checkout
+    // return to checkout after registering.
+    const next = new URLSearchParams(window.location.search).get('next');
+    if (next && next.startsWith('/') && !next.startsWith('//')) {
+      setNextPath(next);
+    }
+
     fetch('/api/settings').then((res) => res.json()).then((data) => {
       if (data.success && data.data) {
         if (data.data.logoUrl) setLogoUrl(data.data.logoUrl);
@@ -33,12 +41,15 @@ export default function RegisterPage() {
     e.preventDefault();
     setErrorMsg('');
 
-    if (phone.trim() && !/^[6-9]\d{9}$/.test(phone.trim())) {
+    // Accept the formats people actually type (+91…, spaces, leading 0) —
+    // the server normalises identically.
+    const normalizedPhone = phone.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '').replace(/^0(?=\d{10}$)/, '');
+    if (phone.trim() && !/^[6-9]\d{9}$/.test(normalizedPhone)) {
       setErrorMsg('Please enter a valid 10-digit Indian mobile number.');
       return;
     }
-    if (password.length < 6) {
-      setErrorMsg('Password must be at least 6 characters long.');
+    if (password.length < 8) {
+      setErrorMsg('Password must be at least 8 characters long.');
       return;
     }
 
@@ -48,10 +59,10 @@ export default function RegisterPage() {
       await register({
         name: name.trim(),
         email: email.trim(),
-        phone: phone.trim() || undefined,
+        phone: normalizedPhone || undefined,
         password,
       });
-      router.push('/account');
+      router.push(nextPath);
     } catch (err: any) {
       setErrorMsg(err.message || 'Registration failed.');
     } finally {

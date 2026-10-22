@@ -325,13 +325,19 @@ export default function AdminOrderDetailPage({ params }: AdminOrderDetailPagePro
             </h3>
             <div className="space-y-2 text-xs text-gray-700">
               <div className="flex justify-between">
-                <span>Gross Subtotal</span>
-                <span>₹{order.subtotal}</span>
+                <span>{order.discountAmount > 0 ? 'Item Total (MRP)' : 'Subtotal'}</span>
+                <span>₹{(order.subtotal ?? order.subtotalAmount) + (order.discountAmount || 0)}</span>
               </div>
               {order.discountAmount > 0 && (
                 <div className="flex justify-between text-emerald-700 font-bold">
-                  <span>Discount</span>
+                  <span>MRP Discount</span>
                   <span>- ₹{order.discountAmount}</span>
+                </div>
+              )}
+              {order.couponDiscount > 0 && (
+                <div className="flex justify-between text-emerald-700 font-bold">
+                  <span>Coupon{order.couponCode ? ` (${order.couponCode})` : ''}</span>
+                  <span>- ₹{order.couponDiscount}</span>
                 </div>
               )}
               <div className="flex justify-between">

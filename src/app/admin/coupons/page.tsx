@@ -140,9 +140,9 @@ export default function AdminCouponsPage() {
                         ? `${c.discountValue}% OFF`
                         : `₹${c.discountValue} FLAT OFF`}
                     </td>
-                    <td className="py-3 px-4 text-gray-600">₹{c.minOrderAmount || 0}</td>
+                    <td className="py-3 px-4 text-gray-600">₹{c.minOrderValue ?? c.minOrderAmount ?? 0}</td>
                     <td className="py-3 px-4 text-gray-600">
-                      {c.usageCount} / {c.usageLimit || '∞'}
+                      {c.usedCount ?? c.usageCount ?? 0} / {c.usageLimit || '∞'}
                     </td>
                     <td className="py-3 px-4">
                       {c.isActive ? (

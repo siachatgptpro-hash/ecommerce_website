@@ -4,7 +4,16 @@ import { ProductCard } from '@/components/storefront/ProductCard';
 import { productRepository } from '@/repositories/product.repository';
 import { AyurvedicFormulation } from '@/types';
 import { BROCHURE_PRODUCTS } from '@/lib/brochure-data';
+import { toPublicProduct } from '@/lib/public-dto';
 import { Filter, SlidersHorizontal, ArrowLeft } from 'lucide-react';
+
+const SORT_OPTIONS = [
+  { value: 'featured', label: 'Featured' },
+  { value: 'newest', label: 'Newest' },
+  { value: 'price-low', label: 'Price: Low to High' },
+  { value: 'price-high', label: 'Price: High to Low' },
+  { value: 'rating', label: 'Top Rated' },
+] as const;
 
 interface ShopPageProps {
   searchParams: {
@@ -27,17 +36,44 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   const page = parseInt(searchParams.page || '1', 10);
   const limit = 12;
 
-  const [categories, productsData] = await Promise.all([
+  const sortBy = (SORT_OPTIONS.some((option) => option.value === sort) ? sort : 'featured') as
+    | 'featured'
+    | 'price-low'
+    | 'price-high'
+    | 'rating'
+    | 'newest';
+
+  const [categories, productsResult] = await Promise.all([
     productRepository.getAllCategories(),
     productRepository.findMany({
       categorySlug,
       formulation,
       search,
-      sortBy: sort === 'featured' ? 'newest' : (sort as 'price-low' | 'price-high' | 'rating' | 'newest'),
+      sortBy,
       page,
       limit,
     }),
   ]);
+  const productsData = { ...productsResult, products: productsResult.products.map(toPublicProduct) };
+
+  // Builds a /shop URL preserving every active filter (pagination previously
+  // dropped `search` and `sort`, silently changing the result set).
+  const shopHref = (overrides: Record<string, string | undefined>) => {
+    const params = new URLSearchParams();
+    const merged: Record<string, string | undefined> = {
+      category: categorySlug,
+      formulation,
+      search,
+      sort: sortBy !== 'featured' ? sortBy : undefined,
+      page: String(page),
+      ...overrides,
+    };
+    for (const [key, value] of Object.entries(merged)) {
+      if (value) params.set(key, value);
+    }
+    const qs = params.toString();
+    return qs ? `/shop?${qs}` : '/shop';
+  };
 
   // Only show formulation filters represented by products in the supplied brochure.
   const formulations = Array.from(new Set(BROCHURE_PRODUCTS.map((product) => product.ayurvedicFormulation)));
@@ -59,6 +95,22 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
             <p className="text-xs sm:text-sm text-gray-600 mt-1">
               Showing {productsData.products.length} of {productsData.total} brochure-listed products
             </p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Sort:</span>
+            {SORT_OPTIONS.map((option) => (
+              <Link
+                key={option.value}
+                href={shopHref({ sort: option.value === 'featured' ? undefined : option.value, page: '1' })}
+                className={`text-[11px] px-2.5 py-1.5 rounded-lg transition-colors ${
+                  sortBy === option.value
+                    ? 'bg-[#1B4332] text-white font-bold'
+                    : 'bg-[#FAF7F2] text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {option.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>
@@ -182,9 +234,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
                 return (
                   <Link
                     key={pNum}
-                    href={`/shop?page=${pNum}${categorySlug ? `&category=${categorySlug}` : ''}${
-                      formulation ? `&formulation=${formulation}` : ''
-                    }`}
+                    href={shopHref({ page: String(pNum) })}
                     className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${
                       pNum === page
                         ? 'bg-[#1B4332] text-white shadow-md'

@@ -27,6 +27,25 @@ declare global {
   }
 }
 
+/** Normalises to bare 10 digits — mirrors the server-side rule exactly. */
+function normalizeIndianPhone(value: string): string {
+  let digits = value.replace(/\D/g, '');
+  if (digits.length === 12 && digits.startsWith('91')) digits = digits.slice(2);
+  if (digits.length === 11 && digits.startsWith('0')) digits = digits.slice(1);
+  return digits;
+}
+
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+  'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+  'Andaman and Nicobar Islands', 'Chandigarh',
+  'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir',
+  'Ladakh', 'Lakshadweep', 'Puducherry',
+];
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
@@ -51,11 +70,11 @@ export default function CheckoutPage() {
 
   const validateCheckout = () => {
     const errors: Record<string, string> = {};
-    const normalizedPhone = phone.replace(/\\D/g, '');
-    const normalizedPin = postalCode.replace(/\\D/g, '');
+    const normalizedPhone = normalizeIndianPhone(phone);
+    const normalizedPin = postalCode.replace(/\D/g, '');
     if (!fullName.trim()) errors.fullName = 'Enter your full name.';
     else if (fullName.trim().length < 2) errors.fullName = 'Name must contain at least 2 characters.';
-    if (!/^\\d{10}$/.test(normalizedPhone)) errors.phone = 'Enter a valid 10-digit mobile number.';
+    if (!/^[6-9]\d{9}$/.test(normalizedPhone)) errors.phone = 'Enter a valid 10-digit Indian mobile number (starting with 6–9).';
     if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email.trim())) errors.email = 'Enter a valid email address.';
     if (!addressLine1.trim()) errors.addressLine1 = 'Enter your house number and street address.';
     if (!city.trim()) errors.city = 'Enter your city or district.';
@@ -140,7 +159,7 @@ export default function CheckoutPage() {
 
       const shippingAddress = {
         fullName: fullName.trim(),
-        phone: phone.trim(),
+        phone: normalizeIndianPhone(phone),
         addressLine1: addressLine1.trim(),
         addressLine2: addressLine2.trim() || undefined,
         city: city.trim(),
@@ -156,7 +175,7 @@ export default function CheckoutPage() {
           body: JSON.stringify({
             customerName: fullName.trim(),
             customerEmail: email.trim(),
-            customerPhone: phone.trim(),
+            customerPhone: normalizeIndianPhone(phone),
             items: items.map((i) => ({
               productVariantId: i.productVariantId,
               quantity: i.quantity,
@@ -398,18 +417,11 @@ export default function CheckoutPage() {
                     aria-invalid={Boolean(fieldErrors.state)}
                     className={`w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332] bg-white ${fieldErrors.state ? 'border-red-500' : 'border-gray-300'}`}
                   >
-                    <option value="Uttar Pradesh">Uttar Pradesh</option>
-                    <option value="Delhi">Delhi NCR</option>
-                    <option value="Maharashtra">Maharashtra</option>
-                    <option value="Karnataka">Karnataka</option>
-                    <option value="Rajasthan">Rajasthan</option>
-                    <option value="Madhya Pradesh">Madhya Pradesh</option>
-                    <option value="Gujarat">Gujarat</option>
-                    <option value="Haryana">Haryana</option>
-                    <option value="Punjab">Punjab</option>
-                    <option value="West Bengal">West Bengal</option>
-                    <option value="Tamil Nadu">Tamil Nadu</option>
-                    <option value="Other">Other State / UT</option>
+                    {INDIAN_STATES.map((stateName) => (
+                      <option key={stateName} value={stateName}>
+                        {stateName}
+                      </option>
+                    ))}
                   </select>
                   {fieldErrors.state && <p className="mt-1 text-xs text-red-600" role="alert">{fieldErrors.state}</p>}
                 </div>

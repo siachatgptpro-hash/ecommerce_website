@@ -5,6 +5,7 @@ import { ProductCard } from '@/components/storefront/ProductCard';
 import { HeroCarousel } from '@/components/storefront/HeroCarousel';
 import { productRepository } from '@/repositories/product.repository';
 import { cmsRepository } from '@/repositories/cms.repository';
+import { toPublicProduct } from '@/lib/public-dto';
 import {
   ShieldCheck,
   Leaf,
@@ -19,10 +20,12 @@ import {
 export const revalidate = 60; // 1 minute ISR
 
 export default async function HomePage() {
-  const [featuredProducts, banners] = await Promise.all([
+  const [featuredResult, banners, catalogueCount] = await Promise.all([
     productRepository.findMany({ isFeatured: true, limit: 8 }),
     cmsRepository.getActiveBanners(),
+    productRepository.findMany({ limit: 1 }),
   ]);
+  const featuredProducts = { ...featuredResult, products: featuredResult.products.map(toPublicProduct) };
 
   const primaryBanner = banners.find((b) => b.slot === 'HERO_PRIMARY') || {
     title: 'A thoughtful catalogue for everyday wellness',
@@ -167,7 +170,7 @@ export default async function HomePage() {
             href="/shop"
             className="text-xs sm:text-sm font-bold text-[#1B4332] hover:text-[#2D6A4F] flex items-center gap-1.5 underline"
           >
-            <span>View all {featuredProducts.total} listings</span>
+            <span>View all {catalogueCount.total} listings</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProductRepository } from '@/repositories/product.repository';
 import { NotFoundError, handleApiError } from '@/lib/errors';
+import { toPublicProduct } from '@/lib/public-dto';
 
 export async function GET(
   req: NextRequest,
@@ -14,7 +15,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data: product,
+      data: toPublicProduct(product),
     });
   } catch (error) {
     const err = handleApiError(error);

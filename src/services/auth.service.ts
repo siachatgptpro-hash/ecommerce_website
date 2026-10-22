@@ -56,16 +56,26 @@ export class AuthService {
     const salt = bcrypt.genSaltSync(10);
     const passwordHash = bcrypt.hashSync(data.password, salt);
 
-    const user = await UserRepository.create({
-      fullName: data.fullName,
-      email: data.email.toLowerCase(),
-      phone: data.phone || null,
-      passwordHash,
-      isActive: true,
-      isVerified: false,
-      roles: [SystemRole.CUSTOMER],
-      permissions: [],
-    });
+    let user;
+    try {
+      user = await UserRepository.create({
+        fullName: data.fullName,
+        email: data.email.toLowerCase(),
+        phone: data.phone || null,
+        passwordHash,
+        isActive: true,
+        isVerified: false,
+        roles: [SystemRole.CUSTOMER],
+        permissions: [],
+      });
+    } catch (error: any) {
+      // Lost a race against a parallel registration with the same email/phone:
+      // report a clean conflict instead of a raw database 500.
+      if (error?.code === '23505') {
+        throw new ConflictError('An account with this email address or mobile number already exists');
+      }
+      throw error;
+    }
 
     const token = this.generateToken(user);
     const { passwordHash: _, ...safeUser } = user;

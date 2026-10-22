@@ -31,7 +31,7 @@ const toIso=(value:Date|string|null|undefined)=>value?new Date(value).toISOStrin
 function parseAddress(value:any){if(!value)return null;if(typeof value==='object')return value;try{return JSON.parse(value)}catch{return null}}
 function mapDbOrderItem(r:any):OrderItem{return{id:r.id,orderId:r.orderId,variantId:r.variantId,productNameSnapshot:r.productNameSnapshot,variantSizeSnapshot:r.variantSizeSnapshot,skuSnapshot:r.skuSnapshot,unitPrice:Number(r.unitPrice),quantity:r.quantity,lineTotal:Number(r.lineTotal),productName:r.productNameSnapshot,variantLabel:r.variantSizeSnapshot,sku:r.skuSnapshot,totalPrice:Number(r.lineTotal)}}
 function mapDbPayment(r:any):Payment{return{id:r.id,orderId:r.orderId,gateway:r.gateway,razorpayOrderId:r.razorpayOrderId??null,razorpayPaymentId:r.razorpayPaymentId??null,razorpaySignature:r.razorpaySignature??null,amount:Number(r.amount),currency:r.currency,status:r.status,gatewayResponse:r.gatewayResponse?parseAddress(r.gatewayResponse):null,refundId:r.refundId??null,refundAmount:r.refundAmount===null?null:Number(r.refundAmount),createdAt:toIso(r.createdAt)!,updatedAt:toIso(r.updatedAt)!}}
-function mapDbShipment(r:any):Shipment{return{id:r.id,orderId:r.orderId,carrierName:r.carrierName,trackingNumber:r.trackingNumber,status:r.status,dispatchedAt:toIso(r.dispatchedAt),deliveredAt:toIso(r.deliveredAt),createdAt:toIso(r.createdAt)!,updatedAt:toIso(r.updatedAt)!,carrier:r.carrierName}}
+function mapDbShipment(r:any):Shipment{return{id:r.id,orderId:r.orderId,carrierName:r.carrierName,trackingNumber:r.trackingNumber,trackingUrl:r.trackingUrl??null,status:r.status,dispatchedAt:toIso(r.dispatchedAt),deliveredAt:toIso(r.deliveredAt),createdAt:toIso(r.createdAt)!,updatedAt:toIso(r.updatedAt)!,carrier:r.carrierName}}
 function mapDbOrder(r:any,items:OrderItem[]=[],payment:Payment|null=null,shipment:Shipment|null=null):Order{return{id:r.id,orderNumber:r.orderNumber,userId:r.userId??null,customerName:r.customerName,customerEmail:r.customerEmail,customerPhone:r.customerPhone,shippingAddress:parseAddress(r.shippingAddress),billingAddress:parseAddress(r.billingAddress),subtotalAmount:Number(r.subtotalAmount),discountAmount:Number(r.discountAmount),couponCode:r.couponCode??null,couponDiscount:Number(r.couponDiscount),shippingFee:Number(r.shippingFee),taxAmount:Number(r.taxAmount),totalPayableAmount:Number(r.totalPayableAmount),orderStatus:r.orderStatus,paymentStatus:r.paymentStatus,paymentGateway:r.paymentGateway,adminNotes:r.adminNotes??null,createdAt:toIso(r.createdAt)!,updatedAt:toIso(r.updatedAt)!,items,payment,shipment,status:r.orderStatus,subtotal:Number(r.subtotalAmount),totalAmount:Number(r.totalPayableAmount),paymentMethod:r.paymentGateway,carrier:shipment?.carrierName??null,trackingNumber:shipment?.trackingNumber??null,trackingUrl:shipment?.trackingUrl??null}}
 async function hydrateDbOrder(row:any):Promise<Order>{
   const [itemsResult,paymentResult,shipmentResult]=await Promise.all([
@@ -323,12 +323,13 @@ export class OrderRepository {
     orderId: string,
     carrierName: string,
     trackingNumber: string,
-    status: ShipmentStatus = ShipmentStatus.IN_TRANSIT
+    status: ShipmentStatus = ShipmentStatus.IN_TRANSIT,
+    trackingUrl?: string | null
   ): Promise<Shipment> {
     if (isPostgresConfigured()) {
       const shipment=await withPostgresTransaction(async(client)=>{
         const id=`shp_${orderId}`;
-        const r=await client.query('INSERT INTO "Shipment" ("id","orderId","carrierName","trackingNumber","status","dispatchedAt","deliveredAt","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,CURRENT_TIMESTAMP,CASE WHEN $5=$6 THEN CURRENT_TIMESTAMP ELSE NULL END,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT ("orderId") DO UPDATE SET "carrierName"=EXCLUDED."carrierName","trackingNumber"=EXCLUDED."trackingNumber","status"=EXCLUDED."status","deliveredAt"=CASE WHEN EXCLUDED."status"=$6 THEN CURRENT_TIMESTAMP ELSE "Shipment"."deliveredAt" END,"updatedAt"=CURRENT_TIMESTAMP RETURNING *',[id,orderId,carrierName,trackingNumber,status,ShipmentStatus.DELIVERED]);
+        const r=await client.query('INSERT INTO "Shipment" ("id","orderId","carrierName","trackingNumber","trackingUrl","status","dispatchedAt","deliveredAt","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$7,$5,CURRENT_TIMESTAMP,CASE WHEN $5=$6 THEN CURRENT_TIMESTAMP ELSE NULL END,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT ("orderId") DO UPDATE SET "carrierName"=EXCLUDED."carrierName","trackingNumber"=EXCLUDED."trackingNumber","trackingUrl"=COALESCE(EXCLUDED."trackingUrl","Shipment"."trackingUrl"),"status"=EXCLUDED."status","deliveredAt"=CASE WHEN EXCLUDED."status"=$6 THEN CURRENT_TIMESTAMP ELSE "Shipment"."deliveredAt" END,"updatedAt"=CURRENT_TIMESTAMP RETURNING *',[id,orderId,carrierName,trackingNumber,status,ShipmentStatus.DELIVERED,trackingUrl ?? null]);
         const newStatus=status===ShipmentStatus.DELIVERED?OrderStatus.DELIVERED:OrderStatus.SHIPPED;
         await client.query('UPDATE "Order" SET "orderStatus"=$2,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=$1 AND "orderStatus"<>$3',[orderId,newStatus,OrderStatus.DELIVERED]);
         return mapDbShipment(r.rows[0]);
@@ -351,6 +352,8 @@ export class OrderRepository {
         orderId,
         carrierName,
         trackingNumber,
+        trackingUrl: trackingUrl ?? null,
+        carrier: carrierName,
         status,
         dispatchedAt: now,
         createdAt: now,
@@ -361,6 +364,8 @@ export class OrderRepository {
         ...shipment,
         carrierName,
         trackingNumber,
+        trackingUrl: trackingUrl !== undefined ? trackingUrl : shipment.trackingUrl ?? null,
+        carrier: carrierName,
         status,
         updatedAt: now,
       };

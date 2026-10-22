@@ -142,18 +142,18 @@ export default function InventoryLedgerPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredVariants.map((v) => {
-                  const isLow = v.stockQuantity <= (v.reorderThreshold || 10);
+                  const isLow = v.stockQuantity <= (v.lowStockThreshold ?? v.reorderThreshold ?? 5);
                   const isOut = v.stockQuantity <= 0;
 
                   return (
                     <tr key={v.id} className="hover:bg-gray-50/80 transition-colors">
                       <td className="py-3 px-4 font-mono font-bold text-[#1B4332]">{v.sku}</td>
-                      <td className="py-3 px-4 font-bold text-gray-900">{v.product?.name}</td>
+                      <td className="py-3 px-4 font-bold text-gray-900">{v.productName || v.product?.name || 'Unknown product'}</td>
                       <td className="py-3 px-4 text-gray-600">{v.sizeLabel}</td>
                       <td className="py-3 px-4 font-bold text-base text-gray-900">
                         {v.stockQuantity}
                       </td>
-                      <td className="py-3 px-4 text-gray-500">{v.reorderThreshold || 10}</td>
+                      <td className="py-3 px-4 text-gray-500">{v.lowStockThreshold ?? v.reorderThreshold ?? 5}</td>
                       <td className="py-3 px-4">
                         {isOut ? (
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-100 text-red-700">
@@ -198,7 +198,7 @@ export default function InventoryLedgerPage() {
                 Adjust Stock: {selectedVariant.sku}
               </h3>
               <p className="text-xs text-gray-500">
-                {selectedVariant.product?.name} ({selectedVariant.sizeLabel})
+                {selectedVariant.productName || selectedVariant.product?.name || 'Unknown product'} ({selectedVariant.sizeLabel})
               </p>
             </div>
 

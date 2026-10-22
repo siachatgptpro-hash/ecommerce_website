@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminPermission } from '@/lib/admin-auth';
+import { BannerWriteSchema } from '@/schemas';
 import { CMSRepository } from '@/repositories/cms.repository';
 import { PermissionKey } from '@/types';
 import { handleApiError } from '@/lib/errors';
@@ -11,14 +12,15 @@ export async function PUT(
   try {
     await requireAdminPermission(req, PermissionKey.MANAGE_CMS);
     const json = await req.json();
+    const input = BannerWriteSchema.parse(json);
     const banner = await CMSRepository.updateBanner(params.id, {
-      title: json.title,
-      subtitle: json.subtitle || null,
-      imageUrl: json.imageUrl,
-      linkUrl: json.ctaLink || json.linkUrl || '/shop',
-      buttonText: json.ctaText || json.buttonText || 'Explore',
-      sortOrder: Number(json.sortOrder ?? 0),
-      isActive: json.isActive !== undefined ? Boolean(json.isActive) : true,
+      title: input.title,
+      subtitle: input.subtitle || null,
+      imageUrl: input.imageUrl,
+      linkUrl: input.ctaLink || input.linkUrl || '/shop',
+      buttonText: input.ctaText || input.buttonText || 'Explore',
+      sortOrder: input.sortOrder ?? 0,
+      isActive: input.isActive !== undefined ? input.isActive : true,
     });
     return NextResponse.json({ success: Boolean(banner), data: banner });
   } catch (error) {

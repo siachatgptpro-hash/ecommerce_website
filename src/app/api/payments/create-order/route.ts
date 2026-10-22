@@ -30,7 +30,11 @@ export async function POST(req: NextRequest) {
 
     const parsed = CheckoutInitiateSchema.safeParse(normalized);
     if (!parsed.success) {
-      throw new ValidationError('Please check your contact, delivery, and cart details.', parsed.error.flatten());
+      // Surface the specific problem (e.g. the phone rule) instead of a
+      // generic "check your details" dead end.
+      const firstIssue = parsed.error.issues[0];
+      const detail = firstIssue ? `${firstIssue.path.join('.')}: ${firstIssue.message}` : 'Invalid checkout details';
+      throw new ValidationError(`Please check your details — ${detail}`, parsed.error.flatten());
     }
 
     let userId: string | undefined;

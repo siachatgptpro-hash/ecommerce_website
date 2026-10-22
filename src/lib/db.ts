@@ -84,19 +84,22 @@ class DatabaseStore {
     this.isInitialized = true;
 
     // 1. BUSINESS SETTINGS SEED (As per PRD specification)
+    // Keys must match the canonical names read by SettingsRepository
+    // (STORE_NAME, BASE_SHIPPING_FEE, ENABLE_COD, …) — the previous
+    // BUSINESS_*/DEFAULT_* names were never read anywhere.
     const settingsList: Array<{ key: string; value: string; isPublic: boolean; description: string }> = [
-      { key: 'BUSINESS_NAME', value: 'Sholkveda', isPublic: true, description: 'Official legal business name' },
-      { key: 'BUSINESS_ADDRESS_LINE1', value: 'B.H Oil Meal Road', isPublic: true, description: 'Premises address' },
-      { key: 'BUSINESS_ADDRESS_LINE2', value: 'Next to Bank of Maharashtra, Dobra Bal Colony', isPublic: true, description: 'Landmark / Area' },
-      { key: 'BUSINESS_CITY', value: 'Hathras', isPublic: true, description: 'City' },
-      { key: 'BUSINESS_STATE', value: 'Uttar Pradesh', isPublic: true, description: 'State' },
-      { key: 'BUSINESS_PINCODE', value: '204101', isPublic: true, description: 'Postal PIN code' },
-      { key: 'BUSINESS_PHONE', value: '7017840020', isPublic: true, description: 'Primary customer support phone' },
-      { key: 'BUSINESS_GSTIN', value: '09ANCPV6879P1ZP', isPublic: true, description: 'Registered GSTIN / UIN' },
-      { key: 'SUPPORT_EMAIL', value: '', isPublic: true, description: 'Official email' },
+      { key: 'STORE_NAME', value: 'Sholkveda', isPublic: true, description: 'Official legal business name' },
+      { key: 'ADDRESS_LINE1', value: 'B.H Oil Meal Road', isPublic: true, description: 'Premises address' },
+      { key: 'ADDRESS_LINE2', value: 'Next to Bank of Maharashtra, Dobra Bal Colony', isPublic: true, description: 'Landmark / Area' },
+      { key: 'CITY', value: 'Hathras', isPublic: true, description: 'City' },
+      { key: 'STATE', value: 'Uttar Pradesh', isPublic: true, description: 'State' },
+      { key: 'POSTAL_CODE', value: '204101', isPublic: true, description: 'Postal PIN code' },
+      { key: 'PHONE', value: '7017840020', isPublic: true, description: 'Primary customer support phone' },
+      { key: 'GSTIN', value: '09ANCPV6879P1ZP', isPublic: true, description: 'Registered GSTIN / UIN' },
+      { key: 'EMAIL', value: '', isPublic: true, description: 'Official email' },
       { key: 'FREE_SHIPPING_THRESHOLD', value: '499', isPublic: true, description: 'Free shipping minimum order value (INR)' },
-      { key: 'DEFAULT_SHIPPING_FEE', value: '50', isPublic: true, description: 'Standard delivery charge below threshold' },
-      { key: 'COD_ENABLED', value: 'true', isPublic: true, description: 'Allow Cash on Delivery' },
+      { key: 'BASE_SHIPPING_FEE', value: '50', isPublic: true, description: 'Standard delivery charge below threshold' },
+      { key: 'ENABLE_COD', value: 'false', isPublic: true, description: 'Allow Cash on Delivery' },
       { key: 'RAZORPAY_KEY_ID', value: process.env.RAZORPAY_KEY_ID || '', isPublic: true, description: 'Razorpay Key ID' },
       { key: 'RAZORPAY_KEY_SECRET', value: process.env.RAZORPAY_KEY_SECRET || '', isPublic: false, description: 'Razorpay Secret' },
     ];

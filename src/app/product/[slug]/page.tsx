@@ -3,9 +3,10 @@ import { cache } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { productRepository } from '@/repositories/product.repository';
+import { toPublicProduct } from '@/lib/public-dto';
 import { ProductDetailClient } from './ProductDetailClient';
 import { ProductCard } from '@/components/storefront/ProductCard';
-import { generateProductJsonLd, generateBreadcrumbJsonLd } from '@/lib/seo';
+import { generateProductJsonLd, generateBreadcrumbJsonLd, jsonLdScriptContent } from '@/lib/seo';
 
 interface ProductPageProps {
   params: {
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: ProductPageProps) {
   const product = await getProduct(params.slug);
   if (!product) return { title: 'Product Not Found | Sholkveda' };
 
-  const desc = (product.description || product.fullDescription || product.shortDescription || '').slice(0, 160);
+  const desc = (product.shortDescription || product.fullDescription || '').slice(0, 160);
 
   return {
     title: `${product.name} | Sholkveda Product Catalogue`,
@@ -38,11 +39,12 @@ export async function generateMetadata({ params }: ProductPageProps) {
 }
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
-  const product = await getProduct(params.slug);
+  const rawProduct = await getProduct(params.slug);
 
-  if (!product) {
+  if (!rawProduct) {
     notFound();
   }
+  const product = toPublicProduct(rawProduct);
 
   // Get related products from same category
   const related = await productRepository.findMany({
@@ -50,7 +52,10 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     limit: 4,
   });
 
-  const filteredRelated = related.products.filter((p) => p.id !== product.id).slice(0, 4);
+  const filteredRelated = related.products
+    .filter((p) => p.id !== product.id)
+    .slice(0, 4)
+    .map(toPublicProduct);
 
   // SEO Schema
   const productJsonLd = generateProductJsonLd(product);
@@ -66,11 +71,11 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScriptContent(productJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScriptContent(breadcrumbJsonLd) }}
       />
 
       {/* Breadcrumb Navigation */}

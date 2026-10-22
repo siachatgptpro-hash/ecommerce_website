@@ -19,7 +19,14 @@ export async function GET(req: NextRequest) {
     if (!token) throw new AuthenticationError();
 
     const user = await AuthService.getCurrentUser(token);
-    const orders = await OrderRepository.listOrders({ userId: user.id });
+    const { searchParams } = new URL(req.url);
+    const pageParam = parseInt(searchParams.get('page') || '1', 10);
+    const limitParam = parseInt(searchParams.get('limit') || '20', 10);
+    const orders = await OrderRepository.listOrders({
+      userId: user.id,
+      page: Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1,
+      limit: Number.isFinite(limitParam) ? Math.min(100, Math.max(1, limitParam)) : 20,
+    });
 
     return NextResponse.json(
       { success: true, data: { orders: orders.orders, total: orders.total, page: orders.page, totalPages: orders.totalPages } },

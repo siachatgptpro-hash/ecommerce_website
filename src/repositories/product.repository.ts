@@ -124,7 +124,8 @@ async function listProductsFromPostgres(options: ProductFilterOptions) {
   if (options.isNewArrival !== undefined) add('p."isNewArrival" = ?', options.isNewArrival);
   const search = (options.searchQuery || options.search)?.trim();
   if (search) {
-    values.push(`%${search}%`);
+    // Escape LIKE wildcards so user input is matched literally.
+    values.push(`%${search.replace(/[%_\\]/g, (ch) => '\\' + ch)}%`);
     const n = values.length;
     clauses.push(`(p."name" ILIKE $${n} OR p."shortDescription" ILIKE $${n} OR p."ingredients" ILIKE $${n} OR p."benefits" ILIKE $${n})`);
   }
@@ -248,9 +249,8 @@ export class ProductRepository {
     // Filter by Category Slug or ID
     if (options.categorySlug) {
       const cat = await this.findCategoryBySlug(options.categorySlug);
-      if (cat) {
-        result = result.filter((p) => p.categoryId === cat.id);
-      }
+      // An unknown category must return nothing — never the whole catalogue.
+      result = cat ? result.filter((p) => p.categoryId === cat.id) : [];
     } else if (options.categoryId) {
       result = result.filter((p) => p.categoryId === options.categoryId);
     }
@@ -349,13 +349,15 @@ export class ProductRepository {
   }
 
   public static async findProductBySlug(slug: string): Promise<Product | null> {
+    // Slug lookup serves only public pages/APIs — inactive (draft/deleted)
+    // products must not be reachable by guessing a slug.
     if (isPostgresConfigured()) {
-      const result = await pgQuery('SELECT * FROM "Product" WHERE LOWER("slug") = LOWER($1) LIMIT 1', [slug]);
+      const result = await pgQuery('SELECT * FROM "Product" WHERE LOWER("slug") = LOWER($1) AND "isActive" = TRUE LIMIT 1', [slug]);
       if (!result.rows[0]) return null;
       return (await hydrateDbProducts([result.rows[0]]))[0];
     }
     for (const p of db.products.values()) {
-      if (p.slug === slug.toLowerCase()) {
+      if (p.slug === slug.toLowerCase() && p.isActive) {
         return this.populateProduct(p);
       }
     }
@@ -382,11 +384,20 @@ export class ProductRepository {
   }
 
   public static async listAllVariants(): Promise<ProductVariant[]> {
+    // Include the parent product's name — the admin inventory screen lists
+    // variants standalone and previously rendered blank product names.
     if (isPostgresConfigured()) {
-      const result = await pgQuery('SELECT * FROM "ProductVariant" ORDER BY "createdAt" DESC');
-      return result.rows.map(mapDbVariant);
+      const result = await pgQuery('SELECT v.*, p."name" AS "productName" FROM "ProductVariant" v JOIN "Product" p ON p."id" = v."productId" ORDER BY v."createdAt" DESC');
+      return result.rows.map((row) => ({ ...mapDbVariant(row), productName: row.productName, product: { id: row.productId, name: row.productName } }));
     }
-    return Array.from(db.productVariants.values());
+    return Array.from(db.productVariants.values()).map((variant) => {
+      const product = db.products.get(variant.productId);
+      return {
+        ...variant,
+        productName: product?.name || 'Unknown product',
+        product: product ? { id: product.id, name: product.name } : null,
+      };
+    });
   }
 
   public static async createProduct(
@@ -505,21 +516,34 @@ export class ProductRepository {
     if (!existing) return null;
 
     const now = new Date().toISOString();
+    // Allow-list the mutable product fields (mirrors the Postgres path) —
+    // arbitrary keys like `id` in the request body must never be merged in.
+    const allowedKeys = ['categoryId','name','slug','skuPrefix','shortDescription','fullDescription','ingredients','benefits','usageInstructions','precautions','ayurvedicFormulation','ayushLicenseNo','fssaiLicenseNo','isFeatured','isBestseller','isNewArrival','isActive','metaTitle','metaDescription','metaKeywords'] as const;
+    const safeUpdates: Partial<Product> = {};
+    for (const key of allowedKeys) {
+      if ((updates as any)[key] !== undefined) (safeUpdates as any)[key] = (updates as any)[key];
+    }
     const updatedProd: Product = {
       ...existing,
-      ...updates,
+      ...safeUpdates,
+      id: existing.id,
+      createdAt: existing.createdAt,
       updatedAt: now,
     };
     db.products.set(id, updatedProd);
 
-    // Update variants if supplied
+    // Update variants if supplied. Preserve each variant's identity (matched
+    // by id, falling back to SKU) and its live reservation, so editing a
+    // product doesn't orphan shoppers' carts or drop reserved stock.
     if (variants && variants.length > 0) {
+      const previousVariants = Array.from(db.productVariants.values()).filter((v) => v.productId === id);
       for (const [vKey, v] of db.productVariants.entries()) {
         if (v.productId === id) db.productVariants.delete(vKey);
       }
       for (let i = 0; i < variants.length; i++) {
         const v = variants[i];
-        const vId = v.id || `var_${id}_${i + 1}`;
+        const previous = previousVariants.find((pv) => pv.id === v.id) || previousVariants.find((pv) => pv.sku === v.sku);
+        const vId = v.id || previous?.id || `var_${id}_${i + 1}`;
         db.productVariants.set(vId, {
           id: vId,
           productId: id,
@@ -527,14 +551,14 @@ export class ProductRepository {
           sizeLabel: v.sizeLabel,
           mrp: v.mrp,
           sellingPrice: v.sellingPrice,
-          costPrice: v.costPrice ?? 0,
-          stockQuantity: v.stockQuantity ?? 0,
-          reservedQuantity: v.reservedQuantity ?? 0,
-          lowStockThreshold: v.lowStockThreshold ?? 5,
-          weightInGrams: v.weightInGrams ?? 0,
+          costPrice: v.costPrice ?? previous?.costPrice ?? 0,
+          stockQuantity: v.stockQuantity ?? previous?.stockQuantity ?? 0,
+          reservedQuantity: previous?.reservedQuantity ?? 0,
+          lowStockThreshold: v.lowStockThreshold ?? previous?.lowStockThreshold ?? 5,
+          weightInGrams: v.weightInGrams ?? previous?.weightInGrams ?? 0,
           isDefault: v.isDefault ?? false,
           isActive: v.isActive ?? true,
-          createdAt: now,
+          createdAt: previous?.createdAt || now,
           updatedAt: now,
         });
       }
@@ -568,13 +592,12 @@ export class ProductRepository {
       const result = await pgQuery('UPDATE "Product" SET "isActive" = FALSE, "updatedAt" = CURRENT_TIMESTAMP WHERE "id" = $1', [id]);
       return (result.rowCount || 0) > 0;
     }
-    for (const [vKey, v] of db.productVariants.entries()) {
-      if (v.productId === id) db.productVariants.delete(vKey);
-    }
-    for (const [imgKey, img] of db.productImages.entries()) {
-      if (img.productId === id) db.productImages.delete(imgKey);
-    }
-    return db.products.delete(id);
+    // Soft delete (matches Postgres): keeps order history resolvable and
+    // lets admins restore the product; hard-deleting broke both.
+    const product = db.products.get(id);
+    if (!product) return false;
+    db.products.set(id, { ...product, isActive: false, updatedAt: new Date().toISOString() });
+    return true;
   }
 
   private static populateProduct(product: Product): Product {
@@ -594,7 +617,9 @@ export class ProductRepository {
       category,
       variants,
       images,
-      reviews,
+      // Only rating aggregates are exposed on products. Full review objects
+      // (which include reviewer userIds) are served — sanitised — by the
+      // reviews API alone.
       ratingCount,
       ratingAverage: ratingCount > 0 ? ratingAverage : 0,
     };

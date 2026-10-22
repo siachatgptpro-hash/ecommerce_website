@@ -28,7 +28,8 @@ export async function PATCH(
         payload.orderStatus,
         payload.trackingCarrier,
         payload.trackingNumber,
-        payload.adminNotes
+        payload.adminNotes,
+        payload.trackingUrl || undefined
       );
     }
 

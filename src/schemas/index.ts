@@ -22,6 +22,14 @@ import {
  * identically in the browser and on the server instead of failing with a
  * generic checkout error.
  */
+/** Absolute http(s) URL or site-relative path (catalogue images are local files). */
+export const imageReference = (message = 'Valid image URL required') =>
+  z
+    .string()
+    .trim()
+    .min(1, message)
+    .refine((value) => value.startsWith('/') || /^https?:\/\//i.test(value), message);
+
 export function normalizeIndianPhone(value: string): string {
   let digits = value.replace(/\D/g, '');
   if (digits.length === 12 && digits.startsWith('91')) digits = digits.slice(2);
@@ -40,7 +48,7 @@ export const RegisterSchema = z.object({
   fullName: z.string().trim().min(2, 'Full name must be at least 2 characters'),
   email: z.string().trim().toLowerCase().email('Invalid email address'),
   phone: indianPhone('Invalid 10-digit Indian phone number').optional().or(z.literal('')),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 export const LoginSchema = z.object({
@@ -73,7 +81,7 @@ export const CategorySchema = z.object({
   name: z.string().trim().min(2, 'Category name is required'),
   slug: z.string().trim().min(2, 'Slug is required').regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens'),
   description: z.string().trim().optional(),
-  imageUrl: z.string().url('Valid image URL required').optional().or(z.literal('')),
+  imageUrl: imageReference().optional().or(z.literal('')),
   parentId: z.string().min(3).optional().nullable(),
   displayOrder: z.number().int().default(0),
   isActive: z.boolean().default(true),
@@ -96,7 +104,7 @@ export const ProductVariantInputSchema = z.object({
 });
 
 export const ProductImageInputSchema = z.object({
-  imageUrl: z.string().url('Valid image URL required'),
+  imageUrl: imageReference(),
   altText: z.string().trim().optional(),
   sortOrder: z.number().int().default(0),
   isPrimary: z.boolean().default(false),
@@ -223,11 +231,26 @@ export const ReviewModerationSchema = z.object({
   adminReply: z.string().trim().optional(),
 });
 
+/** Payload sent by the admin CMS banner form (supports ctaLink/ctaText aliases). */
+export const BannerWriteSchema = z.object({
+  title: z.string().trim().min(2, 'Banner title is required'),
+  subtitle: z.string().trim().optional().nullable(),
+  imageUrl: imageReference(),
+  mobileImgUrl: imageReference().optional().nullable().or(z.literal('')),
+  linkUrl: z.string().trim().optional(),
+  ctaLink: z.string().trim().optional(),
+  buttonText: z.string().trim().optional(),
+  ctaText: z.string().trim().optional(),
+  sortOrder: z.coerce.number().int().optional(),
+  isActive: z.boolean().optional(),
+  slot: z.string().trim().optional(),
+});
+
 export const BannerSchema = z.object({
   title: z.string().trim().min(2),
   subtitle: z.string().trim().optional(),
-  imageUrl: z.string().url('Valid image URL required'),
-  mobileImgUrl: z.string().url().optional().or(z.literal('')),
+  imageUrl: imageReference(),
+  mobileImgUrl: imageReference().optional().or(z.literal('')),
   linkUrl: z.string().trim().optional(),
   buttonText: z.string().trim().optional(),
   sortOrder: z.number().int().default(0),
@@ -254,5 +277,6 @@ export const OrderStatusUpdateSchema = z.object({
   orderStatus: z.nativeEnum(OrderStatus),
   trackingCarrier: z.string().trim().optional(),
   trackingNumber: z.string().trim().optional(),
+  trackingUrl: z.string().trim().url('Tracking URL must be a valid URL').optional().or(z.literal('')),
   adminNotes: z.string().trim().optional(),
 });

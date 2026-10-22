@@ -45,8 +45,11 @@ export class SEOService {
 
   public static generateProductSchema(product: Product) {
     const primaryImg = product.images?.find((i) => i.isPrimary)?.imageUrl || product.images?.[0]?.imageUrl || '';
-    const minPrice = Math.min(...(product.variants?.map((v) => v.sellingPrice) || [0]));
-    const maxPrice = Math.max(...(product.variants?.map((v) => v.sellingPrice) || [0]));
+    // Guard the empty-variants case: Math.min(...[]) is Infinity, which
+    // serialises to null and breaks the structured data.
+    const prices = product.variants?.map((v) => v.sellingPrice).filter((p) => Number.isFinite(p)) || [];
+    const minPrice = prices.length ? Math.min(...prices) : 0;
+    const maxPrice = prices.length ? Math.max(...prices) : 0;
     const inStock = product.variants?.some((v) => v.stockQuantity > 0) ?? true;
 
     return {
@@ -54,7 +57,7 @@ export class SEOService {
       '@type': 'Product',
       name: product.name,
       image: [primaryImg],
-      description: product.description || product.shortDescription || product.fullDescription,
+      description: product.shortDescription || product.fullDescription || '',
       sku: product.skuPrefix || product.variants?.[0]?.sku || 'SV-PRODUCT',
       brand: {
         '@type': 'Brand',
@@ -115,6 +118,15 @@ export class SEOService {
       },
     };
   }
+}
+
+/**
+ * Serialises JSON-LD for inline <script> injection. Escapes `<` so a value
+ * containing "</script>" (e.g. in an admin-entered product name) cannot
+ * break out of the script element.
+ */
+export function jsonLdScriptContent(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c');
 }
 
 export const seoService = new SEOService();
