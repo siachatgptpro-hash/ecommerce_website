@@ -22,13 +22,15 @@ import {
  * identically in the browser and on the server instead of failing with a
  * generic checkout error.
  */
-/** Absolute http(s) URL or site-relative path (catalogue images are local files). */
+/** Absolute http(s) URL or site-relative path (catalogue images are local files).
+ * Protocol-relative "//host/..." (and "/\host") must NOT pass as site-relative:
+ * browsers resolve them to a foreign origin. */
 export const imageReference = (message = 'Valid image URL required') =>
   z
     .string()
     .trim()
     .min(1, message)
-    .refine((value) => value.startsWith('/') || /^https?:\/\//i.test(value), message);
+    .refine((value) => /^\/(?![/\\])/.test(value) || /^https?:\/\//i.test(value), message);
 
 export function normalizeIndianPhone(value: string): string {
   let digits = value.replace(/\D/g, '');
@@ -197,7 +199,9 @@ export const CouponSchema = z
     code: z.string().trim().min(3).toUpperCase(),
     description: z.string().trim().optional(),
     discountType: z.nativeEnum(DiscountType),
-    discountValue: z.number().positive('Discount value must be positive'),
+    // A FREE_SHIPPING coupon waives the delivery fee, so its value is 0;
+    // every other type needs a positive amount/percentage (refined below).
+    discountValue: z.number().nonnegative('Discount value cannot be negative'),
     minOrderValue: z.number().nonnegative().default(0),
     maxDiscountCap: z.number().positive().optional().nullable(),
     usageLimit: z.number().int().positive().optional().nullable(),
@@ -205,6 +209,10 @@ export const CouponSchema = z
     startDate: z.string().datetime().or(z.string().min(10)),
     endDate: z.string().datetime().or(z.string().min(10)),
     isActive: z.boolean().default(true),
+  })
+  .refine((data) => data.discountType === DiscountType.FREE_SHIPPING || data.discountValue > 0, {
+    message: 'Discount value must be positive',
+    path: ['discountValue'],
   })
   .refine((data) => data.discountType !== DiscountType.PERCENTAGE || data.discountValue <= 100, {
     message: 'Percentage discount cannot exceed 100%',

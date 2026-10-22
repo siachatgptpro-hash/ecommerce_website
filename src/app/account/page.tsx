@@ -24,6 +24,32 @@ export default function AccountPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [totalOrders, setTotalOrders] = useState(0);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+
+  async function cancelOrder(orderNumber: string) {
+    if (!window.confirm('Cancel this order? This cannot be undone.')) return;
+    setCancellingId(orderNumber);
+    setCancelError(null);
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(orderNumber)}/cancel`, { method: 'POST' });
+      const payload = await res.json().catch(() => null);
+      if (!res.ok || !payload?.success) {
+        throw new Error(payload?.error?.message || 'Could not cancel this order. Please contact support.');
+      }
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.orderNumber === orderNumber
+            ? { ...o, orderStatus: 'CANCELLED' as Order['orderStatus'], status: 'CANCELLED' }
+            : o
+        )
+      );
+    } catch (err) {
+      setCancelError(err instanceof Error ? err.message : 'Could not cancel this order. Please contact support.');
+    } finally {
+      setCancellingId(null);
+    }
+  }
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -215,18 +241,33 @@ export default function AccountPage() {
                   ))}
                 </div>
 
-                <div className="pt-2 flex justify-between items-center text-xs">
+                <div className="pt-2 flex flex-wrap justify-between items-center gap-2 text-xs">
                   <span className="text-gray-500">
                     Payment: <strong>{ord.paymentMethod}</strong> ({ord.paymentStatus})
                   </span>
-                  <Link
-                    href={`/orders/${ord.orderNumber}`}
-                    className="font-bold text-[#1B4332] hover:underline flex items-center gap-1"
-                  >
-                    <span>View Details & Status</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    {(ord.status === 'PENDING' || ord.status === 'CONFIRMED') && (
+                      <button
+                        type="button"
+                        onClick={() => cancelOrder(ord.orderNumber)}
+                        disabled={cancellingId === ord.orderNumber}
+                        className="font-bold text-red-700 hover:underline disabled:opacity-50"
+                      >
+                        {cancellingId === ord.orderNumber ? 'Cancelling…' : 'Cancel Order'}
+                      </button>
+                    )}
+                    <Link
+                      href={`/orders/${ord.orderNumber}`}
+                      className="font-bold text-[#1B4332] hover:underline flex items-center gap-1"
+                    >
+                      <span>View Details & Status</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
                 </div>
+                {cancelError && (
+                  <p className="text-xs font-semibold text-red-700" role="alert">{cancelError}</p>
+                )}
               </div>
             ))}
           </div>

@@ -291,6 +291,40 @@ export class CMSRepository {
     return { ...review };
   }
 
+  /**
+   * Updates a customer's own review when they submit again for the same
+   * product. The edit goes back through moderation (isApproved reset) so a
+   * previously-approved review can't be swapped for unmoderated content.
+   */
+  public static async updateReviewByUser(
+    id: string,
+    data: { rating: number; title?: string | null; comment: string; isVerified?: boolean }
+  ): Promise<Review | null> {
+    if (isPostgresConfigured()) {
+      const r = await pgQuery(
+        'UPDATE "Review" SET "rating"=$2,"title"=$3,"comment"=$4,"isVerified"=$5,"isApproved"=FALSE,"adminReply"=NULL,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=$1 RETURNING "id"',
+        [id, data.rating, data.title ?? null, data.comment, data.isVerified ?? false]
+      );
+      if (!r.rows[0]) return null;
+      const full = await pgQuery('SELECT r.*,u."fullName" AS "userName",u."email" AS "userEmail",p."name" AS "productName",p."slug" AS "productSlug" FROM "Review" r JOIN "User" u ON u."id"=r."userId" JOIN "Product" p ON p."id"=r."productId" WHERE r."id"=$1', [id]);
+      return full.rows[0] ? mapReview(full.rows[0]) : null;
+    }
+    const rev = db.reviews.get(id);
+    if (!rev) return null;
+    const updated: Review = {
+      ...rev,
+      rating: data.rating,
+      title: data.title ?? null,
+      comment: data.comment,
+      isVerified: data.isVerified ?? rev.isVerified,
+      isApproved: false,
+      adminReply: null,
+      updatedAt: new Date().toISOString(),
+    };
+    db.reviews.set(id, updated);
+    return { ...updated };
+  }
+
   public static async moderateReview(
     id: string,
     isApproved: boolean,

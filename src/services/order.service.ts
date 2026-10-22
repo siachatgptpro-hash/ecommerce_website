@@ -381,17 +381,23 @@ export class OrderService {
       });
     }
 
-    // 2. Stock: paid orders sold units (restore them); unpaid orders only
-    // hold a reservation (release it).
+    // 2. Stock: units were SOLD (reservation committed) for paid online orders
+    // and for COD orders (committed at placement even though still unpaid) —
+    // those must be restored to stock. An unpaid online order only holds a
+    // reservation, which is released. (Paying later via the COD path was
+    // previously misclassified here, so cancelled COD orders lost their
+    // stock forever.)
+    const stockWasCommitted = wasPaid || order.paymentGateway === PaymentGateway.CASH_ON_DELIVERY;
     const items = order.items.map((i) => ({ variantId: i.variantId, quantity: i.quantity }));
-    if (wasPaid) {
+    if (stockWasCommitted) {
       await InventoryRepository.restoreForOrder(items, order.orderNumber, InventoryChangeReason.ORDER_CANCELLATION);
     } else {
       await InventoryRepository.releaseReservation(items);
     }
 
-    // 3. Return the coupon to the customer (usage is only recorded once paid).
-    if (wasPaid && order.couponCode) {
+    // 3. Return the coupon to the customer (usage is recorded on payment for
+    // online orders and at placement for COD — both are "committed" cases).
+    if (stockWasCommitted && order.couponCode) {
       const coupon = await CouponRepository.findByCode(order.couponCode).catch(() => null);
       if (coupon) {
         await CouponRepository.releaseUsage(coupon.id, order.id, !order.userId).catch((error) => {

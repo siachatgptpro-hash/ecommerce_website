@@ -45,14 +45,27 @@ export async function POST(req: NextRequest) {
       throw new NotFoundError('Product');
     }
 
-    const existingReviews = await CMSRepository.listReviews(payload.productId, false);
-    if (existingReviews.some((review) => review.userId === user.id)) {
-      throw new ConflictError('You have already reviewed this product.');
-    }
-
     const isVerified = await OrderRepository.hasUserPurchasedProduct(user.id, payload.productId);
     const cleanComment = sanitizeHtml(payload.comment, { allowedTags: [], allowedAttributes: {} });
     const cleanTitle = payload.title ? sanitizeHtml(payload.title, { allowedTags: [], allowedAttributes: {} }) : null;
+
+    // One review per customer per product: a repeat submission UPDATES the
+    // existing review (back through moderation) instead of erroring.
+    const existingReviews = await CMSRepository.listReviews(payload.productId, false);
+    const mine = existingReviews.find((review) => review.userId === user.id);
+    if (mine) {
+      const updated = await CMSRepository.updateReviewByUser(mine.id, {
+        rating: payload.rating,
+        title: cleanTitle,
+        comment: cleanComment,
+        isVerified,
+      });
+      return NextResponse.json({
+        success: true,
+        message: 'Your review has been updated and will appear after moderation.',
+        data: updated ? toPublicReview(updated) : null,
+      });
+    }
 
     const review = await CMSRepository.createReview({
       productId: payload.productId,
