@@ -1,5 +1,6 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
+import { requireAdminPage } from '@/lib/admin-page-auth';
 import { productRepository } from '@/repositories/product.repository';
 import { ProductForm } from '@/components/admin/ProductForm';
 
@@ -12,6 +13,8 @@ interface EditProductPageProps {
 export const revalidate = 0;
 
 export default async function EditProductPage({ params }: EditProductPageProps) {
+  await requireAdminPage();
+
   const [product, categories] = await Promise.all([
     productRepository.findById(params.id),
     productRepository.getAllCategories(),

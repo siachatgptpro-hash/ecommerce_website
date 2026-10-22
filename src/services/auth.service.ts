@@ -10,8 +10,21 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
 const globalForAuth = globalThis as typeof globalThis & { shlokvedaRuntimeAuthSecret?: string };
+
+// In development a per-process secret is convenient, but in production it
+// would silently differ between server instances (random logouts / 401s on
+// serverless). Production MUST configure a stable AUTH_SECRET. The check is
+// lazy (on first token use) so builds don't fail where env vars are only
+// injected at runtime.
+const USING_EPHEMERAL_SECRET = !process.env.AUTH_SECRET;
 const JWT_SECRET = process.env.AUTH_SECRET || (globalForAuth.shlokvedaRuntimeAuthSecret ??= crypto.randomBytes(32).toString('hex'));
 const TOKEN_EXPIRY = '7d';
+
+function assertProductionSecret(): void {
+  if (USING_EPHEMERAL_SECRET && process.env.NODE_ENV === 'production') {
+    throw new Error('AUTH_SECRET environment variable is required in production. Set a long random value in your deployment settings.');
+  }
+}
 
 export interface TokenPayload {
   userId: string;
@@ -83,6 +96,7 @@ export class AuthService {
   }
 
   public static generateToken(user: User): string {
+    assertProductionSecret();
     const payload: TokenPayload = {
       userId: user.id,
       email: user.email,
@@ -94,6 +108,7 @@ export class AuthService {
   }
 
   public static verifyToken(token: string): TokenPayload {
+    assertProductionSecret();
     try {
       return jwt.verify(token, JWT_SECRET) as TokenPayload;
     } catch {

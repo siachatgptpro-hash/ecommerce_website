@@ -50,6 +50,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: 'Audit Trail', href: '/admin/audit-logs', icon: History },
   ];
 
+  // The sign-in page must stay reachable for logged-out visitors — it lives
+  // inside this layout, so render it bare (no sidebar, no gate).
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center">
@@ -58,14 +64,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // If user is not admin, show permission gate
+  // If user is not admin, show permission gate.
+  // Role names must match the backend SystemRole enum (src/types).
+  const ADMIN_ROLE_NAMES = ['SUPER_ADMIN', 'ADMIN', 'PRODUCT_MANAGER', 'ORDER_MANAGER', 'CONTENT_MANAGER'];
   const isAdmin = user && (
-    user.roles?.includes('SUPER_ADMIN' as any) ||
-    user.roles?.includes('STORE_ADMIN' as any) ||
-    user.roles?.includes('ORDER_FULFILLMENT' as any) ||
-    user.role === 'SUPER_ADMIN' ||
-    user.role === 'STORE_ADMIN' ||
-    user.role === 'ORDER_FULFILLMENT'
+    user.roles?.some((role: string) => ADMIN_ROLE_NAMES.includes(role)) ||
+    (user.role ? ADMIN_ROLE_NAMES.includes(user.role) : false)
   );
 
   if (!user || !isAdmin) {
@@ -81,7 +85,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </p>
           <div className="pt-2 flex flex-col gap-2">
             <Link
-              href="/login"
+              href="/admin/login"
               className="px-6 py-2.5 rounded-xl bg-[#1B4332] text-white font-bold text-xs"
             >
               Sign In as Admin

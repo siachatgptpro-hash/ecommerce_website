@@ -13,7 +13,7 @@ const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export async function POST(req: NextRequest) {
   try {
-    authenticateAdmin(req);
+    await authenticateAdmin(req);
     const form = await req.formData();
     const file = form.get("file");
     if (!(file instanceof File))

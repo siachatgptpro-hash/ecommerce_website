@@ -1,5 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
+import { notFound, redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { AuthService } from '@/services/auth.service';
 import { orderRepository } from '@/repositories/order.repository';
 import { settingsRepository } from '@/repositories/settings.repository';
 import { CheckCircle2, Package, Phone } from 'lucide-react';
@@ -12,18 +15,36 @@ interface OrderConfirmationPageProps {
 }
 
 export const metadata = { robots: { index: false, follow: false } };
+export const dynamic = 'force-dynamic';
 
 export default async function OrderConfirmationPage({ searchParams }: OrderConfirmationPageProps) {
   const { orderId, orderNumber } = searchParams;
-  let order = null;
 
+  // Order details contain personal data (name, address, phone) and order
+  // numbers are sequential — this page must only ever show an order to the
+  // customer who placed it.
+  const suffix = orderNumber ? `?orderNumber=${encodeURIComponent(orderNumber)}` : orderId ? `?orderId=${encodeURIComponent(orderId)}` : '';
+  const token = cookies().get('shlokveda_session_token')?.value;
+  if (!token) redirect(`/login?next=${encodeURIComponent(`/order-confirmation${suffix}`)}`);
+  let user: Awaited<ReturnType<typeof AuthService.getCurrentUser>> | null = null;
+  try { user = await AuthService.getCurrentUser(token); } catch { user = null; }
+  if (!user) redirect(`/login?next=${encodeURIComponent(`/order-confirmation${suffix}`)}`);
+
+  let order = null;
   if (orderId) {
     order = await orderRepository.findById(orderId);
   } else if (orderNumber) {
     order = await orderRepository.findByOrderNumber(orderNumber);
   }
 
+  // Never reveal whether someone else's order exists.
+  if (order && order.userId !== user.id) {
+    notFound();
+  }
+
   const business = await settingsRepository.getBusinessSettings();
+  const isPaid = order?.paymentStatus === 'PAID';
+  const isCancelled = (order?.orderStatus || order?.status) === 'CANCELLED';
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-8">
@@ -35,13 +56,31 @@ export default async function OrderConfirmationPage({ searchParams }: OrderConfi
 
         <div className="space-y-1">
           <span className="text-xs font-bold uppercase tracking-wider text-[#B08968]">
-            {order ? 'Payment confirmed' : 'Order details unavailable'}
+            {!order
+              ? 'Order details unavailable'
+              : isCancelled
+              ? 'Order cancelled'
+              : isPaid
+              ? 'Payment confirmed'
+              : 'Payment pending'}
           </span>
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-gray-900">
-            {order ? 'Thank you. Your order has been placed' : 'We could not retrieve this order from the current server session'}
+            {!order
+              ? 'We could not retrieve this order from the current server session'
+              : isCancelled
+              ? 'This order has been cancelled'
+              : isPaid
+              ? 'Thank you. Your order has been placed'
+              : 'We are still waiting for your payment'}
           </h1>
           <p className="text-sm text-gray-600 max-w-lg mx-auto font-light">
-            Your payment has been verified. The order will move through Approved, Shifted, and Delivered stages as it is fulfilled.
+            {!order
+              ? 'Please open your account to view your order history, or contact support with your order reference.'
+              : isCancelled
+              ? 'If a payment was captured for this order, the refund is processed to the original payment method. Please contact support if you need help.'
+              : isPaid
+              ? 'Your payment has been verified. The order will move through Approved, Shifted, and Delivered stages as it is fulfilled.'
+              : 'This order is not confirmed until payment succeeds. If you already paid, please wait a few minutes and refresh — bank confirmations can be delayed.'}
           </p>
         </div>
 
@@ -105,6 +144,12 @@ export default async function OrderConfirmationPage({ searchParams }: OrderConfi
                   <div className="flex justify-between text-emerald-700 font-bold">
                     <span>Discount</span>
                     <span>- ₹{order.discountAmount}</span>
+                  </div>
+                )}
+                {order.couponDiscount > 0 && (
+                  <div className="flex justify-between text-emerald-700 font-bold">
+                    <span>Coupon{order.couponCode ? ` (${order.couponCode})` : ''}</span>
+                    <span>- ₹{order.couponDiscount}</span>
                   </div>
                 )}
                 <div className="flex justify-between">

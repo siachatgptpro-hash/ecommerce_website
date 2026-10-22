@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    authenticateAdmin(req, PermissionKey.MANAGE_COUPONS);
+    await authenticateAdmin(req, PermissionKey.MANAGE_COUPONS);
     const coupons = await CouponRepository.listAll();
     return NextResponse.json({ success: true, data: { coupons } });
   } catch (error) {
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const admin = authenticateAdmin(req, PermissionKey.MANAGE_COUPONS);
+    const admin = await authenticateAdmin(req, PermissionKey.MANAGE_COUPONS);
     const json = await req.json();
     const payload = CouponSchema.parse(json);
 
