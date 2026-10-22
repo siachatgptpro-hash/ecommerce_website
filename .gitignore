@@ -12,3 +12,4 @@ brochure_text.txt
 .vercel
 .env*
 !.env.example
+*.tsbuildinfo
