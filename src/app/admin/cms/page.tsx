@@ -1,0 +1,306 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
+import { Banner } from '@/types';
+import { ImageIcon, Plus, CheckCircle2, XCircle, Trash2, Edit2, AlertCircle, UploadCloud, X } from 'lucide-react';
+
+export default function AdminCmsPage() {
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  // Form State
+  const [title, setTitle] = useState('');
+  const [subtitle, setSubtitle] = useState('');
+  const [ctaText, setCtaText] = useState('Explore Formulations');
+  const [ctaLink, setCtaLink] = useState('/shop');
+  const [imageUrl, setImageUrl] = useState('');
+  const [imageUploading, setImageUploading] = useState(false);
+  const [slot, setSlot] = useState('HERO_PRIMARY');
+  const [isActive, setIsActive] = useState(true);
+  const [sortOrder, setSortOrder] = useState(0);
+
+  const fetchBanners = async () => {
+    try {
+      const res = await fetch('/api/admin/cms/banners');
+      const data = await res.json();
+      if (data.success && data.data) {
+        setBanners(data.data.banners || []);
+      }
+    } catch (err) {
+      console.error('Error fetching banners:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBanners();
+  }, []);
+
+  const openEdit = (banner: Banner) => {
+    setEditingId(banner.id);
+    setTitle(banner.title);
+    setSubtitle(banner.subtitle || '');
+    setImageUrl(banner.imageUrl);
+    setCtaText(banner.ctaText || banner.buttonText || 'Explore');
+    setCtaLink(banner.ctaLink || banner.linkUrl || '/shop');
+    setSlot(banner.slot || 'HERO_PRIMARY');
+    setIsActive(banner.isActive);
+    setSortOrder(banner.sortOrder || 0);
+    setShowModal(true);
+  };
+
+  const handleBannerUpload = async (file?: File) => {
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      setErrorMsg('Banner must be a JPG, PNG, or WEBP image up to 5 MB.');
+      return;
+    }
+    setImageUploading(true); setErrorMsg('');
+    try {
+      const body = new FormData(); body.append('file', file);
+      const response = await fetch('/api/admin/uploads', { method: 'POST', body });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error?.message || 'Banner upload failed.');
+      setImageUrl(result.data.url);
+    } catch (error: any) { setErrorMsg(error.message || 'Banner upload failed.'); }
+    finally { setImageUploading(false); }
+  };
+
+  const handleCreateBanner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim()) return setErrorMsg('Banner title is required.');
+    if (!imageUrl.trim()) return setErrorMsg('Please upload a banner image.');
+    if (imageUploading) return setErrorMsg('Please wait for the banner upload to finish.');
+
+    setSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      const res = await fetch(editingId ? `/api/admin/cms/banners/${editingId}` : '/api/admin/cms/banners', {
+        method: editingId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title.trim(),
+          subtitle: subtitle.trim() || undefined,
+          ctaText: ctaText.trim() || undefined,
+          ctaLink: ctaLink.trim() || '/shop',
+          imageUrl: imageUrl.trim(),
+          slot,
+          isActive,
+          sortOrder: Number(sortOrder),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error?.message || 'Failed to create banner');
+      }
+
+      await fetchBanners();
+      setShowModal(false);
+      setEditingId(null);
+      setTitle('');
+      setSubtitle('');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error saving banner');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this promotional banner?')) return;
+    try {
+      const res = await fetch(`/api/admin/cms/banners/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setBanners(banners.filter((b) => b.id !== id));
+      }
+    } catch (err) {
+      console.error('Delete banner error:', err);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white p-6 rounded-3xl border border-[#F3EFE6] shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-2xl font-bold text-gray-900">
+            CMS & Storefront Banners
+          </h1>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Manage homepage visual merchandising, hero banners, and promotional CTAs.
+          </p>
+        </div>
+
+        <button
+          onClick={() => setShowModal(true)}
+          className="px-5 py-2.5 rounded-xl bg-[#1B4332] text-white font-bold text-xs hover:bg-[#2D6A4F] transition-all flex items-center gap-1.5 shadow-sm"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Add Hero Banner</span>
+        </button>
+      </div>
+
+      {/* Banners Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {banners.map((b) => (
+          <div
+            key={b.id}
+            className="bg-white rounded-3xl border border-[#F3EFE6] overflow-hidden shadow-sm flex flex-col justify-between"
+          >
+            <div className="relative aspect-video w-full bg-[#FAF7F2]">
+              <Image src={b.imageUrl} alt={b.title} fill className="object-cover" />
+              <div className="absolute top-3 left-3 bg-[#1B4332]/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                Slot: {b.slot}
+              </div>
+            </div>
+
+            <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
+              <div>
+                <h3 className="font-serif font-bold text-base text-gray-900">{b.title}</h3>
+                {b.subtitle && (
+                  <p className="text-xs text-gray-600 mt-1 line-clamp-2">{b.subtitle}</p>
+                )}
+                <div className="flex items-center gap-2 mt-2 text-xs text-[#1B4332] font-bold">
+                  <span>CTA: &ldquo;{b.ctaText || 'Shop'}&rdquo; → {b.ctaLink}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                  Active On Homepage
+                </span>
+                <div className="flex items-center gap-1">
+                <button
+                  onClick={() => openEdit(b)}
+                  className="p-1.5 text-gray-400 hover:text-[#1B4332] rounded-lg"
+                  title="Edit banner"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleDelete(b.id)}
+                  className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg"
+                  title="Delete banner"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* CREATE BANNER MODAL */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-[#F3EFE6]">
+            <h3 className="font-serif text-lg font-bold text-gray-900">{editingId ? 'Edit Homepage Banner' : 'Add Homepage Banner'}</h3>
+
+            {errorMsg && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleCreateBanner} className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                  Main Headline *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Classical Rasayana & Awaleha Season"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                  Subtitle Description
+                </label>
+                <textarea
+                  rows={2}
+                  value={subtitle}
+                  onChange={(e) => setSubtitle(e.target.value)}
+                  placeholder="e.g. 100% handcrafted in copper vessels according to Charaka Samhita."
+                  className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Banner Image *</label>
+                <div className="rounded-2xl border-2 border-dashed border-gray-300 p-4 text-center hover:border-[#1B4332]">
+                  {imageUrl ? <div className="relative mb-3"><Image src={imageUrl} alt="Banner preview" width={640} height={260} className="h-32 w-full rounded-xl object-cover" /><button type="button" onClick={() => setImageUrl('')} className="absolute right-2 top-2 rounded-full bg-white p-1 text-red-600" aria-label="Remove banner image"><X className="h-4 w-4" /></button></div> : <UploadCloud className="mx-auto h-8 w-8 text-[#1B4332]" />}
+                  <p className="text-xs text-gray-500">JPG, PNG or WEBP · maximum 5 MB</p>
+                  <label className="mt-2 inline-flex cursor-pointer items-center rounded-lg bg-[#1B4332] px-3 py-2 text-xs font-bold text-white">{imageUploading ? 'Uploading...' : imageUrl ? 'Replace Image' : 'Choose Image'}<input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={imageUploading} onChange={(e) => { if (e.target.files?.[0]) handleBannerUpload(e.target.files[0]); }} /></label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                    Button Label
+                  </label>
+                  <input
+                    type="text"
+                    value={ctaText}
+                    onChange={(e) => setCtaText(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                    Button Link
+                  </label>
+                  <input
+                    type="text"
+                    value={ctaLink}
+                    onChange={(e) => setCtaLink(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Banner Slot</label><select value={slot} onChange={(e) => setSlot(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs"><option value="HERO_PRIMARY">Hero Primary</option><option value="HERO_SECONDARY">Hero Secondary</option><option value="PROMOTION">Promotion</option></select></div>
+                <div><label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Sort Order</label><input type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs" /></div>
+              </div>
+              <label className="flex items-center gap-2 text-xs font-bold text-gray-700"><input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} /> Active on storefront</label>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-5 py-2 rounded-xl bg-[#1B4332] text-white text-xs font-bold hover:bg-[#2D6A4F] disabled:opacity-50"
+                >
+                  {submitting ? 'Saving...' : 'Publish Banner'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
