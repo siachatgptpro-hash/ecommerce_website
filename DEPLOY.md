@@ -25,26 +25,24 @@ This creates the SUPER_ADMIN/ADMIN roles, all permissions, and your login.
 It refuses to promote/reset an existing account.
 
 
-## Fastest path: one-click deploy of the `arena/07899005-ecommerce-website` branch
-Click (you'll log in with your own Vercel/GitHub account — no token sharing):
+## 3. Deploy the fixed branch on Vercel (use Import, not "clone template")
+All fixes currently live on branch `arena/07899005-ecommerce-website` (PR #1).
+`main` does **not** have them yet — so don't deploy `main` until merged.
 
-**[Deploy this branch to Vercel](https://vercel.com/new/clone?repository-url=https://github.com/siachatgptpro-hash/ecommerce_website/tree/arena/07899005-ecommerce-website&env=DATABASE_URL,AUTH_SECRET,Razorpay_KEY_ID,Razorpay_KEY_SECRET,Razorpay_WEBHOOK_SECRET,CRON_SECRET,NEXT_PUBLIC_SITE_URL&project-name=sholkveda&repository-name=ecommerce_website)**
+1. vercel.com → **Add New → Project**
+2. In **Import Git Repository**, pick `siachatgptpro-hash/ecommerce_website`
+   (if it's missing from the list, use *Adjust GitHub App Permissions* to grant Vercel access, then refresh)
+3. Configure: Framework = Next.js (auto-detected), then find **Production Branch**
+   and set it to **`arena/07899005-ecommerce-website`** so this branch goes live
+   (alternative: merge PR #1 first and keep production on `main`)
+4. Add the environment variables from step 4 below, then **Deploy**
 
-- Vercel imports the repo **at that branch** and prompts you for the env values from step 4 below.
-- It first creates a **Preview** deployment of the branch. To make it live, pick one:
-  - **Recommended:** merge PR #1 into `main` (production deploys from `main`), or
-  - Vercel → Deployments → ⋯ on the branch deployment → **Promote to Production**, or
-  - Vercel → Settings → Git → **Production Branch** = `arena/07899005-ecommerce-website`.
-- Do steps 1–2 (database SQL + admin bootstrap) before or right after — the
-  store builds without them but needs `DATABASE_URL` at runtime.
-- Cron note: the order-expiry cron runs **daily** (`0 0 * * *`) because
-  Vercel Hobby (free) rejects sub-daily schedules. On Pro, change it to
-  `*/30 * * * *` in `vercel.json`.
-
-## 3. Import the project in Vercel
-vercel.com → **Add New → Project** → import this GitHub repository.
-`vercel.json` is already configured (framework, security headers/CSP,
-30-min order-expiry cron). Merge the pull request so `main` is production.
+Notes:
+- Do NOT use `vercel.com/new/clone` links — that flow copies the repo into a
+  new public one and breaks push-to-deploy for this repository.
+- Every later push to the branch auto-deploys; other branches get Preview URLs.
+- Cron: order-expiry runs **daily** (`0 0 * * *`) because Vercel Hobby (free)
+  rejects sub-daily schedules. On Pro, change it to `*/30 * * * *` in `vercel.json`.
 
 ## 4. Environment variables (Vercel → Project → Settings → Environment Variables)
 | Variable | Required | Notes |
