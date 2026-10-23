@@ -8,6 +8,22 @@ import { toPublicProduct } from '@/lib/public-dto';
 import { ArrowDown, BookOpen, ChevronRight, Image as ImageIcon, IndianRupee, Leaf, SlidersHorizontal } from 'lucide-react';
 import { ContactGlowIcon } from '@/components/contact/ContactGlowIcon';
 import { FallingLeaves } from '@/components/botanical/FallingLeaves';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Shop All Products | Shlokveda',
+  description:
+    'Browse the full Shlokveda catalogue — Ayurvedic products with pack sizes, printed MRPs and package photos transcribed from the supplied brochure.',
+  alternates: { canonical: '/shop' },
+  openGraph: {
+    title: 'Shop All Products | Shlokveda',
+    description:
+      'Browse the full Shlokveda catalogue — Ayurvedic products with pack sizes, printed MRPs and package photos transcribed from the supplied brochure.',
+    url: '/shop',
+    siteName: 'Shlokveda',
+    type: 'website',
+  },
+};
 
 const SORT_OPTIONS = [
   { value: 'featured', label: 'Featured' },
@@ -288,7 +304,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
         </aside>
 
         {/* PRODUCTS GRID & PAGINATION */}
-        <main id="catalogue-results" className="lg:col-span-3 scroll-mt-36 space-y-8">
+        <main id="catalogue-results" className="lg:col-span-3 scroll-mt-6 space-y-8">
           {productsData.products.length === 0 ? (
             <div className="py-20 text-center bg-white/80 rounded-3xl border border-[#EDE4CF] space-y-4 motion-safe:animate-[fade-in_.35s_ease-out_both]">
               <div className="w-16 h-16 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center mx-auto">

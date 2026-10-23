@@ -3,6 +3,22 @@ import { SettingsRepository } from '@/repositories/settings.repository';
 import { ContactHero } from '@/components/contact/ContactHero';
 import { ContactCard } from '@/components/contact/ContactCard';
 import { CatalogueCta } from '@/components/contact/CatalogueCta';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Contact Us | Shlokveda',
+  description:
+    'Contact the Shlokveda store — store address and phone number for product and order enquiries.',
+  alternates: { canonical: '/contact' },
+  openGraph: {
+    title: 'Contact Us | Shlokveda',
+    description:
+      'Contact the Shlokveda store — store address and phone number for product and order enquiries.',
+    url: '/contact',
+    siteName: 'Shlokveda',
+    type: 'website',
+  },
+};
 
 export const dynamic = 'force-dynamic';
 

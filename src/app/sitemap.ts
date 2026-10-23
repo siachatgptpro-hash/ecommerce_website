@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { ProductRepository } from '@/repositories/product.repository';
+import { getPolicyLinks } from '@/lib/policies';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,11 +15,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/shop`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
     { url: `${siteUrl}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${siteUrl}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${siteUrl}/policies/shipping-policy`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${siteUrl}/policies/refund-policy`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${siteUrl}/policies/privacy-policy`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${siteUrl}/policies/terms-and-conditions`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
   ];
+
+  // Every Trust & Policies page (built-ins + admin-managed CMS pages such
+  // as Disclaimer and FAQ) from the same source the footer renders.
+  const policyLinks = await getPolicyLinks();
+  const policyRoutes: MetadataRoute.Sitemap = policyLinks.map((policy) => ({
+    url: `${siteUrl}/policies/${policy.slug}`,
+    lastModified: now,
+    changeFrequency: 'monthly',
+    priority: 0.5,
+  }));
 
   const categories = await ProductRepository.listCategories(true);
   const categoryRoutes: MetadataRoute.Sitemap = categories.map((cat) => ({
@@ -38,5 +45,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Note: there is no public /blog route, so blog posts are deliberately not
   // advertised here (they previously pointed crawlers at 404 pages).
-  return [...staticRoutes, ...categoryRoutes, ...productRoutes];
+  return [...staticRoutes, ...policyRoutes, ...categoryRoutes, ...productRoutes];
 }

@@ -1,15 +1,17 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { getPublicSettings } from '@/lib/client-data';
+
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/context/cart-context';
 import { X, Trash2, Plus, Minus, ArrowRight, ShieldCheck, Tag, ShoppingCart, Truck, Leaf } from 'lucide-react';
 
 const DRAWER_LEAVES = [
-  { left: '12%', size: 15, duration: '13s', delay: '-3s', flutter: '3.4s', drift: '2rem', opacity: 0.55, color: '#2D6A4F' },
+  { left: '12%', size: 15, duration: '16s', delay: '-3s', flutter: '3.4s', drift: '2rem', opacity: 0.55, color: '#2D6A4F' },
   { left: '38%', size: 12, duration: '16s', delay: '-10s', flutter: '4.1s', drift: '-1.75rem', opacity: 0.42, color: '#81975A' },
-  { left: '63%', size: 17, duration: '12s', delay: '-6s', flutter: '3.1s', drift: '1.5rem', opacity: 0.5, color: '#4C8055' },
+  { left: '63%', size: 17, duration: '15s', delay: '-6s', flutter: '3.1s', drift: '1.5rem', opacity: 0.5, color: '#4C8055' },
   { left: '86%', size: 13, duration: '15s', delay: '-12s', flutter: '3.8s', drift: '-2rem', opacity: 0.48, color: '#97A05A' },
 ] as const;
 
@@ -33,14 +35,35 @@ export function MiniCart() {
   const [couponFeedback, setCouponFeedback] = useState<{ msg: string; isError: boolean } | null>(null);
   const [isApplying, setIsApplying] = useState(false);
 
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const closeCartRef = useRef(closeCart);
+  closeCartRef.current = closeCart;
+
+  // While the drawer is open: lock background scroll (the shopper's exact
+  // scroll position is preserved), close on Escape, and move focus into
+  // the dialog — restoring it to the opener when the drawer closes.
   useEffect(() => {
-    fetch('/api/settings')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.data?.gstin) setGstin(data.data.gstin);
-        if (data.success && data.data?.logoUrl) setLogoUrl(data.data.logoUrl);
-      })
-      .catch(() => {});
+    if (!isCartOpen) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    closeButtonRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeCartRef.current();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.documentElement.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKeyDown);
+      previouslyFocused?.focus?.();
+    };
+  }, [isCartOpen]);
+
+  useEffect(() => {
+    getPublicSettings().then((settings) => {
+      if (settings?.gstin) setGstin(settings.gstin);
+      if (settings?.logoUrl) setLogoUrl(settings.logoUrl);
+    });
   }, []);
 
   if (!isCartOpen) return null;
@@ -68,7 +91,7 @@ export function MiniCart() {
   const finalTotal = calculation?.finalPayableAmount || 0;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <div className="fixed inset-0 z-50 overflow-hidden" role="dialog" aria-modal="true" aria-label="Shopping basket">
       {/* Backdrop */}
       <div
         onClick={closeCart}
@@ -100,6 +123,7 @@ export function MiniCart() {
               </span>
             </div>
             <button
+              ref={closeButtonRef}
               onClick={closeCart}
               className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#C5A880]/80 bg-white/90 text-[#7C4A21] shadow-[0_0_14px_rgba(197,168,128,0.4)] transition-all duration-[var(--dur-ui)] ease-luxe hover:bg-white hover:shadow-[0_0_20px_rgba(197,168,128,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A880] motion-safe:hover:scale-105"
               aria-label="Close cart"

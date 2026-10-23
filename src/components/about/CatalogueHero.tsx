@@ -1,5 +1,6 @@
 import { BookOpen, Boxes, Leaf, Package, ReceiptText } from 'lucide-react';
 import { GlowIcon } from './GlowIcon';
+import { FallingLeaves } from '@/components/botanical/FallingLeaves';
 
 /**
  * Cinematic catalogue hero: botanical photo edges under a warm ivory wash,
@@ -37,6 +38,9 @@ export function CatalogueHero({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_0%,rgba(217,190,140,0.22),transparent_70%)] motion-safe:animate-[banner-drift_18s_ease-in-out_infinite_alternate]"
       />
+
+      {/* Sparse falling leaves drift over the washed backdrop, under the copy */}
+      <FallingLeaves preset="catalogue" contained />
 
       <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-14 sm:px-6 sm:pb-20 sm:pt-20 lg:px-8">
         <header className="mx-auto max-w-3xl text-center">

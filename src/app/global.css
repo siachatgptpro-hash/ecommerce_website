@@ -16,6 +16,16 @@ body {
 
 html {
   scroll-behavior: smooth;
+  /* Sticky-header offset for every in-page anchor: announcement bar +
+     main header row on mobile; the desktop nav row joins from md up.
+     Per-section scroll-mt utilities now only add breathing room. */
+  scroll-padding-top: 8rem;
+}
+
+@media (min-width: 768px) {
+  html {
+    scroll-padding-top: 11rem;
+  }
 }
 
 body {
@@ -47,19 +57,6 @@ textarea {
 
 .safe-area-bottom {
   padding-bottom: max(0.375rem, env(safe-area-inset-bottom));
-}
-
-@keyframes announcement-marquee {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
-}
-
-.announcement-marquee {
-  animation: announcement-marquee 22s linear infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .announcement-marquee { animation: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -226,6 +223,33 @@ textarea {
   }
 }
 
+/* Standardised icon-button micro-interaction for header/drawer chrome:
+   forest-green shift + restrained gold glow on hover, 1.06 lift and a
+   0.97 press. Transform is gated to hover-capable, motion-safe devices;
+   everyone else keeps the colour/glow cue without movement. */
+@layer components {
+  .icon-btn {
+    border-radius: 9999px;
+    transition:
+      color var(--dur-ui) var(--ease-luxe),
+      background-color var(--dur-ui) var(--ease-luxe),
+      box-shadow var(--dur-ui) var(--ease-luxe),
+      transform var(--dur-ui) var(--ease-luxe);
+  }
+  .icon-btn:hover {
+    color: #1b4332;
+    box-shadow: 0 0 16px rgba(197, 168, 128, 0.45);
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .icon-btn:hover {
+      transform: scale(1.06);
+    }
+    .icon-btn:active {
+      transform: scale(0.97);
+    }
+  }
+}
+
 /* Cart drawer entrance: one smooth slide from the right edge. */
 @keyframes cart-slide-in {
   from {
@@ -233,5 +257,25 @@ textarea {
   }
   to {
     transform: translateX(0);
+  }
+}
+
+/* Refined accordion expansion (progressive enhancement): animates the
+   native <details> content height on engines that support
+   ::details-content; other browsers keep the instant native toggle.
+   The global reduced-motion block above stills this on request. */
+@supports selector(::details-content) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+  details::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition:
+      block-size 0.38s var(--ease-luxe),
+      content-visibility 0.38s allow-discrete;
+  }
+  details[open]::details-content {
+    block-size: auto;
   }
 }

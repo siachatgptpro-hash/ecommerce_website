@@ -1,5 +1,7 @@
 'use client';
 
+import { getPublicSettings } from '@/lib/client-data';
+
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -29,12 +31,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [storeName, setStoreName] = useState('SHLOKVEDA');
 
   useEffect(() => {
-    fetch('/api/settings').then((res) => res.json()).then((data) => {
-      if (data.success && data.data) {
-        if (data.data.logoUrl) setLogoUrl(data.data.logoUrl);
-        if (data.data.storeName) setStoreName(data.data.storeName.toUpperCase());
-      }
-    }).catch(() => {});
+    getPublicSettings().then((settings) => {
+      if (settings?.logoUrl) setLogoUrl(settings.logoUrl);
+      if (settings?.storeName) setStoreName(settings.storeName.toUpperCase());
+    });
   }, []);
 
   const navItems = [

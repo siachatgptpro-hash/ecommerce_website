@@ -15,6 +15,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import type { HeroSlide } from '@/lib/hero-slides';
+import { FallingLeaves } from '@/components/botanical/FallingLeaves';
 
 const AUTOPLAY_MS = 5000;
 const SWIPE_THRESHOLD_PX = 40;
@@ -183,6 +184,11 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
               className="absolute inset-0 bg-gradient-to-r from-[#EDF3E0] via-[#EDF3E0]/85 to-transparent sm:via-[#EDF3E0]/70 lg:via-[#EDF3E0]/45"
               aria-hidden="true"
             />
+
+            {/* Sparse falling leaves over the photograph, under the copy.
+                Only the active slide carries the layer (negative delays
+                keep leaves mid-flight across slide changes). */}
+            {isActive && <FallingLeaves preset="catalogue" contained />}
 
             {/* Slide copy — real HTML text, never baked into the image */}
             <div className="relative z-10 mx-auto flex h-full max-w-7xl items-center px-4 pb-24 pt-6 sm:px-6 lg:px-8">

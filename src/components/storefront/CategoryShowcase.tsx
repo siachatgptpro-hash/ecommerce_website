@@ -54,7 +54,7 @@ export function CategoryShowcase({ categories }: { categories: CategoryCardView[
     <section
       id="categories"
       aria-labelledby="shop-by-category-heading"
-      className="relative scroll-mt-28 overflow-hidden bg-[linear-gradient(180deg,#FBF7EC_0%,#F5EEDF_55%,#FBF7EC_100%)]"
+      className="relative scroll-mt-6 overflow-hidden bg-[linear-gradient(180deg,#FBF7EC_0%,#F5EEDF_55%,#FBF7EC_100%)]"
     >
       {/* Botanical photographic backdrop (decorative only) */}
       <div

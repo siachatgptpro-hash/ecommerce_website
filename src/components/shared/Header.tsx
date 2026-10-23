@@ -1,5 +1,7 @@
 'use client';
 
+import { getCatalogueCategories, getPublicSettings } from '@/lib/client-data';
+
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -42,25 +44,17 @@ export function Header() {
   const [logoUrl, setLogoUrl] = useState('/logo.png');
 
   useEffect(() => {
-    fetch('/api/settings')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.data) {
-          if (data.data.announcementText) setAnnouncementText(data.data.announcementText);
-          if (data.data.storeName) setStoreName(data.data.storeName.toUpperCase());
-          if (data.data.logoUrl) setLogoUrl(data.data.logoUrl);
-        }
-      })
-      .catch(() => {});
+    // Shared one-per-session fetches (Footer/MiniCart reuse the same ones).
+    getPublicSettings().then((settings) => {
+      if (!settings) return;
+      if (settings.announcementText) setAnnouncementText(settings.announcementText);
+      if (settings.storeName) setStoreName(settings.storeName.toUpperCase());
+      if (settings.logoUrl) setLogoUrl(settings.logoUrl);
+    });
 
-    fetch('/api/catalog/categories')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.data) {
-          setCategories(data.data);
-        }
-      })
-      .catch(() => {});
+    getCatalogueCategories().then((list) => {
+      if (list.length > 0) setCategories(list as any);
+    });
   }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -126,7 +120,7 @@ export function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-gray-700 hover:text-[#1B4332]"
+            className="icon-btn md:hidden p-2 text-gray-700"
             aria-label="Toggle menu"
             aria-expanded={isMobileMenuOpen}
           >
@@ -157,7 +151,7 @@ export function Header() {
           <div className="flex items-center gap-1 md:hidden">
             <button
               onClick={openCart}
-              className="relative p-2 text-gray-700 hover:text-[#1B4332]"
+              className="icon-btn relative p-2 text-gray-700"
               aria-label="View shopping bag"
             >
               <ShoppingBag className="w-5 h-5" />
@@ -167,7 +161,7 @@ export function Header() {
                 </span>
               )}
             </button>
-            <Link href={user ? "/account" : "/login"} className="p-2 text-gray-700 hover:text-[#1B4332]" aria-label={user ? "My account" : "Login"}>
+            <Link href={user ? "/account" : "/login"} className="icon-btn p-2 text-gray-700" aria-label={user ? "My account" : "Login"}>
               <UserIcon className="w-5 h-5" />
             </Link>
           </div>
@@ -182,7 +176,7 @@ export function Header() {
             {/* Wishlist */}
             <Link
               href="/wishlist"
-              className="flex flex-col items-center gap-0.5 text-gray-700 transition-colors hover:text-[#1B4332]"
+              className="icon-btn flex flex-col items-center gap-0.5 px-1.5 py-1 text-gray-700"
               aria-label="Wishlist"
             >
               <span className="relative">
@@ -199,7 +193,7 @@ export function Header() {
             {/* Cart Trigger Button */}
             <button
               onClick={openCart}
-              className="flex flex-col items-center gap-0.5 text-gray-700 transition-colors hover:text-[#1B4332]"
+              className="icon-btn flex flex-col items-center gap-0.5 px-1.5 py-1 text-gray-700"
               aria-label="View shopping bag"
             >
               <span className="relative">
@@ -219,7 +213,7 @@ export function Header() {
                 <div>
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex flex-col items-center gap-0.5 text-gray-700 transition-colors hover:text-[#1B4332]"
+                    className="icon-btn flex flex-col items-center gap-0.5 px-1.5 py-1 text-gray-700"
                     aria-expanded={isUserMenuOpen}
                     aria-haspopup="menu"
                   >
@@ -274,7 +268,7 @@ export function Header() {
               ) : (
                 <Link
                   href="/login"
-                  className="flex flex-col items-center gap-0.5 text-gray-700 transition-colors hover:text-[#1B4332]"
+                  className="icon-btn flex flex-col items-center gap-0.5 px-1.5 py-1 text-gray-700"
                 >
                   <UserIcon className="h-5 w-5" aria-hidden="true" />
                   <span className="text-[11px] font-medium">Login</span>

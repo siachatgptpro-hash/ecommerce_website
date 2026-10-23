@@ -293,7 +293,7 @@ export default function AccountPage() {
         </div>
 
         {/* RECENT ORDERS LIST */}
-        <section id="order-history" className="scroll-mt-32 space-y-4">
+        <section id="order-history" className="scroll-mt-6 space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="font-serif text-2xl font-bold leading-[1.15] text-[#0F281E] sm:text-[28px] sm:leading-[1.15]">

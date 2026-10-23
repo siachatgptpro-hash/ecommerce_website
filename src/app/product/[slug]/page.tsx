@@ -26,11 +26,14 @@ export async function generateMetadata({ params }: ProductPageProps) {
   const product = await getProduct(params.slug);
   if (!product) return { title: 'Product Not Found | Shlokveda' };
 
-  const desc = (product.shortDescription || product.fullDescription || '').slice(0, 160);
+  const desc =
+    (product.shortDescription || product.fullDescription || '').slice(0, 160) ||
+    `${product.name} — pack sizes and printed MRP transcribed from the supplied brochure. Available on Shlokveda.`;
 
   return {
     title: `${product.name} | Shlokveda Product Catalogue`,
     description: desc,
+    alternates: { canonical: `/product/${product.slug}` },
     openGraph: {
       title: product.name,
       description: desc,

@@ -31,7 +31,6 @@ import {
   RotateCcw,
   BookOpen,
 } from 'lucide-react';
-import { FallingLeaves } from '@/components/botanical/FallingLeaves';
 
 declare global {
   interface Window {
@@ -156,6 +155,7 @@ export default function CheckoutPage() {
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return; // duplicate-submission guard (double-click / Enter)
     setErrorMsg('');
 
     if (!validateCheckout()) {
@@ -277,14 +277,13 @@ export default function CheckoutPage() {
       />
       <div className="relative overflow-x-clip">
         {/* Botanical frame (decorative): warm sunlight and masked corner
-            foliage behind the z-10 checkout content; sparse leaves drift
-            through the viewport behind every control. */}
+            foliage behind the z-10 checkout content. No falling leaves on
+            checkout — transactional pages stay clear and focused. */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_36%_at_50%_0%,rgba(217,190,140,0.22),transparent_70%)]" />
         <div aria-hidden="true" className="pointer-events-none absolute -left-10 -top-10 h-64 w-64 origin-top-left bg-[url('/banners/highlights-botanical-bg.webp')] bg-[size:175%_auto] bg-[position:0%_0%] bg-no-repeat opacity-70 [mask-image:radial-gradient(ellipse_88%_88%_at_8%_8%,black_42%,transparent_74%)] motion-safe:animate-[leaf-sway_9s_ease-in-out_infinite_alternate] sm:h-80 sm:w-80" />
         <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-64 w-64 origin-top-right bg-[url('/banners/highlights-botanical-bg.webp')] bg-[size:175%_auto] bg-[position:100%_0%] bg-no-repeat opacity-70 [mask-image:radial-gradient(ellipse_88%_88%_at_92%_8%,black_42%,transparent_74%)] motion-safe:animate-[leaf-sway_10s_ease-in-out_infinite_alternate] sm:h-80 sm:w-80" style={{ animationDelay: '0.5s' }} />
         <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 -left-10 h-64 w-64 origin-bottom-left bg-[url('/banners/highlights-botanical-bg.webp')] bg-[size:175%_auto] bg-[position:0%_100%] bg-no-repeat opacity-60 [mask-image:radial-gradient(ellipse_88%_88%_at_8%_92%,black_42%,transparent_74%)] motion-safe:animate-[leaf-sway_9.5s_ease-in-out_infinite_alternate] sm:h-80 sm:w-80" style={{ animationDelay: '1s' }} />
         <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 -right-10 h-64 w-64 origin-bottom-right bg-[url('/banners/highlights-botanical-bg.webp')] bg-[size:175%_auto] bg-[position:100%_100%] bg-no-repeat opacity-60 [mask-image:radial-gradient(ellipse_88%_88%_at_92%_92%,black_42%,transparent_74%)] motion-safe:animate-[leaf-sway_10.5s_ease-in-out_infinite_alternate] sm:h-80 sm:w-80" style={{ animationDelay: '0.3s' }} />
-        <FallingLeaves preset="catalogue" />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
           {/* Breadcrumb */}

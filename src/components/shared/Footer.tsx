@@ -1,5 +1,7 @@
 'use client';
 
+import { getCatalogueCategories, getFooterPolicyLinks, getPublicSettings } from '@/lib/client-data';
+
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -70,41 +72,30 @@ export function Footer() {
   const [categories, setCategories] = useState<FooterCategory[]>(FALLBACK_CATEGORIES);
 
   useEffect(() => {
-    fetch('/api/settings')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.data) setSettings((current) => ({ ...current, ...data.data }));
-      })
-      .catch(() => {});
+    getPublicSettings().then((settings) => {
+      if (settings) setSettings((current) => ({ ...current, ...(settings as Partial<typeof current>) }));
+    });
   }, []);
 
   useEffect(() => {
-    fetch('/api/catalog/categories')
-      .then((res) => res.json())
-      .then((data) => {
-        const list = Array.isArray(data?.data) ? data.data : [];
-        const active = list
-          .filter((c: any) => c?.slug && c?.name && c.isActive !== false)
-          .map((c: any) => ({ slug: String(c.slug), name: String(c.name) }))
-          .slice(0, 8);
-        if (active.length > 0) setCategories(active);
-      })
-      .catch(() => {});
+    getCatalogueCategories().then((list) => {
+      const active = (list as any[])
+        .filter((c: any) => c?.slug && c?.name && c.isActive !== false)
+        .map((c: any) => ({ slug: String(c.slug), name: String(c.name) }))
+        .slice(0, 8);
+      if (active.length > 0) setCategories(active);
+    });
   }, []);
 
   const [policyLinks, setPolicyLinks] = useState<PolicyLinkItem[]>(FALLBACK_POLICY_LINKS);
 
   useEffect(() => {
-    fetch('/api/policies')
-      .then((res) => res.json())
-      .then((data) => {
-        const list = Array.isArray(data?.data) ? data.data : [];
-        const valid = list
-          .filter((policy: any) => policy?.slug && policy?.title)
-          .map((policy: any) => ({ slug: String(policy.slug), title: String(policy.title) }));
-        if (valid.length > 0) setPolicyLinks(valid);
-      })
-      .catch(() => {});
+    getFooterPolicyLinks().then((list) => {
+      const valid = (list as any[])
+        .filter((policy: any) => policy?.slug && policy?.title)
+        .map((policy: any) => ({ slug: String(policy.slug), title: String(policy.title) }));
+      if (valid.length > 0) setPolicyLinks(valid);
+    });
   }, []);
 
   const socialLinks = [
@@ -185,7 +176,7 @@ export function Footer() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={`${settings.storeName} on ${label}`}
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-gray-300 transition-colors hover:border-[#C5A880] hover:text-[#C5A880] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A880]"
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-gray-300 transition-all duration-[var(--dur-ui)] ease-luxe hover:border-[#C5A880] hover:text-[#C5A880] hover:shadow-[0_0_16px_rgba(197,168,128,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A880] motion-safe:hover:scale-110"
                     >
                       <Icon className="h-4 w-4" aria-hidden="true" />
                     </a>

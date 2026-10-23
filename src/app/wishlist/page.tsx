@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Bell, Heart, Leaf, ShoppingCart } from 'lucide-react';
 import { productRepository } from '@/repositories/product.repository';
 import { GlowIcon } from '@/components/about/GlowIcon';
@@ -6,6 +7,13 @@ import { WishlistBotanicalBackdrop } from '@/components/wishlist/WishlistBotanic
 import { WishlistClient } from './WishlistClient';
 
 export const dynamic = 'force-dynamic';
+
+// Wishlist contents live in the visitor's browser — personal page, noindex.
+export const metadata: Metadata = {
+  title: 'My Wishlist | Shlokveda',
+  description: 'Products you have saved in this browser on Shlokveda.',
+  robots: { index: false, follow: true },
+};
 
 const BENEFITS = [
   { icon: Leaf, label: 'Keep your favourites', sub: 'Save products you love' },
