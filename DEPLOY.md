@@ -1,4 +1,4 @@
-# Deploying SHOLKVEDA to Vercel + Neon
+# Deploying SHLOKVEDA to Vercel + Neon
 
 Production checklist. ~10 minutes. The app refuses to run in production
 without `DATABASE_URL` (by design), and refuses to sign/verify auth tokens
@@ -11,9 +11,13 @@ without `AUTH_SECRET`.
 - Never commit real values. `.env*` is gitignored; `.env.example` is the template.
 
 ## 1. Prepare the Neon database (one time)
-In the Neon SQL Editor (or `psql "$DATABASE_URL"` locally):
-- **Fresh database:** run the whole of `prisma/neon-setup.sql`
-  (creates all tables incl. `Shipment.trackingUrl`, seeds the catalogue).
+Pick ONE path (never both on the same database):
+- **Fresh database (easiest — one command):**
+  `DATABASE_URL='postgresql://…' npm run db:setup`
+  It runs `prisma/neon-setup.sql` for you (all tables + catalogue seed)
+  and refuses to run twice on the same database.
+  Manual equivalent: paste the whole of `prisma/neon-setup.sql` into the
+  Neon SQL Editor and Run.
 - **Existing database (created by an older deploy):** run **every** file in
   `prisma/migrations/` in filename (date) order. Each is written to be safe
   to re-run (`IF NOT EXISTS` / `ON CONFLICT DO NOTHING` / `DROP ... IF
@@ -43,16 +47,15 @@ This creates the SUPER_ADMIN/ADMIN roles, all permissions, and your login.
 It refuses to promote/reset an existing account.
 
 
-## 3. Deploy the fixed branch on Vercel (use Import, not "clone template")
-All fixes currently live on branch `arena/07899005-ecommerce-website` (PR #1).
-`main` does **not** have them yet — so don't deploy `main` until merged.
+## 3. Deploy on Vercel (use Import, not "clone template")
+All fixes are merged into `main` (PR #1). Deploy `main` — it is Vercel's
+default production branch, so no branch setting is needed.
 
 1. vercel.com → **Add New → Project**
 2. In **Import Git Repository**, pick `siachatgptpro-hash/ecommerce_website`
    (if it's missing from the list, use *Adjust GitHub App Permissions* to grant Vercel access, then refresh)
-3. Configure: Framework = Next.js (auto-detected), then find **Production Branch**
-   and set it to **`arena/07899005-ecommerce-website`** so this branch goes live
-   (alternative: merge PR #1 first and keep production on `main`)
+3. Configure: Framework = Next.js (auto-detected); Production Branch stays
+   on `main` (default)
 4. Add the environment variables from step 4 below, then **Deploy**
 
 Notes:
@@ -86,7 +89,7 @@ Then **Deploy**.
 ## 5. Razorpay webhook (after first deploy)
 Razorpay Dashboard → Settings → Webhooks → Add:
 - URL: `https://<your-domain>/api/webhooks/razorpay` (lowercase path)
-- Secret: same value as `Razorpay_WEBHOOK_SECRET`
+- Secret: same value as `RAZORPAY_WEBHOOK_SECRET`
 - Events: `payment.captured`, `payment.failed`
 
 ## 6. Post-deploy checks

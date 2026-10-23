@@ -11,6 +11,7 @@
     "prisma:push": "prisma db push",
     "prisma:seed": "tsx prisma/seed.ts",
     "admin:bootstrap": "tsx scripts/bootstrap-admin.ts",
+    "db:setup": "node scripts/setup-db.mjs",
     "test:backend": "tsx test-backend.ts",
     "test:qa": "tsx test-production-qa.ts",
     "test:security": "tsx test-security.ts"
