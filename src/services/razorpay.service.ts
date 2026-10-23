@@ -1,5 +1,5 @@
 // ==============================================================================
-// RAZORPAY PAYMENT GATEWAY SERVICE — SHOLKVEDA
+// RAZORPAY PAYMENT GATEWAY SERVICE — SHLOKVEDA
 // Production Razorpay Engine with Cryptographic Verification & Idempotency
 // ==============================================================================
 
@@ -53,7 +53,7 @@ export class RazorpayService {
         currency: 'INR',
         receipt: receiptOrderNumber,
         notes: {
-          business: 'SHOLKVEDA',
+          business: 'SHLOKVEDA',
           origin: 'Hathras, U.P.',
           ...notes,
         },
@@ -125,7 +125,7 @@ export class RazorpayService {
       const refund = await client.payments.refund(razorpayPaymentId, {
         amount: amountInPaise,
         notes: {
-          refunded_by: 'SHOLKVEDA Admin',
+          refunded_by: 'SHLOKVEDA Admin',
           ...notes,
         },
       });

@@ -1,5 +1,5 @@
 // ==============================================================================
-// DOMAIN TYPES & ENUMS — SHOLKVEDA AYURVEDIC E-COMMERCE
+// DOMAIN TYPES & ENUMS — SHLOKVEDA AYURVEDIC E-COMMERCE
 // ==============================================================================
 
 export enum SystemRole {

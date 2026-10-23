@@ -1,5 +1,5 @@
 // ==============================================================================
-// ENTERPRISE DATA ACCESS LAYER & PERSISTENCE ENGINE — SHOLKVEDA
+// ENTERPRISE DATA ACCESS LAYER & PERSISTENCE ENGINE — SHLOKVEDA
 // Portable Relational Data Store (PostgreSQL / MySQL / In-Memory Seeded Engine)
 // ==============================================================================
 
@@ -88,7 +88,7 @@ class DatabaseStore {
     // (STORE_NAME, BASE_SHIPPING_FEE, ENABLE_COD, …) — the previous
     // BUSINESS_*/DEFAULT_* names were never read anywhere.
     const settingsList: Array<{ key: string; value: string; isPublic: boolean; description: string }> = [
-      { key: 'STORE_NAME', value: 'Sholkveda', isPublic: true, description: 'Official legal business name' },
+      { key: 'STORE_NAME', value: 'Shlokveda', isPublic: true, description: 'Official legal business name' },
       { key: 'ADDRESS_LINE1', value: 'B.H Oil Meal Road', isPublic: true, description: 'Premises address' },
       { key: 'ADDRESS_LINE2', value: 'Next to Bank of Maharashtra, Dobra Bal Colony', isPublic: true, description: 'Landmark / Area' },
       { key: 'CITY', value: 'Hathras', isPublic: true, description: 'City' },
@@ -126,7 +126,7 @@ class DatabaseStore {
         id: adminId,
         email: adminEmail,
         passwordHash: adminHash,
-        fullName: 'Sholkveda Administrator',
+        fullName: 'Shlokveda Administrator',
         isActive: true,
         isVerified: true,
         createdAt: new Date().toISOString(),
@@ -145,7 +145,7 @@ class DatabaseStore {
         ...cat,
         isActive: true,
         imageUrl: categoryImage,
-        metaTitle: `${cat.name} | Sholkveda Product Catalogue`,
+        metaTitle: `${cat.name} | Shlokveda Product Catalogue`,
         metaDescription: cat.description,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -175,7 +175,7 @@ class DatabaseStore {
         isBestseller: p.isBestseller,
         isNewArrival: p.isNewArrival,
         isActive: true,
-        metaTitle: `${p.name} | Buy Authentic Ayurveda | SHOLKVEDA`,
+        metaTitle: `${p.name} | Buy Authentic Ayurveda | SHLOKVEDA`,
         metaDescription: p.shortDescription,
         metaKeywords: `ayurvedic medicine, hathras ayurveda, ${p.name}, classical remedies, natural herbs`,
         createdAt: new Date().toISOString(),
@@ -221,7 +221,7 @@ class DatabaseStore {
           id: img.id,
           productId: p.id,
           imageUrl: img.url,
-          altText: `${p.name} - Sholkveda`,
+          altText: `${p.name} - Shlokveda`,
           sortOrder: img.sortOrder,
           isPrimary: img.isPrimary,
           createdAt: new Date().toISOString(),

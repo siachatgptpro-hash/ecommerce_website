@@ -8,7 +8,7 @@ const checks: Array<{ label: string; ok: boolean }> = [];
 const record = (label: string, ok: boolean) => checks.push({ label, ok });
 
 async function runPreviewQA() {
-  console.log('\nSholkveda storefront preview QA');
+  console.log('\nShlokveda storefront preview QA');
 
   record('95 brochure price-list entries, 84 products and 101 pack variants', PDF_CATALOG_ENTRY_COUNT === 95 && BROCHURE_PRODUCTS.length === 84 && BROCHURE_PRODUCTS.reduce((sum, product) => sum + product.variants.length, 0) === 101);
   record('brochure product image references resolve to local assets', BROCHURE_PRODUCTS.every((product) => product.images.length > 0 && product.images.every((image) => fs.existsSync(`public${image.url}`))));

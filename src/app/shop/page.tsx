@@ -90,7 +90,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="font-serif text-3xl sm:text-4xl font-bold text-gray-900">
-              Sholkveda Product Catalogue
+              Shlokveda Product Catalogue
             </h1>
             <p className="text-xs sm:text-sm text-gray-600 mt-1">
               Showing {productsData.products.length} of {productsData.total} brochure-listed products

@@ -1,5 +1,5 @@
 // ==============================================================================
-// AUTHENTICATION & RBAC SERVICE — SHOLKVEDA
+// AUTHENTICATION & RBAC SERVICE — SHLOKVEDA
 // ==============================================================================
 
 import { UserRepository } from '@/repositories/user.repository';

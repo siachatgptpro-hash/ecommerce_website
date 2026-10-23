@@ -1,5 +1,5 @@
 // ==============================================================================
-// INVENTORY & LEDGER REPOSITORY — SHOLKVEDA
+// INVENTORY & LEDGER REPOSITORY — SHLOKVEDA
 // ==============================================================================
 
 import { db } from '@/lib/db';

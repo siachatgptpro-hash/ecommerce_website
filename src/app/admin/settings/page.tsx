@@ -11,7 +11,7 @@ export default function AdminSettingsPage() {
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Form State
-  const [storeName, setStoreName] = useState('Sholkveda');
+  const [storeName, setStoreName] = useState('Shlokveda');
   const [gstin, setGstin] = useState('09ANCPV6879P1ZP');
   const [phone, setPhone] = useState('7017840020');
   const [email, setEmail] = useState('');

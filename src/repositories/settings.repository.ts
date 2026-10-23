@@ -1,5 +1,5 @@
 // ==============================================================================
-// BUSINESS SETTINGS REPOSITORY — SHOLKVEDA
+// BUSINESS SETTINGS REPOSITORY — SHLOKVEDA
 // ==============================================================================
 
 import { db } from '@/lib/db';
@@ -38,7 +38,7 @@ export class SettingsRepository {
     const value = (key: string, fallback: string, legacyKey?: string) =>
       all[key] !== undefined ? all[key] : legacyKey && all[legacyKey] !== undefined ? all[legacyKey] : fallback;
     return {
-      storeName: value('STORE_NAME', 'Sholkveda', 'BUSINESS_NAME'),
+      storeName: value('STORE_NAME', 'Shlokveda', 'BUSINESS_NAME'),
       gstin: value('GSTIN', '09ANCPV6879P1ZP', 'BUSINESS_GSTIN'),
       phone: value('PHONE', '7017840020', 'BUSINESS_PHONE'),
       email: value('EMAIL', '', 'SUPPORT_EMAIL'),

@@ -1,5 +1,5 @@
 // ==============================================================================
-// ZOD VALIDATION SCHEMAS — SHOLKVEDA
+// ZOD VALIDATION SCHEMAS — SHLOKVEDA
 // ==============================================================================
 
 import { z } from 'zod';
@@ -276,7 +276,7 @@ export const BlogPostSchema = z.object({
   summary: z.string().trim().optional(),
   content: z.string().trim().min(20),
   featuredImg: z.string().url().optional().or(z.literal('')),
-  authorName: z.string().trim().default('Sholkveda Ayurvedic Expert'),
+  authorName: z.string().trim().default('Shlokveda Ayurvedic Expert'),
   readTimeMinutes: z.number().int().positive().default(5),
   isPublished: z.boolean().default(false),
   metaTitle: z.string().trim().optional(),

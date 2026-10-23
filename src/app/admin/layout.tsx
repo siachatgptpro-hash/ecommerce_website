@@ -26,7 +26,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { user, logout, loading } = useAuth();
   const [logoUrl, setLogoUrl] = useState('/logo.png');
-  const [storeName, setStoreName] = useState('SHOLKVEDA');
+  const [storeName, setStoreName] = useState('SHLOKVEDA');
 
   useEffect(() => {
     fetch('/api/settings').then((res) => res.json()).then((data) => {

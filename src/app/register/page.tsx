@@ -11,7 +11,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const { register } = useAuth();
   const [logoUrl, setLogoUrl] = useState('/logo.png');
-  const [storeName, setStoreName] = useState('SHOLKVEDA');
+  const [storeName, setStoreName] = useState('SHLOKVEDA');
   const [nextPath, setNextPath] = useState('/account');
 
   useEffect(() => {

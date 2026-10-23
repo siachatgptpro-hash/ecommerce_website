@@ -1,5 +1,5 @@
 // ==============================================================================
-// SEO & STRUCTURED DATA GENERATORS — SHOLKVEDA
+// SEO & STRUCTURED DATA GENERATORS — SHLOKVEDA
 // JSON-LD Schema.org Injectors for Product, LocalBusiness, BreadcrumbList, Article
 // ==============================================================================
 
@@ -13,8 +13,8 @@ export class SEOService {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
       '@id': `${this.baseUrl}/#organization`,
-      name: 'SHOLKVEDA',
-      description: 'Sholkveda product catalogue with names, pack sizes and printed MRPs sourced from the supplied brochure.',
+      name: 'SHLOKVEDA',
+      description: 'Shlokveda product catalogue with names, pack sizes and printed MRPs sourced from the supplied brochure.',
       url: this.baseUrl,
       telephone: '+917017840020',
       taxID: '09ANCPV6879P1ZP',
@@ -61,7 +61,7 @@ export class SEOService {
       sku: product.skuPrefix || product.variants?.[0]?.sku || 'SV-PRODUCT',
       brand: {
         '@type': 'Brand',
-        name: 'SHOLKVEDA',
+        name: 'SHLOKVEDA',
       },
       offers: {
         '@type': 'AggregateOffer',
@@ -72,7 +72,7 @@ export class SEOService {
         availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
         seller: {
           '@type': 'Organization',
-          name: 'SHOLKVEDA',
+          name: 'SHLOKVEDA',
         },
       },
       ...((product.ratingCount ?? 0) > 0 ? {
@@ -110,11 +110,11 @@ export class SEOService {
       dateModified: blog.updatedAt,
       author: {
         '@type': 'Organization',
-        name: 'SHOLKVEDA Vaidya Council',
+        name: 'SHLOKVEDA Vaidya Council',
       },
       publisher: {
         '@type': 'Organization',
-        name: 'SHOLKVEDA',
+        name: 'SHLOKVEDA',
       },
     };
   }

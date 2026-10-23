@@ -7,7 +7,7 @@ import { ShieldCheck, MapPin, Phone, Mail, Award, Leaf, Truck } from 'lucide-rea
 
 export function Footer() {
   const [settings, setSettings] = useState({
-    storeName: 'Sholkveda', gstin: '09ANCPV6879P1ZP', phone: '7017840020',
+    storeName: 'Shlokveda', gstin: '09ANCPV6879P1ZP', phone: '7017840020',
     addressLine1: 'B.H Oil Meal Road, Next to Bank of Maharashtra', addressLine2: 'Dobra Bal Colony',
     city: 'Hathras', state: 'Uttar Pradesh', postalCode: '204101', email: '', logoUrl: '/logo.png',
   });
@@ -108,7 +108,7 @@ export function Footer() {
                 </div>
               )}
               <div className="flex items-center space-x-2.5">
-                <Link href="/contact" className="hover:text-white transition-colors">Contact Sholkveda</Link>
+                <Link href="/contact" className="hover:text-white transition-colors">Contact Shlokveda</Link>
               </div>
             </div>
 
@@ -218,7 +218,7 @@ export function Footer() {
 
         {/* BOTTOM COPYRIGHT */}
         <div className="pt-8 mt-4 border-t border-[#1B4332]/60 flex flex-col sm:flex-row items-center justify-between text-[11px] text-gray-400 gap-4">
-          <p>© {new Date().getFullYear()} SHOLKVEDA. All Rights Reserved. Hathras, Uttar Pradesh, India.</p>
+          <p>© {new Date().getFullYear()} SHLOKVEDA. All Rights Reserved. Hathras, Uttar Pradesh, India.</p>
           <div className="flex items-center space-x-4 text-gray-400">
             <span>Product details sourced from the supplied brochure.</span>
           </div>

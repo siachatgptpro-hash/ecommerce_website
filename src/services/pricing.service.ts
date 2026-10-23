@@ -1,5 +1,5 @@
 // ==============================================================================
-// PRICING & CART CALCULATION SERVICE — SHOLKVEDA
+// PRICING & CART CALCULATION SERVICE — SHLOKVEDA
 // Server-Side Pricing Engine (Never trusts browser prices)
 // ==============================================================================
 

@@ -1,5 +1,5 @@
 // ==============================================================================
-// PRODUCT & CATALOG REPOSITORY — SHOLKVEDA
+// PRODUCT & CATALOG REPOSITORY — SHLOKVEDA
 // ==============================================================================
 
 import { db } from '@/lib/db';
@@ -416,7 +416,7 @@ export class ProductRepository {
         }
         for (let i = 0; i < images.length; i++) {
           const image = images[i];
-          await client.query('INSERT INTO "ProductImage" ("id","productId","imageUrl","altText","sortOrder","isPrimary","createdAt") VALUES ($1,$2,$3,$4,$5,$6,$7)', [`img_${crypto.randomUUID()}`,id,image.imageUrl,image.altText || `${productData.name} - Sholkveda`,image.sortOrder ?? i,image.isPrimary ?? (i===0),now]);
+          await client.query('INSERT INTO "ProductImage" ("id","productId","imageUrl","altText","sortOrder","isPrimary","createdAt") VALUES ($1,$2,$3,$4,$5,$6,$7)', [`img_${crypto.randomUUID()}`,id,image.imageUrl,image.altText || `${productData.name} - Shlokveda`,image.sortOrder ?? i,image.isPrimary ?? (i===0),now]);
         }
       });
       const created = await this.findProductById(id);
@@ -466,7 +466,7 @@ export class ProductRepository {
         id: imgId,
         productId: id,
         imageUrl: img.imageUrl,
-        altText: img.altText || `${newProduct.name} - Sholkveda`,
+        altText: img.altText || `${newProduct.name} - Shlokveda`,
         sortOrder: img.sortOrder ?? i,
         isPrimary: img.isPrimary ?? (i === 0),
         createdAt: now,
@@ -506,7 +506,7 @@ export class ProductRepository {
           await client.query('DELETE FROM "ProductImage" WHERE "productId" = $1', [id]);
           for (let i=0;i<images.length;i++) {
             const image=images[i];
-            await client.query('INSERT INTO "ProductImage" ("id","productId","imageUrl","altText","sortOrder","isPrimary","createdAt") VALUES ($1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP)', [`img_${crypto.randomUUID()}`,id,image.imageUrl,image.altText || `${updates.name || existing.name} - Sholkveda`,image.sortOrder ?? i,image.isPrimary ?? (i===0)]);
+            await client.query('INSERT INTO "ProductImage" ("id","productId","imageUrl","altText","sortOrder","isPrimary","createdAt") VALUES ($1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP)', [`img_${crypto.randomUUID()}`,id,image.imageUrl,image.altText || `${updates.name || existing.name} - Shlokveda`,image.sortOrder ?? i,image.isPrimary ?? (i===0)]);
           }
         }
       });
@@ -576,7 +576,7 @@ export class ProductRepository {
           id: imgId,
           productId: id,
           imageUrl: img.imageUrl,
-          altText: img.altText || `${updatedProd.name} - Sholkveda`,
+          altText: img.altText || `${updatedProd.name} - Shlokveda`,
           sortOrder: img.sortOrder ?? i,
           isPrimary: img.isPrimary ?? (i === 0),
           createdAt: now,

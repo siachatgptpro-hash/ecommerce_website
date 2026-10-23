@@ -37,7 +37,7 @@ export function Header() {
   // Initial value mirrors the server-side default so the bar never flashes a
   // wrong offer (the configured free-shipping threshold is ₹499 by default).
   const [announcementText, setAnnouncementText] = useState('Free shipping on orders of ₹499 & above · Authentic Ayurvedic Products');
-  const [storeName, setStoreName] = useState('SHOLKVEDA');
+  const [storeName, setStoreName] = useState('SHLOKVEDA');
   const [logoUrl, setLogoUrl] = useState('/logo.png');
 
   useEffect(() => {
@@ -309,7 +309,7 @@ export function Header() {
             Browse Catalogue
           </Link>
           <Link href="/about" className="hover:text-[#1B4332] transition-colors">
-            About Sholkveda
+            About Shlokveda
           </Link>
           <Link href="/contact" className="hover:text-[#1B4332] transition-colors">
             Contact
@@ -393,7 +393,7 @@ export function Header() {
               Track Order
             </Link>
             <Link href="/about" onClick={() => setIsMobileMenuOpen(false)} className="py-1">
-              About Sholkveda
+              About Shlokveda
             </Link>
             <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)} className="py-1">
               Contact & Support

@@ -23,12 +23,12 @@ const getProduct = cache((slug: string) => productRepository.findBySlug(slug));
 
 export async function generateMetadata({ params }: ProductPageProps) {
   const product = await getProduct(params.slug);
-  if (!product) return { title: 'Product Not Found | Sholkveda' };
+  if (!product) return { title: 'Product Not Found | Shlokveda' };
 
   const desc = (product.shortDescription || product.fullDescription || '').slice(0, 160);
 
   return {
-    title: `${product.name} | Sholkveda Product Catalogue`,
+    title: `${product.name} | Shlokveda Product Catalogue`,
     description: desc,
     openGraph: {
       title: product.name,

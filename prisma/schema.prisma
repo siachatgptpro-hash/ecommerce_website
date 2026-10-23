@@ -1,5 +1,5 @@
 // ==============================================================================
-// PRISMA SCHEMA — SHOLKVEDA AYURVEDIC E-COMMERCE PLATFORM
+// PRISMA SCHEMA — SHLOKVEDA AYURVEDIC E-COMMERCE PLATFORM
 // Compatible with Neon PostgreSQL (Production) and Hostinger MySQL (Future Target)
 // ==============================================================================
 
@@ -585,7 +585,7 @@ model BlogPost {
   summary         String?
   content         String
   featuredImg     String?
-  authorName      String           @default("Sholkveda Ayurvedic Expert")
+  authorName      String           @default("Shlokveda Ayurvedic Expert")
   readTimeMinutes Int              @default(5)
   isPublished     Boolean          @default(false)
   publishedAt     DateTime?

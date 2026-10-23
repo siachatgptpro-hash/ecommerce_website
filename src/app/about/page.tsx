@@ -14,10 +14,10 @@ export default function AboutPage() {
           <BookOpen className="w-4 h-4" /> Source-led catalogue
         </span>
         <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-gray-900">
-          Sholkveda, with product details from the supplied brochure
+          Shlokveda, with product details from the supplied brochure
         </h1>
         <p className="text-sm sm:text-base leading-relaxed text-gray-600">
-          This storefront organizes the product names, pack sizes and printed MRPs from the provided 16-page “Only Ayurveda” brochure. Sholkveda is the storefront brand; the original packaging and brochure artwork remain as printed in the source.
+          This storefront organizes the product names, pack sizes and printed MRPs from the provided 16-page “Only Ayurveda” brochure. Shlokveda is the storefront brand; the original packaging and brochure artwork remain as printed in the source.
         </p>
       </header>
 

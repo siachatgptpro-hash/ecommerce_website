@@ -1,5 +1,5 @@
 // ==============================================================================
-// DATABASE-DRIVEN ANALYTICS SERVICE — SHOLKVEDA
+// DATABASE-DRIVEN ANALYTICS SERVICE — SHLOKVEDA
 // Real Aggregated Business Intelligence (Zero Mock / Fake Data)
 // ==============================================================================
 

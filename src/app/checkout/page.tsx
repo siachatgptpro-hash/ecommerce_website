@@ -199,7 +199,7 @@ export default function CheckoutPage() {
             key: keyId,
             amount: amount,
             currency: currency,
-            name: 'Sholkveda',
+            name: 'Shlokveda',
             description: 'Product catalogue order',
             order_id: razorpayOrderId,
             prefill: {

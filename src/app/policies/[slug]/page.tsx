@@ -30,7 +30,7 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
   const policies: Record<string, { title: string; subtitle: string; content: React.ReactNode }> = {
     'privacy-policy': {
       title: 'Privacy Policy',
-      subtitle: 'Information handled by this Sholkveda storefront.',
+      subtitle: 'Information handled by this Shlokveda storefront.',
       content: policyBody(business.privacyPolicy || ''),
     },
     'terms-and-conditions': {

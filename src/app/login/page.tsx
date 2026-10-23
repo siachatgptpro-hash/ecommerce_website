@@ -11,7 +11,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const [logoUrl, setLogoUrl] = useState('/logo.png');
-  const [storeName, setStoreName] = useState('SHOLKVEDA');
+  const [storeName, setStoreName] = useState('SHLOKVEDA');
   const [nextPath, setNextPath] = useState('/account');
 
   useEffect(() => {

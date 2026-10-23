@@ -1,5 +1,5 @@
 // ==============================================================================
-// COUPON & DISCOUNT REPOSITORY — SHOLKVEDA
+// COUPON & DISCOUNT REPOSITORY — SHLOKVEDA
 // ==============================================================================
 
 import { db } from '@/lib/db';

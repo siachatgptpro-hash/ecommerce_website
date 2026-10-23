@@ -8,8 +8,8 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
 export const metadata: Metadata = {
   ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
-  title: 'Sholkveda | Product Catalogue',
-  description: 'Browse Sholkveda products with pack sizes, printed MRPs and product images transcribed from the supplied brochure.',
+  title: 'Shlokveda | Product Catalogue',
+  description: 'Browse Shlokveda products with pack sizes, printed MRPs and product images transcribed from the supplied brochure.',
 };
 
 export default function RootLayout({
