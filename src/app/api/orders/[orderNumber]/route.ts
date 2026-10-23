@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OrderRepository } from '@/repositories/order.repository';
 import { AuthService } from '@/services/auth.service';
 import { AuthenticationError, NotFoundError, handleApiError } from '@/lib/errors';
+import { resolveRequestSessionToken } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest, { params }: { params: { orderNumber: string } }) {
   try {
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.replace(/^Bearer\s+/i, '') || req.cookies.get('shlokveda_session_token')?.value;
+    const token = resolveRequestSessionToken(req, 'customer')?.token;
     if (!token) throw new AuthenticationError();
-    const user = await AuthService.getCurrentUser(token);
+    const user = await AuthService.getCurrentUser(token, { scope: 'customer' });
     const order = await OrderRepository.findByOrderNumber(params.orderNumber);
     if (!order || order.userId !== user.id) throw new NotFoundError('Order');
 

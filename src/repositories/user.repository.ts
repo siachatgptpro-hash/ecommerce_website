@@ -2,7 +2,16 @@
 // USER & ADDRESS REPOSITORY — SHLOKVEDA
 // ==============================================================================
 
-import { db } from '@/lib/db';
+// The large in-memory preview store (and its brochure seed) is loaded only
+// when PostgreSQL is not configured. Production auth therefore does not pay
+// its import/startup cost, and a missing DATABASE_URL is raised inside the
+// request handler where it can be returned as JSON instead of an HTML 500.
+type MemoryDb = typeof import('@/lib/db').db;
+let memoryDbPromise: Promise<MemoryDb> | null = null;
+async function getMemoryDb(): Promise<MemoryDb> {
+  memoryDbPromise ??= import('@/lib/db').then((module) => module.db);
+  return memoryDbPromise;
+}
 import { isPostgresConfigured, pgQuery, withPostgresTransaction } from '@/lib/postgres';
 import crypto from 'node:crypto';
 import { Address, PermissionKey, SystemRole, User } from '@/types';
@@ -31,6 +40,7 @@ export class UserRepository {
       const result = await pgQuery(`${usersSelect} WHERE u."id" = $1 LIMIT 1`, [id]);
       return result.rows[0] ? mapDbUser(result.rows[0]) : null;
     }
+    const db = await getMemoryDb();
     const user = db.users.get(id);
     return user ? { ...user } : null;
   }
@@ -41,6 +51,7 @@ export class UserRepository {
       const result = await pgQuery(`${usersSelect} WHERE LOWER(u."email") = $1 LIMIT 1`, [normalized]);
       return result.rows[0] ? mapDbUser(result.rows[0]) : null;
     }
+    const db = await getMemoryDb();
     const users = Array.from(db.users.values());
     for (const user of users) {
       if (user.email.toLowerCase() === normalized) {
@@ -56,6 +67,7 @@ export class UserRepository {
       const result = await pgQuery(`${usersSelect} WHERE u."phone" = $1 LIMIT 1`, [cleanPhone]);
       return result.rows[0] ? mapDbUser(result.rows[0]) : null;
     }
+    const db = await getMemoryDb();
     const users = Array.from(db.users.values());
     for (const user of users) {
       if (user.phone === cleanPhone) {
@@ -67,14 +79,32 @@ export class UserRepository {
 
   public static async findByEmailOrPhone(query: string): Promise<User | null> {
     const clean = query.trim();
-    const byEmail = await this.findByEmail(clean);
-    if (byEmail) return byEmail;
+    const normalizedEmail = clean.toLowerCase();
     // Accept Indian mobile numbers written with +91 / 0 prefixes or spaces,
     // matching the 10-digit format enforced at registration.
     let digits = clean.replace(/\D/g, '');
     if (digits.length === 12 && digits.startsWith('91')) digits = digits.slice(2);
     if (digits.length === 11 && digits.startsWith('0')) digits = digits.slice(1);
-    return this.findByPhone(digits.length === 10 ? digits : clean);
+    const phoneCandidate = digits.length === 10 ? digits : clean;
+
+    if (isPostgresConfigured()) {
+      // One Neon round trip for both identifier forms. The previous version
+      // queried email first and then phone, doubling cold-database latency
+      // for mobile-number and unknown-account sign-ins.
+      const result = await pgQuery(
+        `${usersSelect} WHERE LOWER(u."email") = $1 OR u."phone" = $2 ORDER BY CASE WHEN LOWER(u."email") = $1 THEN 0 ELSE 1 END LIMIT 1`,
+        [normalizedEmail, phoneCandidate]
+      );
+      return result.rows[0] ? mapDbUser(result.rows[0]) : null;
+    }
+
+    const db = await getMemoryDb();
+    for (const user of db.users.values()) {
+      if (user.email.toLowerCase() === normalizedEmail || user.phone === phoneCandidate) {
+        return { ...user };
+      }
+    }
+    return null;
   }
 
   public static async create(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
@@ -99,6 +129,7 @@ export class UserRepository {
       if (!created) throw new Error('Created user could not be reloaded.');
       return created;
     }
+    const db = await getMemoryDb();
     const id = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const now = new Date().toISOString();
     const newUser: User = {
@@ -140,6 +171,7 @@ export class UserRepository {
       });
       return this.findById(id);
     }
+    const db = await getMemoryDb();
     const user = db.users.get(id);
     if (!user) return null;
     // Allow-list mutable fields (mirrors the Postgres path) and never let an
@@ -169,6 +201,7 @@ export class UserRepository {
         return safe as User;
       });
     }
+    const db = await getMemoryDb();
     return Array.from(db.users.values()).map((u) => {
       const { passwordHash: _, ...safeUser } = u;
       return safeUser as User;
@@ -181,6 +214,7 @@ export class UserRepository {
       const result = await pgQuery('SELECT * FROM "Address" WHERE "userId"=$1 ORDER BY "isDefault" DESC,"createdAt" DESC', [userId]);
       return result.rows.map(mapDbAddress);
     }
+    const db = await getMemoryDb();
     return Array.from(db.addresses.values()).filter((a) => a.userId === userId);
   }
 
@@ -193,6 +227,7 @@ export class UserRepository {
         return mapDbAddress(result.rows[0]);
       });
     }
+    const db = await getMemoryDb();
     const id = `addr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const now = new Date().toISOString();
 
@@ -232,6 +267,7 @@ export class UserRepository {
         return mapDbAddress(current.rows[0]);
       });
     }
+    const db = await getMemoryDb();
     const addr = db.addresses.get(id);
     if (!addr) return null;
 
@@ -258,6 +294,7 @@ export class UserRepository {
       const result = await pgQuery('DELETE FROM "Address" WHERE "id"=$1', [id]);
       return (result.rowCount || 0) > 0;
     }
+    const db = await getMemoryDb();
     return db.addresses.delete(id);
   }
 

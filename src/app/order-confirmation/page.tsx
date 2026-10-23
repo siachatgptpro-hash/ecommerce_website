@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { AuthService } from '@/services/auth.service';
+import { resolveCookieSessionToken } from '@/lib/session';
 import { orderRepository } from '@/repositories/order.repository';
 import { settingsRepository } from '@/repositories/settings.repository';
 import Image from 'next/image';
@@ -75,10 +76,10 @@ export default async function OrderConfirmationPage({ searchParams }: OrderConfi
   // numbers are sequential — this page must only ever show an order to the
   // customer who placed it.
   const suffix = orderNumber ? `?orderNumber=${encodeURIComponent(orderNumber)}` : orderId ? `?orderId=${encodeURIComponent(orderId)}` : '';
-  const token = cookies().get('shlokveda_session_token')?.value;
-  if (!token) redirect(`/login?next=${encodeURIComponent(`/order-confirmation${suffix}`)}`);
+  const resolved = resolveCookieSessionToken(cookies(), 'customer');
+  if (!resolved) redirect(`/login?next=${encodeURIComponent(`/order-confirmation${suffix}`)}`);
   let user: Awaited<ReturnType<typeof AuthService.getCurrentUser>> | null = null;
-  try { user = await AuthService.getCurrentUser(token); } catch { user = null; }
+  try { user = await AuthService.getCurrentUser(resolved.token, { scope: 'customer' }); } catch { user = null; }
   if (!user) redirect(`/login?next=${encodeURIComponent(`/order-confirmation${suffix}`)}`);
 
   let order = null;

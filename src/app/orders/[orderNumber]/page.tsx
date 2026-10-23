@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { AuthService } from '@/services/auth.service';
+import { resolveCookieSessionToken } from '@/lib/session';
 import { orderRepository } from '@/repositories/order.repository';
 import {
   PackageCheck,
@@ -25,10 +26,10 @@ export const dynamic = 'force-dynamic';
 export const metadata = { robots: { index: false, follow: false } };
 
 export default async function OrderTrackingPage({ params }: OrderTrackingPageProps) {
-  const token = cookies().get('shlokveda_session_token')?.value;
-  if (!token) redirect(`/login?next=${encodeURIComponent(`/orders/${params.orderNumber}`)}`);
+  const resolved = resolveCookieSessionToken(cookies(), 'customer');
+  if (!resolved) redirect(`/login?next=${encodeURIComponent(`/orders/${params.orderNumber}`)}`);
   let user;
-  try { user = await AuthService.getCurrentUser(token); } catch { redirect('/login'); }
+  try { user = await AuthService.getCurrentUser(resolved.token, { scope: 'customer' }); } catch { redirect('/login'); }
 
   const order = await orderRepository.findByOrderNumber(params.orderNumber);
 

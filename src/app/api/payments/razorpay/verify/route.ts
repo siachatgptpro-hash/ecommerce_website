@@ -3,6 +3,7 @@ import { RazorpayVerifySchema } from '@/schemas';
 import { OrderService } from '@/services/order.service';
 import { OrderRepository } from '@/repositories/order.repository';
 import { AuthService } from '@/services/auth.service';
+import { resolveRequestSessionToken } from '@/lib/session';
 import { AuthenticationError, NotFoundError, handleApiError } from '@/lib/errors';
 import { enforceRateLimit } from '@/lib/rate-limit';
 
@@ -12,10 +13,9 @@ export async function POST(req: NextRequest) {
     if (limited) return limited;
     const json = await req.json();
     const payload = RazorpayVerifySchema.parse(json);
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.replace(/^Bearer\s+/i, '') || req.cookies.get('shlokveda_session_token')?.value;
+    const token = resolveRequestSessionToken(req, 'customer')?.token;
     if (!token) throw new AuthenticationError('Please log in to confirm this payment.');
-    const user = await AuthService.getCurrentUser(token);
+    const user = await AuthService.getCurrentUser(token, { scope: 'customer' });
     const ownedOrder = await OrderRepository.findById(payload.orderId);
     if (!ownedOrder || ownedOrder.userId !== user.id) throw new NotFoundError('Order');
 

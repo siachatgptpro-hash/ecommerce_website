@@ -64,6 +64,15 @@ async function runBackendTests() {
     const registered = await AuthService.register({ fullName: 'Preview Customer', email, phone: '9812345678', password: 'preview-password-1' });
     const login = await AuthService.login(email, 'preview-password-1');
     assert(registered.user.id === login.user.id && AuthService.verifyToken(login.token).email === email, 'registration, login and signed session work in-process');
+    assert(registered.scope === 'customer' && AuthService.verifyToken(registered.token).scope === 'customer', 'registration issues only a customer-scoped session');
+    const customerLogin = await AuthService.login(email, 'preview-password-1', 'customer');
+    assert(AuthService.verifyToken(customerLogin.token, { scope: 'customer' }).scope === 'customer', 'customer login verifies in the customer session scope');
+    let scopeMismatch = false;
+    try { AuthService.verifyToken(customerLogin.token, { scope: 'admin' }); } catch { scopeMismatch = true; }
+    assert(scopeMismatch, 'customer-scoped token is rejected as an admin session');
+    let adminScopeDenied = false;
+    try { await AuthService.login(email, 'preview-password-1', 'admin'); } catch (error: any) { adminScopeDenied = error?.code === 'ADMIN_ROLE_REQUIRED'; }
+    assert(adminScopeDenied, 'a customer account cannot create an admin-scoped session');
     let denied = false;
     try { AuthService.requirePermission(AuthService.verifyToken(login.token), PermissionKey.MANAGE_SETTINGS); } catch { denied = true; }
     assert(denied, 'customer session cannot access admin settings');

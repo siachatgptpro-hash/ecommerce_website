@@ -9,7 +9,7 @@ The app has two data modes:
 - **Local preview:** with `DATABASE_URL` unset, repositories use the in-memory preview data. This is useful for the local storefront and automated checks, but data is not durable.
 - **Neon PostgreSQL:** when `DATABASE_URL` is set, the product/catalogue, user/address, settings, coupon, CMS/review/audit, inventory, and order/payment/shipment repository paths use the shared `pg` pool. Production runtime refuses to start without a database URL.
 
-The Neon bootstrap script is in `prisma/neon-setup.sql`. The user-reported database currently contains 31 tables, 8 categories, 84 products, 101 variants, and 84 images. **Stock was intentionally seeded at zero** because verified available inventory was not supplied; checkout must not be enabled for sale until accurate stock is entered. The bootstrap creates no administrator, coupon, order, or review records.
+The Neon bootstrap script is in `prisma/neon-setup.sql`. The user-reported existing database contains 31 tables, 8 categories, 84 products, 101 variants, and 84 images, and was originally seeded with zero stock. The brochure PDF contains product, pack-size, MRP and page-number data but no inventory quantities. On 2026-10-24 the owner approved an opening balance of **100 units for every brochure pack variant**; the updated fresh bootstrap seeds that balance with matching inventory-ledger rows. An existing database remains unchanged until the confirmed `npm run inventory:fill-brochure-stock` command (or its SQL migration) is run from a private environment. Do not accept live orders until that command verifies 101/101 variants and the Admin inventory ledger has been spot-checked. The bootstrap creates no administrator, coupon, order, or review records.
 
 The database-backed code has passed TypeScript and production-build checks, plus the in-memory backend and storefront QA suites. A live Neon connection and database-backed CRUD/payment/inventory flow have **not** been validated from this checkout because its `DATABASE_URL` is intentionally unset. Do not treat the build as proof of live database readiness or deploy to accept orders until private-URL validation is complete.
 
@@ -29,7 +29,7 @@ Open the local Next.js URL printed by the dev server. Without `DATABASE_URL`, th
 1. In Neon, rotate any credential previously shared outside the private dashboard, then use the new connection string.
 2. Run `prisma/neon-setup.sql` once against an **empty** Neon schema. Do not rerun it over an initialized database.
 3. Set `DATABASE_URL`, a strong stable `AUTH_SECRET`, and required payment/webhook variables in the **private deployment environment** (for example, Vercel Production). Never commit or paste secrets into source control or chat.
-4. Create the first administrator from a private execution environment using `npm run admin:bootstrap` with `DATABASE_URL`, `ADMIN_EMAIL`, and a unique `ADMIN_PASSWORD` of at least 14 characters. The command only creates a new account; it will not promote or reset an existing email. Do not put the database URL or password in a shared terminal transcript.
+4. Create the first administrator from a private execution environment using `npm run admin:bootstrap` with `DATABASE_URL`, `ADMIN_EMAIL`, and a unique `ADMIN_PASSWORD` of at least 14 characters. The command only creates a new account; it will not promote or reset an existing email. If the owner email already exists as a customer, use `npm run admin:promote` with `DATABASE_URL`, `ADMIN_EMAIL`, and `CONFIRM_PROMOTE_ADMIN=YES` to add the administrator roles without changing its password. Do not put the database URL or password in a shared terminal transcript.
 5. Enter verified inventory quantities in the admin inventory screen and verify checkout, order persistence, stock-ledger changes, payment callbacks, and cancellation/refund flows against the private database before accepting live orders.
 
 `DATABASE_URL` is deliberately not stored in this checkout. The optional `ADMIN_EMAIL` / `ADMIN_PASSWORD` values are consumed only by the explicit bootstrap script; they are not an automatic production-startup mechanism.
@@ -38,7 +38,7 @@ Open the local Next.js URL printed by the dev server. Without `DATABASE_URL`, th
 
 - `DATABASE_URL`: Neon PostgreSQL connection string; required by the production runtime.
 - `AUTH_SECRET`: stable, random secret of at least 32 characters for signed sessions.
-- `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_FULL_NAME`: used only by the explicit administrator bootstrap command.
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_FULL_NAME`: used only by the explicit administrator bootstrap command. `CONFIRM_PROMOTE_ADMIN=YES` is additionally required by the existing-account promotion command. `CONFIRM_FILL_BROCHURE_STOCK_100=YES` is required only by the one-time existing-database brochure opening-stock command.
 - `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`: server-side payment configuration for live Razorpay operations.
 - `NEXT_PUBLIC_SITE_URL`: verified public site origin for absolute sitemap links.
 
@@ -63,3 +63,5 @@ The automated backend checks run against the in-memory preview mode unless a dat
 - `prisma/schema.prisma` — relational schema.
 - `prisma/neon-setup.sql` — one-time schema and brochure-catalog bootstrap for an empty Neon schema.
 - `scripts/bootstrap-admin.ts` — one-time secure first-administrator creation command.
+- `scripts/promote-admin.ts` — confirmed repair command that adds administrator roles to an existing owner account without changing its password.
+- `scripts/fill-brochure-stock.ts` — confirmed one-time runner for the existing-database migration that sets every brochure pack variant to the owner-approved opening balance of 100 units and writes matching inventory-ledger rows.

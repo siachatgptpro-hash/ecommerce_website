@@ -24,7 +24,7 @@ async function main() {
     await client.query('BEGIN');
     const existing = await client.query('SELECT "id" FROM "User" WHERE LOWER("email")=$1 LIMIT 1', [email]);
     if (existing.rows.length) {
-      throw new Error('That email already exists. This bootstrap command only creates a new administrator; it will not promote or reset an existing account.');
+      throw new Error('That email already exists. This bootstrap command only creates a new administrator; it will not promote or reset an existing account. If this is your owner account, use npm run admin:promote with CONFIRM_PROMOTE_ADMIN=YES instead.');
     }
 
     const userId = `usr_${crypto.randomUUID()}`;

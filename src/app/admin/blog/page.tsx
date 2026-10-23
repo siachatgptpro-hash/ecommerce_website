@@ -2,6 +2,9 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { BlogPost } from '@/types';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/auth-context';
+import { fetchJson, isAdminSessionError } from '@/lib/client-api';
 import {
   Newspaper,
   Plus,
@@ -42,6 +45,8 @@ const inputClasses =
 const labelClasses = 'block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1';
 
 export default function AdminBlogPage() {
+  const router = useRouter();
+  const { refreshSession } = useAuth();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -49,6 +54,7 @@ export default function AdminBlogPage() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [notice, setNotice] = useState('');
+  const [noticeIsError, setNoticeIsError] = useState(false);
 
   // Form state
   const [title, setTitle] = useState('');
@@ -65,15 +71,26 @@ export default function AdminBlogPage() {
   const slugTouched = useRef(false);
   const readTimeTouched = useRef(false);
 
+  const redirectIfAdminSessionError = async (error: unknown): Promise<boolean> => {
+    if (!isAdminSessionError(error)) return false;
+    // Re-read the admin-scoped cookie before leaving, so AuthProvider state
+    // matches the server and AdminLayout does not render a stale identity.
+    await refreshSession('admin');
+    router.replace('/admin/login?next=%2Fadmin%2Fblog&reason=session-changed');
+    return true;
+  };
+
+  const messageFromError = (error: unknown, fallback: string) =>
+    error instanceof Error && error.message ? error.message : fallback;
+
   const fetchPosts = async () => {
     try {
-      const res = await fetch('/api/admin/blog');
-      const data = await res.json();
-      if (data.success && data.data) {
-        setPosts(data.data.posts || []);
-      }
+      const data = await fetchJson('/api/admin/blog', { cache: 'no-store' }, 'Could not load blog posts.');
+      setPosts(data.data?.posts || []);
     } catch (err) {
-      console.error('Error fetching blog posts:', err);
+      if (await redirectIfAdminSessionError(err)) return;
+      setNoticeIsError(true);
+      setNotice(messageFromError(err, 'Could not load blog posts.'));
     } finally {
       setLoading(false);
     }
@@ -142,12 +159,11 @@ export default function AdminBlogPage() {
     try {
       const body = new FormData();
       body.append('file', file);
-      const response = await fetch('/api/admin/uploads', { method: 'POST', body });
-      const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error?.message || 'Photo upload failed');
+      const result = await fetchJson('/api/admin/uploads', { method: 'POST', body }, 'Photo upload failed.');
       setFeaturedImg(result.data.url);
     } catch (error: any) {
-      setErrorMsg(error.message || 'Photo upload failed.');
+      if (await redirectIfAdminSessionError(error)) return;
+      setErrorMsg(messageFromError(error, 'Photo upload failed.'));
     } finally {
       setImageUploading(false);
     }
@@ -177,16 +193,17 @@ export default function AdminBlogPage() {
     };
 
     try {
-      const res = await fetch(editingId ? `/api/admin/blog/${editingId}` : '/api/admin/blog', {
-        method: editingId ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data?.error?.message || 'Could not save the blog post. Please try again.');
-      }
+      await fetchJson(
+        editingId ? `/api/admin/blog/${editingId}` : '/api/admin/blog',
+        {
+          method: editingId ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        },
+        'Could not save the blog post. Please try again.'
+      );
       setShowModal(false);
+      setNoticeIsError(false);
       setNotice(
         editingId
           ? `Blog post "${payload.title}" updated.`
@@ -196,7 +213,8 @@ export default function AdminBlogPage() {
       );
       await fetchPosts();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Could not save the blog post. Please try again.');
+      if (await redirectIfAdminSessionError(err)) return;
+      setErrorMsg(messageFromError(err, 'Could not save the blog post. Please try again.'));
     } finally {
       setSubmitting(false);
     }
@@ -204,16 +222,17 @@ export default function AdminBlogPage() {
 
   const handleTogglePublished = async (post: BlogPost) => {
     setNotice('');
+    setNoticeIsError(false);
     try {
-      const res = await fetch(`/api/admin/blog/${post.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isPublished: !post.isPublished }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data?.error?.message || 'Could not update the post status.');
-      }
+      await fetchJson(
+        `/api/admin/blog/${post.id}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isPublished: !post.isPublished }),
+        },
+        'Could not update the post status.'
+      );
       setNotice(
         post.isPublished
           ? `"${post.title}" moved back to drafts — hidden from the storefront.`
@@ -221,23 +240,29 @@ export default function AdminBlogPage() {
       );
       await fetchPosts();
     } catch (err: any) {
-      setNotice(err.message || 'Could not update the post status.');
+      if (await redirectIfAdminSessionError(err)) return;
+      setNoticeIsError(true);
+      setNotice(messageFromError(err, 'Could not update the post status.'));
     }
   };
 
   const handleDelete = async (post: BlogPost) => {
     setNotice('');
+    setNoticeIsError(false);
     if (!window.confirm(`Delete blog post "${post.title}"? This cannot be undone.`)) return;
     try {
-      const res = await fetch(`/api/admin/blog/${post.id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data?.error?.message || 'Could not delete the blog post.');
-      }
+      await fetchJson(
+        `/api/admin/blog/${post.id}`,
+        { method: 'DELETE' },
+        'Could not delete the blog post.'
+      );
+      setNoticeIsError(false);
       setNotice(`Blog post "${post.title}" deleted.`);
       await fetchPosts();
     } catch (err: any) {
-      setNotice(err.message || 'Could not delete the blog post.');
+      if (await redirectIfAdminSessionError(err)) return;
+      setNoticeIsError(true);
+      setNotice(messageFromError(err, 'Could not delete the blog post.'));
     }
   };
 
@@ -266,7 +291,7 @@ export default function AdminBlogPage() {
       </div>
 
       {notice && (
-        <div className="p-3 bg-[#FAF7F2] border border-[#E3DCCB] rounded-xl text-[#1B4332] text-xs flex items-center gap-2" role="status">
+        <div className={`p-3 border rounded-xl text-xs flex items-center gap-2 ${noticeIsError ? 'bg-red-50 border-red-200 text-red-700' : 'bg-[#FAF7F2] border-[#E3DCCB] text-[#1B4332]'}`} role={noticeIsError ? 'alert' : 'status'}>
           <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
           <span>{notice}</span>
         </div>

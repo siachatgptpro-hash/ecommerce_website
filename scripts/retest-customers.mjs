@@ -153,7 +153,7 @@ let RohanOrder = null;
   check('B1 7-char password rejected', shortPw.status === 422, `status ${shortPw.status}`);
 
   const reg = await call('POST', '/api/auth/register', { jar: Rohan, body: { fullName: 'Rohan', email: 'Rohan@example.com', phone: '9812345678', password: 'probe-password-1' } });
-  check('B2 register succeeds; no token in body; session cookie set', reg.status === 201 && !JSON.stringify(reg.json).includes('token') && Rohan.has('shlokveda_session_token'), `status ${reg.status} cookie=${Rohan.has('shlokveda_session_token')}`);
+  check('B2 register succeeds; no token in body; customer session cookie set', reg.status === 201 && !JSON.stringify(reg.json).includes('token') && Rohan.has('shlokveda_customer_session'), `status ${reg.status} cookie=${Rohan.has('shlokveda_customer_session')}`);
 
   const dup = await call('POST', '/api/auth/register', { body: { fullName: 'Rohan Clone', email: 'Rohan@example.com', password: 'probe-password-2' } });
   check('B3 duplicate email is a clean 409', dup.status === 409, `status ${dup.status}`);
@@ -296,7 +296,7 @@ const Kavita = new Jar();
 
   const logout = await call('POST', '/api/auth/logout', { jar: Kavita, body: {} });
   const meAfter = await call('GET', '/api/auth/me', { jar: Kavita });
-  check('C14 logout clears cookie + session dead', logout.status === 200 && !Kavita.has('shlokveda_session_token') && meAfter.status === 401, `logout=${logout.status} me=${meAfter.status}`);
+  check('C14 logout clears cookie + session dead', logout.status === 200 && !Kavita.has('shlokveda_customer_session') && meAfter.status === 401, `logout=${logout.status} me=${meAfter.status}`);
 }
 
 // ============================================================ ADMIN/PLATFORM

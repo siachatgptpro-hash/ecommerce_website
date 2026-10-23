@@ -39,6 +39,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     });
   }, []);
 
+  // Role names must match the backend SystemRole enum (src/types).
+  const ADMIN_ROLE_NAMES = ['SUPER_ADMIN', 'ADMIN', 'PRODUCT_MANAGER', 'ORDER_MANAGER', 'CONTENT_MANAGER'];
+  const isAdmin = !!user && (
+    user.roles?.some((role: string) => ADMIN_ROLE_NAMES.includes(role)) ||
+    (user.role ? ADMIN_ROLE_NAMES.includes(user.role) : false)
+  );
+
+  useEffect(() => {
+    if (pathname === '/admin/login' || loading) return;
+    if (!user || !isAdmin) {
+      // AuthProvider revalidates on focus/navigation/storage changes. As
+      // soon as it learns the admin identity is gone or no longer has an
+      // admin role, leave the stale console instead of letting the next
+      // save fail with a confusing permission notice.
+      router.replace(
+        `/admin/login?next=${encodeURIComponent(pathname)}&reason=session-changed`
+      );
+    }
+  }, [isAdmin, loading, pathname, router, user]);
+
   const navItems = [
     { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { label: 'Products & SKUs', href: '/admin/products', icon: Package },
@@ -68,14 +88,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // If user is not admin, show permission gate.
-  // Role names must match the backend SystemRole enum (src/types).
-  const ADMIN_ROLE_NAMES = ['SUPER_ADMIN', 'ADMIN', 'PRODUCT_MANAGER', 'ORDER_MANAGER', 'CONTENT_MANAGER'];
-  const isAdmin = user && (
-    user.roles?.some((role: string) => ADMIN_ROLE_NAMES.includes(role)) ||
-    (user.role ? ADMIN_ROLE_NAMES.includes(user.role) : false)
-  );
-
+  // Fallback permission gate while the redirect above is in flight.
   if (!user || !isAdmin) {
     return (
       <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center p-4">
@@ -85,11 +98,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           <h2 className="font-serif text-2xl font-bold text-gray-900">Restricted Admin Suite</h2>
           <p className="text-xs text-gray-600">
-            You must be signed in with an administrative role (using an authorized admin account) to access the Hathras management console.
+            Your admin session has expired or changed. Taking you to admin sign-in…
           </p>
           <div className="pt-2 flex flex-col gap-2">
             <Link
-              href="/admin/login"
+              href={`/admin/login?next=${encodeURIComponent(pathname)}&reason=session-changed`}
               className="px-6 py-2.5 rounded-xl bg-[#1B4332] text-white font-bold text-xs"
             >
               Sign In as Admin
@@ -158,14 +171,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center justify-between">
             <div className="min-w-0">
               <span className="text-xs font-bold text-white block truncate">{user.fullName || user.name || 'Admin'}</span>
+              {user.email && <span className="text-[10px] text-emerald-100/80 block truncate">{user.email}</span>}
               <span className="text-[10px] text-amber-300 font-mono block uppercase">
                 {user.role || user.roles?.[0]}
               </span>
             </div>
             <button
               onClick={() => {
-                logout();
-                router.push('/login');
+                logout('admin');
+                router.push('/admin/login');
               }}
               className="p-1.5 text-gray-300 hover:text-red-400 rounded-lg hover:bg-white/10"
               title="Sign Out"

@@ -4,6 +4,7 @@ import { CMSRepository } from '@/repositories/cms.repository';
 import { OrderRepository } from '@/repositories/order.repository';
 import { ProductRepository } from '@/repositories/product.repository';
 import { AuthService } from '@/services/auth.service';
+import { resolveRequestSessionToken } from '@/lib/session';
 import { AuthenticationError, ConflictError, NotFoundError, handleApiError } from '@/lib/errors';
 import { toPublicReview } from '@/lib/public-dto';
 import sanitizeHtml from 'sanitize-html';
@@ -29,14 +30,13 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '') || req.cookies.get('shlokveda_session_token')?.value;
+    const token = resolveRequestSessionToken(req, 'customer')?.token;
 
     if (!token) {
       throw new AuthenticationError('Please log in to submit a verified product review.');
     }
 
-    const user = await AuthService.getCurrentUser(token);
+    const user = await AuthService.getCurrentUser(token, { scope: 'customer' });
     const json = await req.json();
     const payload = ReviewCreateSchema.parse(json);
 

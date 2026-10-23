@@ -4,7 +4,9 @@
 
 import { UserRepository } from '@/repositories/user.repository';
 import { PermissionKey, SystemRole, User } from '@/types';
-import { AuthenticationError, AuthorizationError, ConflictError, ValidationError } from '@/lib/errors';
+import { AuthenticationError, AuthorizationError, ConflictError } from '@/lib/errors';
+import { hasAdminRole } from '@/lib/admin-roles';
+import type { SessionScope, SessionTokenScope } from '@/lib/session';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
@@ -19,6 +21,10 @@ const globalForAuth = globalThis as typeof globalThis & { shlokvedaRuntimeAuthSe
 const USING_EPHEMERAL_SECRET = !process.env.AUTH_SECRET;
 const JWT_SECRET = process.env.AUTH_SECRET || (globalForAuth.shlokvedaRuntimeAuthSecret ??= crypto.randomBytes(32).toString('hex'));
 const TOKEN_EXPIRY = '7d';
+// Compared against when an identifier does not exist, so missing-account and
+// wrong-password attempts take a similar path and do not reveal which part
+// was wrong through response timing. This is only a bcrypt hash, not a login.
+const DUMMY_PASSWORD_HASH = '$2a$12$zR9cQaXVcp7c88vSkQVg/.z/BAPsKuS12P9IotrZG6JuAETTetsfW';
 
 function assertProductionSecret(): void {
   if (USING_EPHEMERAL_SECRET && process.env.NODE_ENV === 'production') {
@@ -32,6 +38,12 @@ export interface TokenPayload {
   fullName: string;
   roles: SystemRole[];
   permissions: PermissionKey[];
+  scope?: SessionTokenScope;
+}
+
+export interface VerifyTokenOptions {
+  scope?: SessionScope;
+  allowLegacyScope?: boolean;
 }
 
 export class AuthService {
@@ -40,7 +52,7 @@ export class AuthService {
     email: string;
     phone?: string;
     password: string;
-  }): Promise<{ user: Omit<User, 'passwordHash'>; token: string }> {
+  }): Promise<{ user: Omit<User, 'passwordHash'>; token: string; scope: 'customer' }> {
     const existingEmail = await UserRepository.findByEmail(data.email);
     if (existingEmail) {
       throw new ConflictError('An account with this email address already exists');
@@ -53,8 +65,7 @@ export class AuthService {
       }
     }
 
-    const salt = bcrypt.genSaltSync(10);
-    const passwordHash = bcrypt.hashSync(data.password, salt);
+    const passwordHash = await bcrypt.hash(data.password, 10);
 
     let user;
     try {
@@ -77,17 +88,28 @@ export class AuthService {
       throw error;
     }
 
-    const token = this.generateToken(user);
+    const token = this.generateToken(user, 'customer');
     const { passwordHash: _, ...safeUser } = user;
-    return { user: safeUser, token };
+    return { user: safeUser, token, scope: 'customer' as const };
   }
 
   public static async login(
     emailOrPhone: string,
-    password: string
-  ): Promise<{ user: Omit<User, 'passwordHash'>; token: string }> {
+    password: string,
+    scope: SessionTokenScope = 'legacy'
+  ): Promise<{ user: Omit<User, 'passwordHash'>; token: string; scope: SessionTokenScope }> {
     const user = await UserRepository.findByEmailOrPhone(emailOrPhone);
-    if (!user) {
+
+    let isValid = false;
+    try {
+      // The async API keeps a deliberately expensive bcrypt check from
+      // blocking every other request handled by the same server instance.
+      isValid = await bcrypt.compare(password, user?.passwordHash || DUMMY_PASSWORD_HASH);
+    } catch {
+      isValid = false;
+    }
+
+    if (!user || !isValid) {
       throw new AuthenticationError('Invalid email/mobile or password');
     }
 
@@ -95,17 +117,22 @@ export class AuthService {
       throw new AuthorizationError('Your account has been deactivated. Please contact support.');
     }
 
-    const isValid = bcrypt.compareSync(password, user.passwordHash);
-    if (!isValid) {
-      throw new AuthenticationError('Invalid email/mobile or password');
+    if (scope === 'admin' && !hasAdminRole(user.roles)) {
+      throw new AuthorizationError(
+        'This account does not have admin access. Please sign in with an administrator account.',
+        'ADMIN_ROLE_REQUIRED'
+      );
     }
 
-    const token = this.generateToken(user);
+    const token = this.generateToken(user, scope);
     const { passwordHash: _, ...safeUser } = user;
-    return { user: safeUser, token };
+    return { user: safeUser, token, scope };
   }
 
-  public static generateToken(user: User): string {
+  public static generateToken(
+    user: User | Omit<User, 'passwordHash'>,
+    scope: SessionTokenScope = 'legacy'
+  ): string {
     assertProductionSecret();
     const payload: TokenPayload = {
       userId: user.id,
@@ -113,21 +140,48 @@ export class AuthService {
       fullName: user.fullName,
       roles: user.roles || [SystemRole.CUSTOMER],
       permissions: user.permissions || [],
+      scope,
     };
     return jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_EXPIRY, algorithm: 'HS256' });
   }
 
-  public static verifyToken(token: string): TokenPayload {
+  public static verifyToken(
+    token: string,
+    options: VerifyTokenOptions | SessionScope = {}
+  ): TokenPayload {
     assertProductionSecret();
+    const resolvedOptions: VerifyTokenOptions =
+      typeof options === 'string' ? { scope: options } : options;
+
+    let payload: TokenPayload;
     try {
-      return jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as TokenPayload;
+      payload = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as TokenPayload;
     } catch {
       throw new AuthenticationError('Invalid or expired authentication session. Please log in.');
     }
+
+    if (resolvedOptions.scope) {
+      const hasLegacyScope = !payload.scope || payload.scope === 'legacy';
+      const scopeMatches = payload.scope === resolvedOptions.scope;
+      const legacyAllowed = hasLegacyScope && resolvedOptions.allowLegacyScope !== false;
+      if (!scopeMatches && !legacyAllowed) {
+        throw new AuthenticationError(
+          resolvedOptions.scope === 'admin'
+            ? 'Please sign in to the admin panel again.'
+            : 'Please sign in to your customer account again.',
+          'SESSION_SCOPE_MISMATCH'
+        );
+      }
+    }
+
+    return payload;
   }
 
-  public static async getCurrentUser(token: string): Promise<Omit<User, 'passwordHash'>> {
-    const payload = this.verifyToken(token);
+  public static async getCurrentUser(
+    token: string,
+    options: VerifyTokenOptions | SessionScope = {}
+  ): Promise<Omit<User, 'passwordHash'>> {
+    const payload = this.verifyToken(token, options);
     const user = await UserRepository.findById(payload.userId);
     if (!user || !user.isActive) {
       throw new AuthenticationError('User session is invalid');
@@ -141,7 +195,11 @@ export class AuthService {
       return; // Super admin has global bypass
     }
     if (!payload.permissions.includes(permission)) {
-      throw new AuthorizationError(`Missing required permission: ${permission}`);
+      throw new AuthorizationError(
+        `Missing required permission: ${permission}`,
+        'ADMIN_PERMISSION_REQUIRED',
+        { permission }
+      );
     }
   }
 
@@ -151,15 +209,26 @@ export class AuthService {
     }
     const hasRole = payload.roles.some((r) => allowedRoles.includes(r));
     if (!hasRole) {
-      throw new AuthorizationError('You do not have access to this operational module');
+      throw new AuthorizationError(
+        'You do not have access to this operational module',
+        'ADMIN_ROLE_REQUIRED'
+      );
     }
   }
 
   public register(data: any) { return AuthService.register(data); }
-  public login(emailOrPhone: string, password: string) { return AuthService.login(emailOrPhone, password); }
-  public generateToken(user: any) { return AuthService.generateToken(user); }
-  public verifyToken(token: string) { return AuthService.verifyToken(token); }
-  public getCurrentUser(token: string) { return AuthService.getCurrentUser(token); }
+  public login(emailOrPhone: string, password: string, scope?: SessionTokenScope) {
+    return AuthService.login(emailOrPhone, password, scope);
+  }
+  public generateToken(user: any, scope?: SessionTokenScope) {
+    return AuthService.generateToken(user, scope);
+  }
+  public verifyToken(token: string, options?: VerifyTokenOptions | SessionScope) {
+    return AuthService.verifyToken(token, options);
+  }
+  public getCurrentUser(token: string, options?: VerifyTokenOptions | SessionScope) {
+    return AuthService.getCurrentUser(token, options);
+  }
   public requirePermission(payload: any, perm: any) { return AuthService.requirePermission(payload, perm); }
   public requireRole(payload: any, roles: any) { return AuthService.requireRole(payload, roles); }
 }

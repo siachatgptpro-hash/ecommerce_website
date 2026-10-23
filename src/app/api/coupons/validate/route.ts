@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { PricingService } from '@/services/pricing.service';
 import { AuthService } from '@/services/auth.service';
 import { handleApiError } from '@/lib/errors';
+import { resolveRequestSessionToken } from '@/lib/session';
 
 const ValidateInput = z.object({
   code: z.string().trim().min(1),
@@ -15,11 +16,10 @@ export async function POST(req: NextRequest) {
     const { code, subtotal } = ValidateInput.parse(json);
 
     let userId: string | undefined = undefined;
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '') || req.cookies.get('shlokveda_session_token')?.value;
+    const token = resolveRequestSessionToken(req, 'customer')?.token;
     if (token) {
       try {
-        const decoded = AuthService.verifyToken(token);
+        const decoded = AuthService.verifyToken(token, { scope: 'customer' });
         userId = decoded.userId;
       } catch {
         // Guest mode fallback

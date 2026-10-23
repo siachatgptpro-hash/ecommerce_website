@@ -44,7 +44,23 @@ try {
   const count = await client.query(
     `SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'public'`
   );
+  const stock = await client.query(
+    `SELECT
+       count(*)::int AS total,
+       count(*) FILTER (WHERE v."stockQuantity" = 100)::int AS at100,
+       count(*) FILTER (
+         WHERE EXISTS (
+           SELECT 1
+           FROM "InventoryLedger" l
+           WHERE l."variantId" = v."id"
+             AND l."referenceId" = 'OPENING_STOCK_100_20261024'
+         )
+       )::int AS ledger
+     FROM "ProductVariant" v
+     WHERE starts_with(v."id", 'pdfv_')`
+  );
   console.log(`DONE ✅ Database ready (${count.rows[0].n} tables created).`);
+  console.log(`Catalogue opening stock: ${stock.rows[0].at100}/${stock.rows[0].total} brochure pack variants at 100 units; ${stock.rows[0].ledger} opening-stock ledger rows.`);
   console.log('Next step — create your admin login:');
   console.log("  DATABASE_URL='postgresql://…' ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='min-14-chars' npm run admin:bootstrap");
 } catch (err) {

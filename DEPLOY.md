@@ -35,12 +35,22 @@ Pick ONE path (never both on the same database):
   saves store plain text only),
   `20261024_add_uploaded_files.sql` (admin-uploaded images stored in Neon;
   the upload endpoint also creates this table if it is missing, so deploying
-  the code before this migration does not break uploads).
+  the code before this migration does not break uploads),
+  `20261024_fill_brochure_opening_stock_100.sql` (owner-approved opening
+  balance of 100 units for every brochure pack variant, with matching
+  inventory-ledger rows; its marker makes a duplicate run safe and prevents
+  later sales/manual corrections from being reset).
 - The fresh-database script already contains all of the above — never run
   both paths on the same database.
-- ⚠️ The catalogue seed sets **stockQuantity = 0** (unverified stock). After
-  deploy, set real stock per variant in Admin → Inventory Ledger, otherwise
-  every product shows out of stock.
+- **Stock:** the brochure PDF was checked page by page; it contains product,
+  pack size, MRP and page-number data, but no inventory quantities. On
+  2026-10-24 the owner approved **100 units per brochure pack variant**.
+  A fresh database is seeded at 100 for all 101 variants. For an existing
+  database that was created before this change, after pulling the merged code
+  run this private one-time command from the repository root:
+  `DATABASE_URL='postgresql://…' CONFIRM_FILL_BROCHURE_STOCK_100=YES npm run inventory:fill-brochure-stock`
+  Success must verify **101/101** variants at 100. Do not accept live orders
+  until you see that success message and spot-check Admin → Inventory Ledger.
 
 ## 2. Create the first admin (one time, from your computer)
 ```bash
@@ -48,6 +58,19 @@ DATABASE_URL='postgresql://…' ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='min-
 ```
 This creates the SUPER_ADMIN/ADMIN roles, all permissions, and your login.
 It refuses to promote/reset an existing account.
+
+### If your email was already registered as a customer
+
+Do **not** run the database setup again. From your private computer terminal,
+run this one command to add the missing admin roles to that existing account.
+It does not change the account password:
+
+```bash
+DATABASE_URL='postgresql://…' ADMIN_EMAIL=you@example.com CONFIRM_PROMOTE_ADMIN=YES npm run admin:promote
+```
+
+Success must say that the account has `SUPER_ADMIN`, `ADMIN`, and
+`MANAGE_CMS`. Then sign in at `/admin/login`.
 
 
 ## 3. Deploy on Vercel (use Import, not "clone template")
