@@ -275,7 +275,7 @@ export const BlogPostSchema = z.object({
   slug: z.string().trim().min(3).regex(/^[a-z0-9-]+$/),
   summary: z.string().trim().optional(),
   content: z.string().trim().min(20),
-  featuredImg: z.string().url().optional().or(z.literal('')),
+  featuredImg: imageReference().optional().or(z.literal('')),
   authorName: z.string().trim().default('Shlokveda Ayurvedic Expert'),
   readTimeMinutes: z.number().int().positive().default(5),
   isPublished: z.boolean().default(false),

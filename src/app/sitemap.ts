@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { ProductRepository } from '@/repositories/product.repository';
 import { getPolicyLinks } from '@/lib/policies';
+import { CMSRepository } from '@/repositories/cms.repository';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/shop`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
     { url: `${siteUrl}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${siteUrl}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${siteUrl}/blog`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
   ];
 
   // Every Trust & Policies page (built-ins + admin-managed CMS pages such
@@ -43,7 +45,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.95,
   }));
 
-  // Note: there is no public /blog route, so blog posts are deliberately not
-  // advertised here (they previously pointed crawlers at 404 pages).
-  return [...staticRoutes, ...policyRoutes, ...categoryRoutes, ...productRoutes];
+  // Published journal articles (drafts stay out — their pages 404 publicly).
+  const posts = await CMSRepository.listBlogPosts(true);
+  const blogRoutes: MetadataRoute.Sitemap = posts.map((post) => ({
+    url: `${siteUrl}/blog/${post.slug}`,
+    lastModified: new Date(post.updatedAt),
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  }));
+
+  return [...staticRoutes, ...policyRoutes, ...categoryRoutes, ...productRoutes, ...blogRoutes];
 }

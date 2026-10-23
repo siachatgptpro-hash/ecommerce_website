@@ -38,6 +38,7 @@ const QUICK_LINKS = [
   { href: '/#categories', label: 'Shop by Category' },
   { href: '/shop', label: 'Browse Catalogue' },
   { href: '/about', label: 'About Shlokveda' },
+  { href: '/blog', label: 'Blog' },
   { href: '/contact', label: 'Contact Us' },
   { href: '/login', label: 'Customer Portal' },
   { href: '/account', label: 'My Account' },

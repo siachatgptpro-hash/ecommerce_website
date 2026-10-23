@@ -157,6 +157,12 @@ export class CMSRepository {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
+  public static async findBlogPostById(id: string): Promise<BlogPost | null> {
+    if (isPostgresConfigured()) { const r=await pgQuery('SELECT * FROM "BlogPost" WHERE "id"=$1 LIMIT 1',[id]); return r.rows[0]?mapBlog(r.rows[0]):null; }
+    const post = db.blogPosts.get(id);
+    return post ? { ...post } : null;
+  }
+
   public static async findBlogPostBySlug(slug: string): Promise<BlogPost | null> {
     if (isPostgresConfigured()) { const r=await pgQuery('SELECT * FROM "BlogPost" WHERE LOWER("slug")=LOWER($1) LIMIT 1',[slug]); return r.rows[0]?mapBlog(r.rows[0]):null; }
     const posts = Array.from(db.blogPosts.values());

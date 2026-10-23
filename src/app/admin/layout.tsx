@@ -15,6 +15,7 @@ import {
   Users,
   TicketPercent,
   LayoutGrid,
+  Newspaper,
   MessageSquare,
   Image as ImageIcon,
   Settings,
@@ -48,6 +49,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: 'Coupons & Promos', href: '/admin/coupons', icon: TicketPercent },
     { label: 'Review Moderation', href: '/admin/reviews', icon: MessageSquare },
     { label: 'CMS & Banners', href: '/admin/cms', icon: ImageIcon },
+    { label: 'Blog Posts', href: '/admin/blog', icon: Newspaper },
     { label: 'Hathras Settings', href: '/admin/settings', icon: Settings },
     { label: 'Audit Trail', href: '/admin/audit-logs', icon: History },
   ];

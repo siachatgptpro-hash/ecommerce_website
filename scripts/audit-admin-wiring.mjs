@@ -285,6 +285,38 @@ if (auditCat) {
   }
 }
 
+// ---------------------------------------------------------------- blog lifecycle
+console.log('\n[Blog admin wiring]');
+const blogSlug = `audit-blog-${Date.now()}`;
+const blogMarker = `AUDITBLOG${Date.now()}`;
+const blogCreate = await call('POST', '/api/admin/blog', { jar: admin, body: { title: 'Audit Blog Post', slug: blogSlug, summary: 'Wiring audit summary', content: `${blogMarker} opening paragraph for the wiring audit.\n\n## A Section Heading\n\nClosing paragraph of the audit article body.`, isPublished: false } });
+const auditPost = data(blogCreate);
+check('L1 admin creates draft post', blogCreate.status === 201 && auditPost?.isPublished === false, `status ${blogCreate.status}`);
+const dupPost = await call('POST', '/api/admin/blog', { jar: admin, body: { title: 'Audit Blog Copy', slug: blogSlug, content: 'Duplicate slug body must be rejected by the API layer.' } });
+check('L2 duplicate slug rejected', dupPost.status === 409, `status ${dupPost.status}`);
+const custPost = await call('POST', '/api/admin/blog', { jar: cust, body: { title: 'Hacked Post', slug: 'hacked-post', content: 'Customers must never publish journal content here.' } });
+check('L3 customer cannot create post', [401, 403].includes(custPost.status), `status ${custPost.status}`);
+if (auditPost) {
+  const draftPage = await call('GET', `/blog/${blogSlug}`);
+  check('L4 draft hidden from storefront', !draftPage.text.includes(blogMarker), `status ${draftPage.status}`);
+  const publish = await call('PUT', `/api/admin/blog/${auditPost.id}`, { jar: admin, body: { isPublished: true } });
+  check('L5 publish via PUT sets publishedAt', publish.json?.success && Boolean(data(publish)?.publishedAt), `status ${publish.status}`);
+  const blogIndex = await call('GET', '/blog');
+  check('L6 blog index lists the post', blogIndex.status === 200 && blogIndex.text.includes('Audit Blog Post'), `status ${blogIndex.status}`);
+  const postPage = await call('GET', `/blog/${blogSlug}`);
+  check('L7 article page renders content + heading', postPage.status === 200 && postPage.text.includes(blogMarker) && postPage.text.includes('A Section Heading'), `status ${postPage.status}`);
+  const cmsFeed = data(await call('GET', '/api/cms'));
+  check('L8 public CMS feed carries the post', (cmsFeed?.blogPosts || []).some((p) => p.slug === blogSlug));
+  const homeHtml = await call('GET', '/');
+  check('L9 header exposes the Blog tab', homeHtml.text.includes('href="/blog"'));
+  const unpublish = await call('PUT', `/api/admin/blog/${auditPost.id}`, { jar: admin, body: { isPublished: false } });
+  const hiddenAgain = await call('GET', `/blog/${blogSlug}`);
+  check('L10 unpublish hides the article', unpublish.json?.success && !hiddenAgain.text.includes(blogMarker), `status ${hiddenAgain.status}`);
+  const deletePost = await call('DELETE', `/api/admin/blog/${auditPost.id}`, { jar: admin });
+  const adminPosts = data(await call('GET', '/api/admin/blog', { jar: admin }));
+  check('L11 delete removes the post', deletePost.json?.success === true && !(adminPosts?.posts || []).some((p) => p.id === auditPost.id), `status ${deletePost.status}`);
+}
+
 // ---------------------------------------------------------------- order lifecycle + review moderation
 console.log('\n[Order lifecycle & review moderation]');
 // The store is online-payment-only unless an admin enables COD; turn it on

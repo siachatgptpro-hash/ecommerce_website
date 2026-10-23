@@ -316,6 +316,9 @@ export function Header() {
           <Link href="/about" className="hover:text-[#1B4332] transition-colors">
             About Shlokveda
           </Link>
+          <Link href="/blog" className="hover:text-[#1B4332] transition-colors">
+            Blog
+          </Link>
           <Link href="/contact" className="hover:text-[#1B4332] transition-colors">
             Contact
           </Link>
@@ -383,6 +386,9 @@ export function Header() {
             </Link>
             <Link href="/about" onClick={() => setIsMobileMenuOpen(false)} className="py-1">
               About Shlokveda
+            </Link>
+            <Link href="/blog" onClick={() => setIsMobileMenuOpen(false)} className="py-1">
+              Blog
             </Link>
             <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)} className="py-1">
               Contact & Support
