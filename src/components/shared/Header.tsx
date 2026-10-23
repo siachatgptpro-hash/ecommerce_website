@@ -19,7 +19,6 @@ import {
   ChevronDown,
   Leaf,
   LayoutGrid,
-  BadgePercent,
   Package,
   CircleHelp,
   Gift,
@@ -301,15 +300,6 @@ export function Header() {
               aria-hidden="true"
             />
           </button>
-          {categories.map((cat) => (
-            <Link
-              key={cat.id}
-              href={`/category/${cat.slug}`}
-              className="hover:text-[#1B4332] transition-colors"
-            >
-              {cat.name}
-            </Link>
-          ))}
           <Link href="/shop" className="hover:text-[#1B4332] transition-colors">
             Browse Catalogue
           </Link>
@@ -322,12 +312,8 @@ export function Header() {
           <Link href="/contact" className="hover:text-[#1B4332] transition-colors">
             Contact
           </Link>
-          <Link
-            href="/shop"
-            className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-[#C5A880]/25 px-3.5 py-1.5 text-[12px] font-bold text-[#8A6D3B] transition-colors hover:bg-[#C5A880]/40"
-          >
-            <BadgePercent className="h-4 w-4" aria-hidden="true" />
-            Deals & Offers
+          <Link href="/policies/privacy-policy" className="hover:text-[#1B4332] transition-colors">
+            Privacy Policy
           </Link>
         </nav>
 
