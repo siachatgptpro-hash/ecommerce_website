@@ -72,19 +72,26 @@ export function CatalogueShowcase({
             sizes="(max-width: 1024px) 100vw, 50vw"
             className="object-cover"
           />
-          {/* Soft ground shadow so the pack sits on the wooden pedestal */}
+          {/* Soft contact shadow on the pedestal surface, under the pack base */}
           <span
             aria-hidden="true"
-            className="absolute bottom-[22%] left-1/2 h-4 w-[34%] -translate-x-1/2 rounded-full bg-[#3A2A18]/20 blur-md"
+            className="absolute bottom-[23%] left-1/2 h-[2.5%] w-[21%] -translate-x-1/2 rounded-full bg-[#3A2A18]/25 blur-md"
           />
-          <Image
-            src={imageSrc}
-            alt={imageAlt}
-            fill
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-contain p-6 mix-blend-multiply transition-transform duration-500 motion-safe:group-hover:scale-[1.03] sm:p-10"
-            style={{ objectPosition: '50% 64%' }}
-          />
+          {/* The pack stands ON the wooden slice: its base aligns with the
+              pedestal surface (~76% of the stage height) at ~25% of the card
+              width, so the real pack photo stays fully visible and never
+              sinks into the pedestal or table. Multiply only melts the
+              pack's thin white edges into the bright backdrop. */}
+          <span className="absolute inset-x-0 bottom-[24%] flex justify-center">
+            <Image
+              src={imageSrc}
+              alt={imageAlt}
+              width={452}
+              height={847}
+              sizes="(max-width: 1024px) 25vw, 13vw"
+              className="h-auto w-[25%] origin-bottom mix-blend-multiply transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
+            />
+          </span>
             </>
           )}
         </Link>

@@ -212,7 +212,10 @@ export default function AdminSettingsPage() {
               ) : (
                 <>
                   <img src="/stages/stage-showcase.webp" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
-                  <img src="/products/pdf-p5-i3.webp" alt="Built-in showcase: Triphala Ras pack on the catalogue stage" className="absolute inset-0 h-full w-full object-contain p-4 mix-blend-multiply" />
+                  <span aria-hidden="true" className="absolute bottom-[23%] left-1/2 h-[2.5%] w-[21%] -translate-x-1/2 rounded-full bg-[#3A2A18]/25 blur-md" />
+                  <span className="absolute inset-x-0 bottom-[24%] flex justify-center">
+                    <img src="/products/pdf-p5-i3.webp" alt="Built-in showcase: Triphala Ras pack on the catalogue stage" className="h-auto w-[25%] mix-blend-multiply" />
+                  </span>
                 </>
               )}
             </div>
