@@ -272,7 +272,16 @@ const Kavita = new Jar();
   const calcLow = await call('POST', '/api/cart/calculate', { jar: Kavita, body: { items: [{ variantId: lowVariantId, quantity: 1 }], couponCode: 'PROBEFREE' } });
   const low = calcLow.json?.data || {};
   check('C10 free-shipping coupon below min: error shown, shipping charged', !!low.couponError && low.shippingFee > 0 && Math.abs(low.finalPayableAmount - (low.subtotal + low.shippingFee)) < 0.02, `sub=${low.subtotal} ship=${low.shippingFee} payable=${low.finalPayableAmount} err=${low.couponError}`);
-  const calcHigh = await call('POST', '/api/cart/calculate', { jar: Kavita, body: { items: [{ variantId: v.id, quantity: 8 }], couponCode: 'PROBEFREE' } });
+  // Product ordering is not a price guarantee: choose a variant/quantity
+  // that actually reaches the coupon minimum within available stock.
+  const highCandidate = products
+    .flatMap((product) => product.variants || [])
+    .map((variant) => ({ variant, price: variant.sellingPrice ?? variant.price ?? 0 }))
+    .filter(({ variant, price }) => price > 0 && Math.ceil(1000 / price) <= (variant.stockQuantity || 0))
+    .sort((a, b) => b.price - a.price)[0];
+  const highVariantId = highCandidate?.variant.id || v.id;
+  const highQuantity = highCandidate ? Math.ceil(1000 / highCandidate.price) : 8;
+  const calcHigh = await call('POST', '/api/cart/calculate', { jar: Kavita, body: { items: [{ variantId: highVariantId, quantity: highQuantity }], couponCode: 'PROBEFREE' } });
   const high = calcHigh.json?.data || {};
   check('C11 free-shipping above min: shipping waived once, no double discount', high.subtotal >= 1000 && high.shippingFee === 0 && (high.couponDiscount || 0) === 0 && Math.abs(high.finalPayableAmount - high.subtotal) < 0.02, `sub=${high.subtotal} ship=${high.shippingFee} coup=${high.couponDiscount} payable=${high.finalPayableAmount}`);
 
