@@ -5,8 +5,9 @@ import { productRepository } from '@/repositories/product.repository';
 import { AyurvedicFormulation } from '@/types';
 import { BROCHURE_PRODUCTS } from '@/lib/brochure-data';
 import { toPublicProduct } from '@/lib/public-dto';
-import { BookOpen, ChevronRight, Image as ImageIcon, IndianRupee, Leaf, SlidersHorizontal } from 'lucide-react';
+import { ArrowDown, BookOpen, ChevronRight, Image as ImageIcon, IndianRupee, Leaf, SlidersHorizontal } from 'lucide-react';
 import { ContactGlowIcon } from '@/components/contact/ContactGlowIcon';
+import { FallingLeaves } from '@/components/botanical/FallingLeaves';
 
 const SORT_OPTIONS = [
   { value: 'featured', label: 'Featured' },
@@ -102,6 +103,8 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
 
   return (
     <div className="relative overflow-hidden bg-[#FAF7F2]">
+      {/* Sparse leaves drifting through the viewport behind the catalogue */}
+      <FallingLeaves preset="catalogue" />
       {/* Reference-style botanical frame: photographic foliage belongs at
           the corners and extreme edges only, while the catalogue itself
           stays on clean ivory. Each accent is a corner crop of the same
@@ -139,7 +142,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_32%_at_50%_0%,rgba(217,190,140,0.2),transparent_70%)] motion-safe:animate-[banner-drift_18s_ease-in-out_infinite_alternate]"
       />
-    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
+    <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
       {/* Breadcrumb & Header */}
       <div className="space-y-5 border-b border-[#E9E0CC]/80 pb-6 motion-safe:animate-[rise-in_.6s_cubic-bezier(.22,1,.36,1)_both]">
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-gray-500">
@@ -156,6 +159,13 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
             <p className="text-xs sm:text-sm text-gray-600 mt-1.5">
               Showing {rangeStart}–{rangeEnd} of {total} brochure-listed products
             </p>
+            <a
+              href="#catalogue-results"
+              className="group mt-4 inline-flex items-center gap-2 rounded-full bg-[#1B4332] px-5 py-2.5 text-xs font-bold text-[#F3E5C3] shadow-[0_12px_28px_-10px_rgba(27,67,50,0.65),0_0_18px_rgba(197,168,128,0.4)] transition-all duration-[var(--dur-ui)] ease-luxe hover:bg-[#2D6A4F] hover:shadow-[0_16px_34px_-10px_rgba(197,168,128,0.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A880] focus-visible:ring-offset-2 motion-safe:hover:scale-[1.03]"
+            >
+              View all {total} listings
+              <ArrowDown className="h-3.5 w-3.5 transition-transform duration-[var(--dur-ui)] ease-luxe motion-safe:group-hover:translate-y-0.5" aria-hidden="true" />
+            </a>
           </div>
           <ul className="hidden items-start gap-6 lg:flex" aria-label="Catalogue sourcing">
             {trustItems.map(({ icon, label, sub }, index) => (
@@ -278,7 +288,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
         </aside>
 
         {/* PRODUCTS GRID & PAGINATION */}
-        <main className="lg:col-span-3 space-y-8">
+        <main id="catalogue-results" className="lg:col-span-3 scroll-mt-36 space-y-8">
           {productsData.products.length === 0 ? (
             <div className="py-20 text-center bg-white/80 rounded-3xl border border-[#EDE4CF] space-y-4 motion-safe:animate-[fade-in_.35s_ease-out_both]">
               <div className="w-16 h-16 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center mx-auto">

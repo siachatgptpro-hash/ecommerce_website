@@ -12,6 +12,8 @@ import { CategoryShowcase } from '@/components/storefront/CategoryShowcase';
 import { ProductInfoHero } from '@/components/storefront/ProductInfoHero';
 import { TransparencyBanner } from '@/components/storefront/TransparencyBanner';
 import { CatalogueTrustStrip } from '@/components/storefront/CatalogueTrustStrip';
+import { FallingLeaves } from '@/components/botanical/FallingLeaves';
+import { Reveal } from '@/components/botanical/Reveal';
 import { selectFeaturedCategories } from '@/lib/homepage-categories';
 import { jsonLdScriptContent } from '@/lib/seo';
 import {
@@ -142,31 +144,40 @@ export default async function HomePage() {
       <section className="relative overflow-hidden" aria-labelledby="catalogue-highlights-heading">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[url('/banners/highlights-botanical-bg.webp')] bg-cover bg-center" />
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(250,247,242,0.12)_0%,rgba(250,247,242,0.04)_45%,rgba(250,247,242,0.16)_100%)]" />
+        {/* Midground foliage: masked corner crops swaying over the static
+            backdrop for depth; sparse leaves drift down above them. */}
+        <div aria-hidden="true" className="pointer-events-none absolute -left-8 -top-8 h-44 w-44 origin-top-left bg-[url('/banners/highlights-botanical-bg.webp')] bg-[size:230%_auto] bg-[position:0%_0%] bg-no-repeat opacity-70 [mask-image:radial-gradient(ellipse_85%_85%_at_10%_10%,black_40%,transparent_72%)] motion-safe:animate-[leaf-sway_9s_ease-in-out_infinite_alternate] sm:h-56 sm:w-56" />
+        <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 origin-top-right bg-[url('/banners/highlights-botanical-bg.webp')] bg-[size:230%_auto] bg-[position:100%_0%] bg-no-repeat opacity-70 [mask-image:radial-gradient(ellipse_85%_85%_at_90%_10%,black_40%,transparent_72%)] motion-safe:animate-[leaf-sway_10s_ease-in-out_infinite_alternate] sm:h-56 sm:w-56" style={{ animationDelay: '0.7s' }} />
+        <FallingLeaves preset="catalogue" contained />
         <div className="relative mx-auto max-w-7xl space-y-8 px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div>
+        <div className="flex flex-col gap-7 lg:flex-row lg:items-start lg:justify-between">
+          <Reveal>
             <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#1B4332]">
               <Leaf className="h-4 w-4 text-[#1B4332]" aria-hidden="true" />
               From Our Ayurvedic Catalogue
             </span>
-            <h2 id="catalogue-highlights-heading" className="mt-2 font-serif text-4xl font-bold text-[#0F281E] sm:text-5xl">
-              Catalogue <span className="text-[#A67C2E]">Highlights</span>
+            <h2 id="catalogue-highlights-heading" className="mt-3 font-serif text-[40px] font-bold leading-[1.06] text-[#0F281E] sm:text-6xl">
+              Catalogue
+              <span className="block bg-[linear-gradient(180deg,#D9B45B,#A67C2E)] bg-clip-text text-transparent">Highlights</span>
             </h2>
-            <p className="mt-2 text-sm text-gray-500 sm:text-base">
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-gray-600 sm:text-base">
               Discover Ayurvedic products for your everyday wellness routine.
             </p>
-          </div>
+          </Reveal>
 
-          <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+          <Reveal delay={120} className="flex flex-col items-start gap-6 lg:items-center lg:pt-3">
             <ul className="hidden items-center gap-7 md:flex" aria-label="Catalogue assurances">
               {[
                 { icon: Leaf, filled: true, title: 'Authentic Formulations', text: 'Rooted in classical Ayurveda' },
                 { icon: ShieldCheck, filled: false, title: 'Quality Checked', text: 'Verified pack information' },
                 { icon: Soup, filled: false, title: 'Wide Range', text: 'For your daily wellness needs' },
-              ].map(({ icon: Icon, filled, title, text }) => (
+              ].map(({ icon: Icon, filled, title, text }, index) => (
                 <li key={title} className="flex items-center gap-2.5">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-[#1B4332]/20 bg-white text-[#1B4332]">
-                    <Icon className={filled ? 'h-5 w-5 fill-[#1B4332]' : 'h-5 w-5'} strokeWidth={filled ? 1.5 : 2.2} aria-hidden="true" />
+                  <span className="relative grid h-12 w-12 shrink-0 place-items-center">
+                    <span aria-hidden="true" className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(197,168,128,0.55),transparent_70%)] motion-safe:animate-[banner-breathe_5.5s_ease-in-out_infinite]" style={{ animationDelay: `${index * 0.8}s` }} />
+                    <span className="relative grid h-11 w-11 place-items-center rounded-full border border-[#D9BE8C]/80 bg-[#FBF3E2] shadow-[0_0_16px_rgba(197,168,128,0.45)]">
+                      <Icon className={filled ? 'h-5 w-5 fill-[#1B4332] text-[#1B4332]' : 'h-5 w-5 text-[#A67C2E]'} strokeWidth={filled ? 1.5 : 1.9} aria-hidden="true" />
+                    </span>
                   </span>
                   <span>
                     <span className="block text-[13px] font-bold leading-tight text-gray-900">{title}</span>
@@ -177,17 +188,17 @@ export default async function HomePage() {
             </ul>
             <Link
               href="/shop"
-              className="inline-flex items-center gap-2 rounded-full border border-[#1B4332]/30 bg-white px-5 py-2.5 text-sm font-bold text-[#1B4332] shadow-sm transition-colors hover:border-[#1B4332] hover:bg-[#1B4332] hover:text-white"
+              className="group inline-flex items-center gap-2.5 rounded-full bg-[#1B4332] px-7 py-3.5 text-sm font-bold text-[#F3E5C3] shadow-[0_16px_36px_-12px_rgba(27,67,50,0.7),0_0_24px_rgba(197,168,128,0.45)] transition-all duration-[var(--dur-ui)] ease-luxe hover:bg-[#2D6A4F] hover:shadow-[0_20px_42px_-12px_rgba(197,168,128,0.8)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A880] focus-visible:ring-offset-2 motion-safe:hover:scale-[1.03]"
             >
               View all {catalogueCount.total} listings
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              <ArrowRight className="h-4 w-4 transition-transform duration-[var(--dur-ui)] ease-luxe motion-safe:group-hover:translate-x-1" aria-hidden="true" />
             </Link>
-          </div>
+          </Reveal>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {featuredProducts.products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {featuredProducts.products.map((product, index) => (
+            <ProductCard key={product.id} product={product} entranceDelay={Math.min(index, 7) * 60} />
           ))}
         </div>
         </div>
