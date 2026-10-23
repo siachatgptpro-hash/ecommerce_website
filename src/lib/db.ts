@@ -317,6 +317,32 @@ class DatabaseStore {
       for (const heroBanner of heroBanners) this.banners.set(heroBanner.id, heroBanner);
     }
 
+    // Policy & static pages seed (editable in Admin -> CMS; auto-listed in
+    // the footer Trust & Policies column). Content is transcribed from this
+    // storefront's own published notices and settings — no new legal copy.
+    const pageNow = new Date().toISOString();
+    const policyPages: StaticPage[] = [
+      {
+        id: 'page_disclaimer',
+        slug: 'disclaimer',
+        title: 'Disclaimer',
+        content: 'Product names, descriptions and ingredient notes on this store are transcribed from the supplied brochure where available. When a detail is not listed here, please refer to the product package for complete composition, directions, cautions and regulatory information.\n\nThis catalogue is for general information only and is not medical advice. It does not claim that any product diagnoses, treats, cures or prevents any health condition. Please read the package label carefully and consult a qualified healthcare professional before use.\n\nWe work to keep catalogue information accurate and consistent with the source brochure. If you notice an error, please contact the store so it can be reviewed.',
+        metaTitle: null,
+        metaDescription: null,
+        updatedAt: pageNow,
+      },
+      {
+        id: 'page_faq',
+        slug: 'faq',
+        title: 'Frequently Asked Questions',
+        content: 'How do I place an order?\nBrowse the catalogue, add products to your cart and proceed to checkout. You will be asked to log in or create an account so that your order can be tracked.\n\nWhat are the delivery charges?\nA delivery fee of ₹{{baseShippingFee}} applies on orders below ₹{{freeShippingThreshold}} and is waived at or above that amount. The final amount is calculated from your cart and shown before you place the order.\n\nHow can I pay?\nThe payment options available to you are shown at checkout. Online payments are processed through the configured payment gateway; this store does not store your card or UPI credentials.\n\nWhere does the product information come from?\nProduct names, pack sizes, printed MRPs and package photos are transcribed from the supplied product brochure. For complete composition, directions and cautions, please refer to the product package.\n\nHow do I request a return or refund?\nPlease contact the store with your order reference before requesting a return, cancellation or refund. Any applicable resolution will depend on the order status and the condition of the delivered product.',
+        metaTitle: null,
+        metaDescription: null,
+        updatedAt: pageNow,
+      },
+    ];
+    for (const page of policyPages) this.staticPages.set(page.slug, page);
+
     // Testimonials Seed
     // No testimonials or health/compliance claims are seeded without verified source material.
 

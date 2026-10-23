@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Banner } from '@/types';
-import { ImageIcon, Plus, CheckCircle2, XCircle, Trash2, Edit2, AlertCircle, UploadCloud, X } from 'lucide-react';
+import { Banner, StaticPage } from '@/types';
+import { ImageIcon, Plus, CheckCircle2, XCircle, Trash2, Edit2, AlertCircle, UploadCloud, X, FileText } from 'lucide-react';
 
 export default function AdminCmsPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -26,6 +26,18 @@ export default function AdminCmsPage() {
   const [isActive, setIsActive] = useState(true);
   const [sortOrder, setSortOrder] = useState(0);
 
+  // Policy & static pages state
+  const [pages, setPages] = useState<StaticPage[]>([]);
+  const [showPageModal, setShowPageModal] = useState(false);
+  const [editingPageSlug, setEditingPageSlug] = useState<string | null>(null);
+  const [pageSlug, setPageSlug] = useState('');
+  const [pageTitle, setPageTitle] = useState('');
+  const [pageContent, setPageContent] = useState('');
+  const [pageMetaTitle, setPageMetaTitle] = useState('');
+  const [pageMetaDescription, setPageMetaDescription] = useState('');
+  const [pageError, setPageError] = useState('');
+  const [pageSubmitting, setPageSubmitting] = useState(false);
+
   const fetchBanners = async () => {
     try {
       const res = await fetch('/api/admin/cms/banners');
@@ -40,8 +52,21 @@ export default function AdminCmsPage() {
     }
   };
 
+  const fetchPages = async () => {
+    try {
+      const res = await fetch('/api/admin/cms');
+      const data = await res.json();
+      if (data.success && data.data) {
+        setPages(data.data.pages || []);
+      }
+    } catch (err) {
+      console.error('Error fetching pages:', err);
+    }
+  };
+
   useEffect(() => {
     fetchBanners();
+    fetchPages();
   }, []);
 
   const openEdit = (banner: Banner) => {
@@ -119,6 +144,54 @@ export default function AdminCmsPage() {
       setErrorMsg(err.message || 'Error saving banner');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const openPageEdit = (page?: StaticPage) => {
+    setEditingPageSlug(page?.slug || null);
+    setPageSlug(page?.slug || '');
+    setPageTitle(page?.title || '');
+    setPageContent(page?.content || '');
+    setPageMetaTitle(page?.metaTitle || '');
+    setPageMetaDescription(page?.metaDescription || '');
+    setPageError('');
+    setShowPageModal(true);
+  };
+
+  const handleSavePage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanSlug = pageSlug.trim().toLowerCase();
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(cleanSlug)) {
+      return setPageError('Slug must use lowercase letters, numbers and hyphens (e.g. disclaimer).');
+    }
+    if (!pageTitle.trim()) return setPageError('Page title is required.');
+    if (!pageContent.trim()) return setPageError('Page content is required.');
+
+    setPageSubmitting(true);
+    setPageError('');
+    try {
+      const res = await fetch('/api/admin/cms?type=page', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: cleanSlug,
+          title: pageTitle.trim(),
+          content: pageContent.trim(),
+          metaTitle: pageMetaTitle.trim() || null,
+          metaDescription: pageMetaDescription.trim() || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error?.message || 'Failed to save page');
+      }
+      await fetchPages();
+      setShowPageModal(false);
+      setEditingPageSlug(null);
+    } catch (err: any) {
+      setPageError(err.message || 'Error saving page');
+    } finally {
+      setPageSubmitting(false);
     }
   };
 
@@ -205,6 +278,52 @@ export default function AdminCmsPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Policy & Static Pages */}
+      <div className="bg-white p-6 rounded-3xl border border-[#F3EFE6] shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="font-serif text-xl font-bold text-gray-900 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-[#1B4332]" /> Policy &amp; Static Pages
+            </h2>
+            <p className="text-xs text-gray-500 mt-0.5 max-w-xl">
+              Pages saved here appear automatically in the footer Trust &amp; Policies list and open under /policies/ on the store.
+              The Privacy, Terms, Shipping and Refund texts are edited in Settings.
+            </p>
+          </div>
+          <button
+            onClick={() => openPageEdit()}
+            className="px-5 py-2.5 rounded-xl bg-[#1B4332] text-white font-bold text-xs hover:bg-[#2D6A4F] transition-all flex items-center gap-1.5 shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Page</span>
+          </button>
+        </div>
+
+        {pages.length === 0 ? (
+          <p className="text-xs text-gray-500">No static pages yet. Add your first page to list it in the footer.</p>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {pages.map((page) => (
+              <li key={page.id} className="flex items-center justify-between gap-4 py-3">
+                <div>
+                  <p className="text-sm font-bold text-gray-900">{page.title}</p>
+                  <p className="text-[11px] text-gray-500 font-mono">
+                    /policies/{page.slug} · Updated {new Date(page.updatedAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <button
+                  onClick={() => openPageEdit(page)}
+                  className="p-1.5 text-gray-400 hover:text-[#1B4332] rounded-lg"
+                  title="Edit page"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* CREATE BANNER MODAL */}
@@ -331,6 +450,112 @@ export default function AdminCmsPage() {
                   className="px-5 py-2 rounded-xl bg-[#1B4332] text-white text-xs font-bold hover:bg-[#2D6A4F] disabled:opacity-50"
                 >
                   {submitting ? 'Saving...' : 'Publish Banner'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* PAGE EDITOR MODAL */}
+      {showPageModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-[#F3EFE6] max-h-[90vh] overflow-y-auto">
+            <h3 className="font-serif text-lg font-bold text-gray-900">{editingPageSlug ? 'Edit Page' : 'Add Page'}</h3>
+
+            {pageError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{pageError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSavePage} className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                  Page Slug *
+                </label>
+                <input
+                  type="text"
+                  required
+                  disabled={Boolean(editingPageSlug)}
+                  value={pageSlug}
+                  onChange={(e) => setPageSlug(e.target.value)}
+                  placeholder="e.g. disclaimer"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none disabled:bg-gray-50 disabled:text-gray-500"
+                />
+                <p className="text-[11px] text-gray-500 mt-1">Opens at /policies/{pageSlug || 'your-slug'} and is listed in the footer. The slug cannot be changed after creation.</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                  Page Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={pageTitle}
+                  onChange={(e) => setPageTitle(e.target.value)}
+                  placeholder="e.g. Disclaimer"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                  Content *
+                </label>
+                <textarea
+                  rows={10}
+                  required
+                  value={pageContent}
+                  onChange={(e) => setPageContent(e.target.value)}
+                  placeholder="Write the page content. Separate paragraphs with a blank line."
+                  className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none"
+                />
+                <p className="text-[11px] text-gray-500 mt-1">
+                  Separate paragraphs with a blank line. Placeholders {'{{baseShippingFee}}'}, {'{{freeShippingThreshold}}'} and {'{{phone}}'} are replaced with live settings values.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                  Meta Title (SEO)
+                </label>
+                <input
+                  type="text"
+                  value={pageMetaTitle}
+                  onChange={(e) => setPageMetaTitle(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                  Meta Description (SEO)
+                </label>
+                <textarea
+                  rows={2}
+                  value={pageMetaDescription}
+                  onChange={(e) => setPageMetaDescription(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPageModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={pageSubmitting}
+                  className="px-5 py-2 rounded-xl bg-[#1B4332] text-white text-xs font-bold hover:bg-[#2D6A4F] disabled:opacity-50"
+                >
+                  {pageSubmitting ? 'Saving...' : 'Publish Page'}
                 </button>
               </div>
             </form>

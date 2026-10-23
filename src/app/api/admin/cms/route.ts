@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateAdmin } from '@/lib/admin-auth';
-import { BannerSchema, BlogPostSchema } from '@/schemas';
+import { BannerSchema, BlogPostSchema, StaticPageSchema } from '@/schemas';
 import { CMSRepository } from '@/repositories/cms.repository';
 import { AuditRepository } from '@/repositories/audit.repository';
 import { PermissionKey } from '@/types';
@@ -42,6 +42,16 @@ export async function POST(req: NextRequest) {
     } else if (type === 'blog') {
       const payload = BlogPostSchema.parse(json);
       created = await CMSRepository.createBlogPost(payload);
+    } else if (type === 'page') {
+      // Static/policy pages: upsert by slug (creates or updates). Saved pages
+      // are served at /policies/<slug> and listed in the footer automatically.
+      const payload = StaticPageSchema.parse(json);
+      created = await CMSRepository.updateStaticPage(payload.slug, {
+        title: payload.title,
+        content: payload.content,
+        metaTitle: payload.metaTitle ?? null,
+        metaDescription: payload.metaDescription ?? null,
+      });
     } else {
       // Previously fell through and returned 201 with `data: undefined`.
       throw new ValidationError(`Unsupported CMS content type: ${type}`);

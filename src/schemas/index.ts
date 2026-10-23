@@ -302,3 +302,16 @@ export const NewsletterSubscribeSchema = z.object({
     .email('Please enter a valid email address')
     .max(254, 'Email address is too long'),
 });
+
+export const StaticPageSchema = z.object({
+  slug: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must use lowercase letters, numbers and hyphens')
+    .max(80),
+  title: z.string().trim().min(1, 'Title is required').max(160),
+  content: z.string().trim().min(1, 'Content is required').max(20000),
+  metaTitle: z.string().trim().max(160).optional().nullable(),
+  metaDescription: z.string().trim().max(320).optional().nullable(),
+});

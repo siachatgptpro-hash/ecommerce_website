@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { settingsRepository } from '@/repositories/settings.repository';
+import { CMSRepository } from '@/repositories/cms.repository';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 
 interface PolicyPageProps {
@@ -23,7 +24,16 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
 
   const policyBody = (text: string) => (
     <div className="space-y-4 text-sm leading-relaxed text-gray-700">
-      {formatPolicy(text).split(/\n\s*\n/).filter(Boolean).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+      {formatPolicy(text).split(/\n\s*\n/).filter(Boolean).map((paragraph, index) => (
+        <p key={index}>
+          {paragraph.split('\n').map((line, lineIndex) => (
+            <React.Fragment key={lineIndex}>
+              {lineIndex > 0 && <br />}
+              {line}
+            </React.Fragment>
+          ))}
+        </p>
+      ))}
     </div>
   );
 
@@ -60,8 +70,18 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
     },
   };
 
-  const policy = policies[slug];
-  if (!policy) notFound();
+  let policy = policies[slug];
+  if (!policy) {
+    // Admin-managed static pages (Admin -> CMS) are served at /policies/<slug>
+    // and listed automatically in the footer Trust & Policies column.
+    const page = await CMSRepository.findStaticPageBySlug(slug);
+    if (!page) notFound();
+    policy = {
+      title: page.title,
+      subtitle: page.metaDescription || '',
+      content: policyBody(page.content || ''),
+    };
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-8">

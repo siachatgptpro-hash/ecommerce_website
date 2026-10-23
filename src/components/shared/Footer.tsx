@@ -8,14 +8,12 @@ import {
   Instagram,
   Leaf,
   Link2,
-  Lock,
   Mail,
   MapPin,
   Phone,
   ShieldCheck,
   Youtube,
 } from 'lucide-react';
-import { NewsletterForm } from './NewsletterForm';
 
 interface FooterCategory {
   slug: string;
@@ -43,18 +41,19 @@ const QUICK_LINKS = [
   { href: '/account', label: 'My Account' },
 ] as const;
 
-const POLICY_LINKS = [
-  { href: '/policies/shipping-policy', label: 'Shipping & Delivery Policy' },
-  { href: '/policies/refund-policy', label: 'Return & Refund Policy' },
-  { href: '/policies/privacy-policy', label: 'Privacy Policy' },
-  { href: '/policies/terms-and-conditions', label: 'Terms & Conditions' },
-  { href: '/policies/disclaimer', label: 'Disclaimer' },
-  { href: '/policies/faq', label: 'FAQ' },
-] as const;
+interface PolicyLinkItem {
+  slug: string;
+  title: string;
+}
 
-// Razorpay is the store's configured gateway; these are the methods it
-// presents at checkout. Rendered as text badges (no fabricated logo art).
-const PAYMENT_METHODS = ['Razorpay', 'UPI', 'VISA', 'Mastercard', 'RuPay', 'COD'] as const;
+// Guaranteed routes (texts edited in Admin -> Settings). Replaced after load
+// by the live /api/policies list: built-ins + pages managed in Admin -> CMS.
+const FALLBACK_POLICY_LINKS: PolicyLinkItem[] = [
+  { slug: 'shipping-policy', title: 'Shipping & Delivery Policy' },
+  { slug: 'refund-policy', title: 'Return & Refund Policy' },
+  { slug: 'privacy-policy', title: 'Privacy Policy' },
+  { slug: 'terms-and-conditions', title: 'Terms & Conditions' },
+];
 
 const headingClass =
   'flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[#C5A880]';
@@ -89,6 +88,21 @@ export function Footer() {
           .map((c: any) => ({ slug: String(c.slug), name: String(c.name) }))
           .slice(0, 8);
         if (active.length > 0) setCategories(active);
+      })
+      .catch(() => {});
+  }, []);
+
+  const [policyLinks, setPolicyLinks] = useState<PolicyLinkItem[]>(FALLBACK_POLICY_LINKS);
+
+  useEffect(() => {
+    fetch('/api/policies')
+      .then((res) => res.json())
+      .then((data) => {
+        const list = Array.isArray(data?.data) ? data.data : [];
+        const valid = list
+          .filter((policy: any) => policy?.slug && policy?.title)
+          .map((policy: any) => ({ slug: String(policy.slug), title: String(policy.title) }));
+        if (valid.length > 0) setPolicyLinks(valid);
       })
       .catch(() => {});
   }, []);
@@ -235,10 +249,10 @@ export function Footer() {
               Trust &amp; Policies
             </h4>
             <ul className="space-y-2.5">
-              {POLICY_LINKS.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className={linkClass}>
-                    {link.label}
+              {policyLinks.map((link) => (
+                <li key={link.slug}>
+                  <Link href={`/policies/${link.slug}`} className={linkClass}>
+                    {link.title}
                   </Link>
                 </li>
               ))}
@@ -246,50 +260,8 @@ export function Footer() {
           </nav>
         </div>
 
-        {/* NEWSLETTER + SECURE PAYMENTS */}
-        <div className="mt-14 grid items-center gap-8 border-t border-white/10 pt-10 lg:grid-cols-5">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 lg:col-span-3">
-            <div className="flex flex-col gap-5 md:flex-row md:items-center">
-              <div className="shrink-0">
-                <h4 className="flex items-center gap-2 font-serif text-lg font-bold text-white">
-                  <Leaf className="h-4 w-4 text-[#C5A880]" aria-hidden="true" />
-                  Stay Updated
-                </h4>
-                <p className="mt-1.5 max-w-[240px] text-xs leading-relaxed text-gray-400">
-                  Get the latest updates, offers and Ayurvedic wellness tips.
-                </p>
-              </div>
-              <NewsletterForm />
-            </div>
-          </div>
-
-          <div className="lg:col-span-2">
-            <p className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#C5A880]/15 text-[#C5A880]" aria-hidden="true">
-                <Lock className="h-4 w-4" />
-              </span>
-              <span>
-                <span className="block text-sm font-bold text-white">Secure Payments</span>
-                <span className="block text-[11px] text-gray-400">
-                  Payments are processed securely via Razorpay.
-                </span>
-              </span>
-            </p>
-            <ul className="mt-4 flex flex-wrap items-center gap-2" aria-label="Accepted payment methods">
-              {PAYMENT_METHODS.map((method) => (
-                <li
-                  key={method}
-                  className="rounded-md bg-white px-2.5 py-1.5 text-[10px] font-extrabold tracking-wide text-gray-700 shadow-sm"
-                >
-                  {method}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
         {/* BOTTOM BAR (extra bottom padding clears the mobile navigation) */}
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/10 pb-24 pt-5 text-center text-[11px] text-gray-400 md:pb-6 lg:flex-row lg:text-left">
+        <div className="mt-14 flex flex-col items-center justify-between gap-3 border-t border-white/10 pb-24 pt-5 text-center text-[11px] text-gray-400 md:pb-6 lg:flex-row lg:text-left">
           <p>
             © {year} SHLOKVEDA. All Rights Reserved. {settings.city}, {settings.state}, India.
           </p>
