@@ -41,7 +41,7 @@ export class SettingsRepository {
       storeName: value('STORE_NAME', 'Shlokveda', 'BUSINESS_NAME'),
       gstin: value('GSTIN', '09ANCPV6879P1ZP', 'BUSINESS_GSTIN'),
       phone: value('PHONE', '7017840020', 'BUSINESS_PHONE'),
-      email: value('EMAIL', 'contact@shlokveda.com', 'SUPPORT_EMAIL'),
+      email: value('EMAIL', '', 'SUPPORT_EMAIL'),
       addressLine1: value('ADDRESS_LINE1', 'B.H Oil Meal Road, Next to Bank of Maharashtra', 'BUSINESS_ADDRESS_LINE1'),
       addressLine2: value('ADDRESS_LINE2', 'Dobra Bal Colony', 'BUSINESS_ADDRESS_LINE2'),
       city: value('CITY', 'Hathras', 'BUSINESS_CITY'),

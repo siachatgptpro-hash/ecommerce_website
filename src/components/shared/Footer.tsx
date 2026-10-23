@@ -4,9 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  ChevronRight,
   Facebook,
-  FileText,
   Instagram,
   Leaf,
   Link2,
@@ -54,18 +52,20 @@ const POLICY_LINKS = [
   { href: '/policies/faq', label: 'FAQ' },
 ] as const;
 
+// Razorpay is the store's configured gateway; these are the methods it
+// presents at checkout. Rendered as text badges (no fabricated logo art).
+const PAYMENT_METHODS = ['Razorpay', 'UPI', 'VISA', 'Mastercard', 'RuPay', 'COD'] as const;
+
 const headingClass =
   'flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[#C5A880]';
 const linkClass =
   'inline-block text-[13px] text-gray-300 transition-all hover:text-white motion-safe:hover:translate-x-0.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C5A880] rounded-sm';
-const catLinkClass =
-  'group flex w-full items-center justify-between gap-2 rounded-sm text-[13px] text-gray-300 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C5A880]';
 
 export function Footer() {
   const [settings, setSettings] = useState({
     storeName: 'Shlokveda', gstin: '09ANCPV6879P1ZP', phone: '7017840020',
     addressLine1: 'B.H Oil Meal Road, Next to Bank of Maharashtra', addressLine2: 'Dobra Bal Colony',
-    city: 'Hathras', state: 'Uttar Pradesh', postalCode: '204101', email: 'contact@shlokveda.com', logoUrl: '/logo.png',
+    city: 'Hathras', state: 'Uttar Pradesh', postalCode: '204101', email: '', logoUrl: '/logo.png',
     facebookUrl: '', instagramUrl: '', youtubeUrl: '',
   });
   const [categories, setCategories] = useState<FooterCategory[]>(FALLBACK_CATEGORIES);
@@ -182,8 +182,7 @@ export function Footer() {
 
             {settings.gstin && (
               <p>
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#C5A880]/60 px-4 py-1.5 font-mono text-[11px] tracking-wide text-[#C5A880]">
-                  <FileText className="h-3.5 w-3.5" aria-hidden="true" />
+                <span className="inline-block rounded-full border border-[#C5A880]/60 px-4 py-1.5 font-mono text-[11px] tracking-wide text-[#C5A880]">
                   GSTIN / UIN:&nbsp;&nbsp;{settings.gstin}
                 </span>
               </p>
@@ -191,7 +190,7 @@ export function Footer() {
           </div>
 
           {/* Column 2: Our Categories (live catalogue) */}
-          <nav aria-label="Product categories" className="space-y-4 lg:border-l lg:border-white/10 lg:pl-8">
+          <nav aria-label="Product categories" className="space-y-4">
             <h4 className={headingClass}>
               <Leaf className="h-3.5 w-3.5" aria-hidden="true" />
               Our Categories
@@ -199,23 +198,21 @@ export function Footer() {
             <ul className="space-y-2.5">
               {categories.map((category) => (
                 <li key={category.slug}>
-                  <Link href={`/category/${category.slug}`} className={catLinkClass}>
+                  <Link href={`/category/${category.slug}`} className={linkClass}>
                     {category.name}
-                    <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#C5A880]/70 transition-transform motion-safe:group-hover:translate-x-0.5" aria-hidden="true" />
                   </Link>
                 </li>
               ))}
               <li>
-                <Link href="/shop" className={catLinkClass}>
+                <Link href="/shop" className={linkClass}>
                   All Products
-                  <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#C5A880]/70 transition-transform motion-safe:group-hover:translate-x-0.5" aria-hidden="true" />
                 </Link>
               </li>
             </ul>
           </nav>
 
           {/* Column 3: Quick Links */}
-          <nav aria-label="Quick links" className="space-y-4 lg:border-l lg:border-white/10 lg:pl-8">
+          <nav aria-label="Quick links" className="space-y-4">
             <h4 className={headingClass}>
               <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
               Quick Links
@@ -232,7 +229,7 @@ export function Footer() {
           </nav>
 
           {/* Column 4: Trust & Policies */}
-          <nav aria-label="Trust and policies" className="space-y-4 lg:border-l lg:border-white/10 lg:pl-8">
+          <nav aria-label="Trust and policies" className="space-y-4">
             <h4 className={headingClass}>
               <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
               Trust &amp; Policies
@@ -249,12 +246,12 @@ export function Footer() {
           </nav>
         </div>
 
-{/* NEWSLETTER + SECURE PAYMENTS — one panel with an inner divider, as in the reference */}
-        <div className="mt-14 rounded-[1.75rem] border border-[#C5A880]/25 bg-white/[0.04] p-6 sm:p-8">
-          <div className="grid items-center gap-8 lg:grid-cols-5 lg:gap-0">
-            <div className="flex flex-col gap-5 md:flex-row md:items-center lg:col-span-3 lg:pr-10">
+        {/* NEWSLETTER + SECURE PAYMENTS */}
+        <div className="mt-14 grid items-center gap-8 border-t border-white/10 pt-10 lg:grid-cols-5">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 lg:col-span-3">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center">
               <div className="shrink-0">
-                <h4 className="flex items-center gap-2 font-serif text-xl font-bold text-white">
+                <h4 className="flex items-center gap-2 font-serif text-lg font-bold text-white">
                   <Leaf className="h-4 w-4 text-[#C5A880]" aria-hidden="true" />
                   Stay Updated
                 </h4>
@@ -264,51 +261,36 @@ export function Footer() {
               </div>
               <NewsletterForm />
             </div>
+          </div>
 
-            <div className="lg:col-span-2 lg:border-l lg:border-white/10 lg:pl-10">
-              <p className="flex items-center gap-2.5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[#C5A880]/50 text-[#C5A880]" aria-hidden="true">
-                  <Lock className="h-4 w-4" />
+          <div className="lg:col-span-2">
+            <p className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#C5A880]/15 text-[#C5A880]" aria-hidden="true">
+                <Lock className="h-4 w-4" />
+              </span>
+              <span>
+                <span className="block text-sm font-bold text-white">Secure Payments</span>
+                <span className="block text-[11px] text-gray-400">
+                  Payments are processed securely via Razorpay.
                 </span>
-                <span>
-                  <span className="block text-sm font-bold text-white">Secure Payments</span>
-                  <span className="block text-[11px] text-gray-400">
-                    Payments are processed securely via Razorpay.
-                  </span>
-                </span>
-              </p>
-              {/* Original text badges for the methods the configured gateway presents */}
-              <ul className="mt-4 flex flex-wrap items-center gap-2" aria-label="Accepted payment methods">
-                <li className="flex h-8 items-center rounded-md bg-white px-2.5 shadow-sm" aria-label="Razorpay">
-                  <span aria-hidden="true" className="text-[11px] font-black italic text-[#072654]">Razorpay</span>
+              </span>
+            </p>
+            <ul className="mt-4 flex flex-wrap items-center gap-2" aria-label="Accepted payment methods">
+              {PAYMENT_METHODS.map((method) => (
+                <li
+                  key={method}
+                  className="rounded-md bg-white px-2.5 py-1.5 text-[10px] font-extrabold tracking-wide text-gray-700 shadow-sm"
+                >
+                  {method}
                 </li>
-                <li className="flex h-8 items-center rounded-md bg-white px-2.5 shadow-sm" aria-label="UPI">
-                  <span aria-hidden="true" className="text-[11px] font-black text-gray-700">UPI<span className="text-[#ED752E]">›</span><span className="text-[#097939]">›</span></span>
-                </li>
-                <li className="flex h-8 items-center rounded-md bg-white px-2.5 shadow-sm" aria-label="Visa">
-                  <span aria-hidden="true" className="text-[11px] font-black italic tracking-wide text-[#1A1F71]">VISA</span>
-                </li>
-                <li className="flex h-8 items-center rounded-md bg-white px-2.5 shadow-sm" aria-label="Mastercard">
-                  <span aria-hidden="true" className="flex items-center">
-                    <span className="h-4 w-4 rounded-full bg-[#EB001B]/90" />
-                    <span className="-ml-1.5 h-4 w-4 rounded-full bg-[#F79E1B]/90" />
-                  </span>
-                </li>
-                <li className="flex h-8 items-center rounded-md bg-white px-2.5 shadow-sm" aria-label="RuPay">
-                  <span aria-hidden="true" className="text-[11px] font-black italic"><span className="text-[#0B6FA4]">Ru</span><span className="text-[#2E9E4F]">Pay</span></span>
-                </li>
-                <li className="flex h-8 items-center rounded-md bg-white px-2.5 shadow-sm" aria-label="Cash on Delivery">
-                  <span aria-hidden="true" className="text-[11px] font-extrabold text-gray-600">COD</span>
-                </li>
-              </ul>
-            </div>
+              ))}
+            </ul>
           </div>
         </div>
 
-                {/* BOTTOM BAR (extra bottom padding clears the mobile navigation) */}
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-[#C5A880]/25 pb-24 pt-5 text-center text-[11px] text-gray-400 md:pb-6 lg:flex-row lg:text-left">
-          <p className="flex items-center gap-1.5">
-            <Leaf className="h-3.5 w-3.5 shrink-0 text-[#C5A880]" aria-hidden="true" />
+        {/* BOTTOM BAR (extra bottom padding clears the mobile navigation) */}
+        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/10 pb-24 pt-5 text-center text-[11px] text-gray-400 md:pb-6 lg:flex-row lg:text-left">
+          <p>
             © {year} SHLOKVEDA. All Rights Reserved. {settings.city}, {settings.state}, India.
           </p>
           <nav aria-label="Legal" className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
