@@ -114,15 +114,23 @@ export function CategoryShowcase({ categories }: { categories: CategoryCardView[
                 className="group relative flex flex-col overflow-hidden rounded-[1.75rem] border border-[#EFE6D4] bg-[#FFFCF5] shadow-[0_10px_30px_-12px_rgba(27,67,50,0.15)] transition-all duration-300 focus-within:ring-2 focus-within:ring-[#1B4332] focus-within:ring-offset-2 hover:border-[#C5A880]/60 hover:shadow-[0_24px_45px_-15px_rgba(27,67,50,0.3)] motion-safe:hover:-translate-y-1.5"
               >
                 <div className="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(circle_at_50%_45%,#FFFFFF_0%,#FFFDF8_42%,#F3ECD9_78%,#E2EDCE_100%)]">
-                  <Leaf aria-hidden="true" className="absolute -left-3 -top-3 h-20 w-20 rotate-[20deg] text-[#1B4332]/10" />
-                  <Leaf aria-hidden="true" className="absolute -bottom-4 -right-3 h-24 w-24 -scale-x-100 rotate-[15deg] text-[#1B4332]/10" />
+                  {category.imageFit === 'contain' && (
+                    <>
+                      <Leaf aria-hidden="true" className="absolute -left-3 -top-3 h-20 w-20 rotate-[20deg] text-[#1B4332]/10" />
+                      <Leaf aria-hidden="true" className="absolute -bottom-4 -right-3 h-24 w-24 -scale-x-100 rotate-[15deg] text-[#1B4332]/10" />
+                    </>
+                  )}
                   {category.imageUrl ? (
                     <Image
                       src={category.imageUrl}
                       alt={category.imageAlt}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      className="object-contain p-4 mix-blend-multiply transition-transform duration-500 motion-safe:group-hover:scale-105"
+                      className={
+                        category.imageFit === 'cover'
+                          ? 'object-cover transition-transform duration-500 motion-safe:group-hover:scale-105'
+                          : 'object-contain p-4 mix-blend-multiply transition-transform duration-500 motion-safe:group-hover:scale-105'
+                      }
                     />
                   ) : (
                     <span className="flex h-full w-full items-center justify-center" aria-hidden="true">

@@ -20,7 +20,7 @@ export const FEATURED_CATEGORY_SLUGS = [
 interface CategoryPresentation {
   blurb: string;
   icon: LucideIcon;
-  /** Real pack photograph used when the category has no image of its own. */
+  /** Homepage scene photograph for the card (category pages/admin keep the catalogue image). */
   fallbackImage: string;
   imageAlt: string;
 }
@@ -29,26 +29,26 @@ const CATEGORY_PRESENTATION: Record<string, CategoryPresentation> = {
   'syrups-juices': {
     blurb: 'Explore herbal syrups, juices, and traditional liquid formulations.',
     icon: Leaf,
-    fallbackImage: '/products/pdf-p6-i10.webp',
-    imageAlt: 'Ayurvedic herbal syrup bottle from the SHLOKVEDA syrups and juices range',
+    fallbackImage: '/categories/syrups-juices.webp',
+    imageAlt: 'Ayurvedic herbal syrup bottle with tulsi leaves, honey and ginger',
   },
   'arks-drops': {
     blurb: 'Discover traditional herbal extracts and liquid preparations.',
     icon: Droplet,
-    fallbackImage: '/products/pdf-p6-i3.webp',
-    imageAlt: 'Ayurvedic ark and herbal drops bottle from the SHLOKVEDA catalogue',
+    fallbackImage: '/categories/arks-drops.webp',
+    imageAlt: 'Amber glass dropper bottle with medicinal herbs and a stone mortar',
   },
   'herbal-oils': {
     blurb: 'Browse traditional herbal oils for personal care and massage.',
     icon: Flower2,
-    fallbackImage: '/products/pdf-p10-i1.webp',
-    imageAlt: 'Ayurvedic herbal oil bottle from the SHLOKVEDA catalogue',
+    fallbackImage: '/categories/herbal-oils.webp',
+    imageAlt: 'Ayurvedic herbal oil bottle with leaves, cinnamon and natural ingredients',
   },
   'herbal-capsules': {
     blurb: 'Explore capsule-based Ayurvedic formulations and wellness products.',
     icon: Pill,
-    fallbackImage: '/products/pdf-p12-i2.webp',
-    imageAlt: 'Ayurvedic herbal capsule bottle from the SHLOKVEDA catalogue',
+    fallbackImage: '/categories/herbal-capsules.webp',
+    imageAlt: 'Ayurvedic capsule bottle with amla fruits and botanical leaves',
   },
 };
 
@@ -66,6 +66,8 @@ export interface CategoryCardView {
   /** Null when neither the category nor the fallback provides a photo. */
   imageUrl: string | null;
   imageAlt: string;
+  /** 'cover' for scene photographs, 'contain' for white-background pack shots. */
+  imageFit: 'cover' | 'contain';
   icon: LucideIcon;
   accent: 'green' | 'gold';
   ctaLabel: string;
@@ -99,7 +101,8 @@ export function selectFeaturedCategories(categories: Category[]): CategoryCardVi
       slug: category.slug,
       href: `/category/${category.slug}`,
       description: presentation.blurb,
-      imageUrl: category.imageUrl || presentation.fallbackImage || null,
+      imageUrl: presentation.fallbackImage || category.imageUrl || null,
+      imageFit: presentation.fallbackImage ? 'cover' : 'contain',
       imageAlt: presentation.imageAlt,
       icon: presentation.icon,
       accent: index % 2 === 0 ? 'green' : 'gold',

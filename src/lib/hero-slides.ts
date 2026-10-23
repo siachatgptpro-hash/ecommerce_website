@@ -40,9 +40,9 @@ export const DEFAULT_HERO_SLIDES: HeroSlide[] = [
     titleHighlight: 'for a Healthier You',
     subtitle:
       'Explore authentic Ayurvedic products crafted with traditional herbs for your everyday wellness routine.',
-    imageUrl: '/banners/natural-care.jpg',
+    imageUrl: '/banners/hero-personal-care.webp',
     imageAlt:
-      'Ayurvedic personal care still life with aloe vera, herbal jars, roses and a mortar and pestle',
+      'Ayurvedic personal care scene with herbal jars, dropper bottles, aloe vera and botanical leaves',
     ctaText: 'Shop Personal Care',
     ctaLink: '/category/personal-care',
     secondaryCtaText: 'Explore Categories',
@@ -55,8 +55,8 @@ export const DEFAULT_HERO_SLIDES: HeroSlide[] = [
     titleHighlight: 'Rooted in Ayurveda',
     subtitle:
       'Discover traditional Ayurvedic formulations for your daily wellness routine.',
-    imageUrl: '/banners/daily-immunity.jpg',
-    imageAlt: 'Family sharing herbal tea with amla, honey and ginger on the table',
+    imageUrl: '/banners/hero-wellness.webp',
+    imageAlt: 'Ayurvedic wellness scene with a herbal jar, amla, tulsi leaves and honey',
     ctaText: 'Explore Wellness',
     ctaLink: '/category/immunity-rasayana',
     secondaryCtaText: 'Shop Bestsellers',
@@ -69,8 +69,8 @@ export const DEFAULT_HERO_SLIDES: HeroSlide[] = [
     titleHighlight: 'Everyday Care.',
     subtitle:
       'Explore traditional herbal oils and Ayurvedic preparations for your daily care rituals.',
-    imageUrl: '/banners/herbal-oils.jpg',
-    imageAlt: 'Amber bottles of herbal oil beside a lit brass diya and fresh herbs',
+    imageUrl: '/banners/hero-herbal-oils.webp',
+    imageAlt: 'Ayurvedic herbal oil bottles with medicinal leaves and a lit brass diya',
     ctaText: 'Shop Herbal Oils',
     ctaLink: '/category/herbal-oils',
     secondaryCtaText: 'Discover More',
@@ -83,8 +83,8 @@ export const DEFAULT_HERO_SLIDES: HeroSlide[] = [
     titleHighlight: 'Ayurveda Home',
     subtitle:
       "Find Ayurvedic essentials for your family's everyday wellness needs.",
-    imageUrl: '/banners/ayurvedic-wellness.jpg',
-    imageAlt: 'Ayurvedic wellness essentials with dropper bottles, turmeric and amla',
+    imageUrl: '/banners/hero-essentials.webp',
+    imageAlt: 'Collection of Ayurvedic wellness essentials with jars, bottles, herbs and powders',
     ctaText: 'Shop All Products',
     ctaLink: '/shop',
     secondaryCtaText: 'Browse Categories',
