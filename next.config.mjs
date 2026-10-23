@@ -54,7 +54,19 @@ const nextConfig = {
     ],
   },
   async headers() {
-    return [{ source: '/:path*', headers: securityHeaders }];
+    // Catalogue imagery lives at stable, un-hashed paths. A one-day cache
+    // with a week of stale-while-revalidate speeds repeat visits while
+    // still picking up replaced photos quickly (no immutable pinning).
+    const imageCache = [
+      { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
+    ];
+    return [
+      { source: '/:path*', headers: securityHeaders },
+      { source: '/banners/:path*', headers: imageCache },
+      { source: '/categories/:path*', headers: imageCache },
+      { source: '/products/:path*', headers: imageCache },
+      { source: '/stages/:path*', headers: imageCache },
+    ];
   },
 };
 

@@ -7,7 +7,12 @@ import { Product, ProductVariant } from '@/types';
 import { useCart } from '@/context/cart-context';
 import { useAuth } from '@/context/auth-context';
 import { useWishlist } from '@/context/wishlist-context';
-import { ReviewSection } from '@/components/storefront/ReviewSection';
+import dynamic from 'next/dynamic';
+
+// Below-the-fold reviews load as their own chunk instead of PDP's critical JS.
+const ReviewSection = dynamic(
+  () => import('@/components/storefront/ReviewSection').then((m) => m.ReviewSection)
+);
 import {
   Heart,
   ShoppingCart,
@@ -125,7 +130,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               src="/stages/pdp-stage.webp"
               alt=""
               fill
-              priority
+              loading="eager"
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"
               aria-hidden="true"
@@ -141,6 +146,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 <img
                   src={activeImage}
                   alt={product.name}
+                  fetchPriority="high"
+                  decoding="async"
                   className="h-full w-auto max-w-[76%] object-contain [mask-image:radial-gradient(ellipse_92%_90%_at_50%_50%,black_84%,transparent_99%)]"
                 />
               </div>

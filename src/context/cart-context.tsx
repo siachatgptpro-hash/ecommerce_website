@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode, useCallback } from 'react';
 import { CartCalculationResult, ProductVariant, Product, AyurvedicFormulation } from '@/types';
 import { useAuth } from './auth-context';
 
@@ -78,12 +78,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [authLoading, cartStorageKey, couponStorageKey]);
 
-  // Sync and recalculate cart with server whenever items, coupon or token changes
+  // Sync and recalculate cart with server whenever items, coupon or token changes.
+  // Rapid quantity taps fire several recalculations: abort the superseded
+  // request and ignore any late response, so an earlier request landing
+  // after a newer one can never resurrect stale totals.
+  const calcSeqRef = useRef(0);
+  const calcAbortRef = useRef<AbortController | null>(null);
   const refreshCart = useCallback(
     async (currentItems: Array<{ variantId: string; quantity: number }>, code: string) => {
       // Even an empty cart is calculated by the server now: it returns the
       // real free-shipping threshold from settings instead of the client
       // guessing (it previously hardcoded ₹999 vs the server's ₹499).
+      const seq = ++calcSeqRef.current;
+      calcAbortRef.current?.abort();
+      const controller = new AbortController();
+      calcAbortRef.current = controller;
+      const isStale = () => seq !== calcSeqRef.current;
       setIsLoading(true);
       try {
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -92,6 +102,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const res = await fetch('/api/cart/calculate', {
           method: 'POST',
           headers,
+          signal: controller.signal,
           body: JSON.stringify({
             items: currentItems.map((i) => ({
               variantId: i.variantId,
@@ -102,6 +113,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         });
 
         const data = await res.json();
+        if (isStale()) return;
         if (data.success && data.data) {
           setCalculation(data.data);
           setCartError(null);
@@ -120,10 +132,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
           setCartError(data.error?.message || 'We could not update your cart totals. Please review your items.');
         }
       } catch (err) {
+        if ((err as Error)?.name === 'AbortError' || isStale()) return;
         console.error('[Cart Sync Error]:', err);
         setCartError('We could not update your cart totals. Please check your connection.');
       } finally {
-        setIsLoading(false);
+        if (!isStale()) setIsLoading(false);
       }
     },
     [token, couponStorageKey]

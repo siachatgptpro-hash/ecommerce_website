@@ -15,8 +15,11 @@ interface ProductPageProps {
   };
 }
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// ISR: product pages are cacheable for 60s. Prices/stock shown here are
+// display-only — the cart-calculate and order APIs always recompute from
+// the live catalogue server-side, so a page rendered seconds before an
+// admin edit can never produce wrong totals at checkout.
+export const revalidate = 60;
 
 // Share the product query between metadata and the page render so one click does not
 // trigger two identical database round trips.
