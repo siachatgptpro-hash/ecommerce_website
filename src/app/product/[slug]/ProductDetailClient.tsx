@@ -86,9 +86,9 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     <div className="space-y-12">
       {/* TOP SECTION: MEDIA & DETAILS */}
       <div className="grid grid-cols-1 gap-8 motion-safe:animate-[rise-in_.55s_cubic-bezier(.22,1,.36,1)_both] lg:grid-cols-2 lg:gap-12">
-        {/* MEDIA GALLERY — thumbnail rail + staged panel */}
+        {/* MEDIA GALLERY — thumbnail rail + staged botanical panel */}
         <div className="flex flex-col-reverse gap-3 sm:gap-4 lg:flex-row">
-          {/* Thumbnail rail (real product images only) */}
+          {/* Thumbnail rail (real product images, staged) */}
           {images.length > 0 && (
             <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-1 lg:max-h-[36rem] lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden lg:pb-0 lg:pr-1">
               {images.map((img, idx) => (
@@ -97,37 +97,56 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                   onClick={() => setSelectedImageIndex(idx)}
                   aria-label={`View image ${idx + 1}`}
                   aria-pressed={selectedImageIndex === idx}
-                  className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border-2 bg-white transition-all duration-[var(--dur-ui)] ease-luxe focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A880] sm:h-20 sm:w-20 ${
+                  className={`relative h-20 w-16 shrink-0 overflow-hidden rounded-2xl border-2 transition-all duration-[var(--dur-ui)] ease-luxe focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A880] sm:h-24 sm:w-20 ${
                     selectedImageIndex === idx
                       ? 'border-[#C5A880] shadow-[0_0_16px_rgba(197,168,128,0.45)]'
-                      : 'border-[#EFE7D8] opacity-75 hover:border-[#D9BE8C] hover:opacity-100'
+                      : 'border-[#EFE7D8] opacity-80 hover:border-[#D9BE8C] hover:opacity-100'
                   }`}
                 >
-                  <Image src={img.imageUrl} alt="" fill className="object-cover" sizes="80px" />
+                  <Image src="/stages/pdp-stage.webp" alt="" fill className="object-cover" sizes="80px" aria-hidden="true" />
+                  <span className="absolute inset-x-0 bottom-[24%] flex h-[58%] items-end justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img.imageUrl} alt="" className="h-full w-auto max-w-[86%] object-contain [mask-image:radial-gradient(ellipse_92%_90%_at_50%_50%,black_84%,transparent_99%)]" />
+                  </span>
                 </button>
               ))}
             </div>
           )}
 
-          {/* Main staged panel */}
-          <div className="relative aspect-square w-full flex-1 overflow-hidden rounded-3xl border border-[#EFE7D8] bg-[radial-gradient(ellipse_85%_65%_at_50%_36%,#FFFFFF_0%,#FAF7F2_58%,#F3EAD9_100%)] shadow-[0_24px_50px_-30px_rgba(27,67,50,0.45)]">
-            <div aria-hidden="true" className="pointer-events-none absolute -left-6 -top-6 h-32 w-32 origin-top-left bg-[url('/banners/highlights-botanical-bg.webp')] bg-[size:230%_auto] bg-[position:0%_0%] bg-no-repeat opacity-70 [mask-image:radial-gradient(ellipse_85%_85%_at_10%_10%,black_38%,transparent_72%)] motion-safe:animate-[leaf-sway_9s_ease-in-out_infinite_alternate]" />
-            <div aria-hidden="true" className="pointer-events-none absolute -bottom-6 -right-6 h-32 w-32 origin-bottom-right bg-[url('/banners/highlights-botanical-bg.webp')] bg-[size:230%_auto] bg-[position:100%_100%] bg-no-repeat opacity-60 [mask-image:radial-gradient(ellipse_85%_85%_at_90%_90%,black_38%,transparent_72%)] motion-safe:animate-[leaf-sway_10s_ease-in-out_infinite_alternate]" style={{ animationDelay: '0.6s' }} />
+          {/* Main staged panel: empty botanical stage scene + the real pack
+              photo standing on the log slice (feather-melted photo edges,
+              spotlight pool blends white photo margins, contact shadow
+              grounds the pack). */}
+          <div className="relative aspect-square w-full flex-1 overflow-hidden rounded-3xl border border-[#EFE7D8] shadow-[0_24px_50px_-30px_rgba(27,67,50,0.45)]">
+            <Image
+              src="/stages/pdp-stage.webp"
+              alt=""
+              fill
+              priority
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              aria-hidden="true"
+            />
+            <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-[41%] h-[64%] w-[64%] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(ellipse_50%_50%_at_50%_50%,rgba(255,255,255,0.88),rgba(255,255,255,0.5)_54%,transparent_78%)]" />
+            <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-[65.5%] h-[5%] w-[36%] -translate-x-1/2 -translate-y-1/2 rounded-[50%] bg-[radial-gradient(ellipse_at_center,rgba(43,28,12,0.55),transparent_70%)] blur-[5px]" />
 
             {activeImage ? (
-              <Image
-                key={activeImage}
-                src={activeImage}
-                alt={product.name}
-                fill
-                priority
-                className="object-contain p-4 motion-safe:animate-[fade-in_.4s_ease-out_both] sm:p-8"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
+              <div key={activeImage} className="absolute inset-x-0 bottom-[30%] flex h-[54%] items-end justify-center motion-safe:animate-[fade-in_.4s_ease-out_both]">
+                {/* Plain img: h-full/w-auto keeps the element box at the true
+                    photo aspect so the feather mask aligns with photo edges. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={activeImage}
+                  alt={product.name}
+                  className="h-full w-auto max-w-[76%] object-contain [mask-image:radial-gradient(ellipse_92%_90%_at_50%_50%,black_84%,transparent_99%)]"
+                />
+              </div>
             ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-[#1B4332]/40">
-                <Leaf className="h-10 w-10" aria-hidden="true" />
-                <span className="text-xs font-semibold">Classical Formulation</span>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                <span className="grid h-16 w-16 place-items-center rounded-full bg-white/85 shadow-md">
+                  <Leaf className="h-8 w-8 text-[#1B4332]/50" aria-hidden="true" />
+                </span>
+                <span className="rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-[#1B4332]">Classical Formulation</span>
               </div>
             )}
 
@@ -214,7 +233,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               <label className="block text-sm font-bold text-gray-800">
                 Select packaging size / weight:
               </label>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3">
                 {variants.map((v, idx) => (
                   <button
                     key={v.id}
