@@ -2,8 +2,32 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Banner, StaticPage } from '@/types';
-import { ImageIcon, Plus, CheckCircle2, XCircle, Trash2, Edit2, AlertCircle, UploadCloud, X, FileText } from 'lucide-react';
+import { Banner, PolicySection, StaticPage } from '@/types';
+import { POLICY_ICON_OPTIONS } from '@/lib/policy-icons';
+import { ImageIcon, Plus, CheckCircle2, XCircle, Trash2, Edit2, AlertCircle, UploadCloud, X, FileText, ArrowUp, ArrowDown } from 'lucide-react';
+
+const POLICY_LAYOUTS = [
+  { value: 'prose', label: 'Plain text (paragraphs)' },
+  { value: 'list', label: 'Icon list (e.g. Shipping, Privacy)' },
+  { value: 'grid', label: 'Card grid (e.g. Terms, Disclaimer)' },
+  { value: 'cards', label: 'Three cards + assistance panel (e.g. Returns)' },
+  { value: 'accordion', label: 'Accordion (e.g. FAQ)' },
+] as const;
+
+/** Best-effort conversion of plain page text into structured sections. */
+function parseContentToSections(text: string): PolicySection[] {
+  return text
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map((block, index) => {
+      const lines = block.split('\n').map((line) => line.trim()).filter(Boolean);
+      if (lines.length > 1 && lines[0].length <= 90) {
+        return { icon: 'FileText', heading: lines[0], body: lines.slice(1).join('\n') };
+      }
+      return { icon: 'FileText', heading: `Section ${index + 1}`, body: lines.join('\n') };
+    });
+}
 
 export default function AdminCmsPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -37,6 +61,8 @@ export default function AdminCmsPage() {
   const [pageMetaDescription, setPageMetaDescription] = useState('');
   const [pageError, setPageError] = useState('');
   const [pageSubmitting, setPageSubmitting] = useState(false);
+  const [pageLayout, setPageLayout] = useState<string>('prose');
+  const [pageSections, setPageSections] = useState<PolicySection[]>([]);
 
   const fetchBanners = async () => {
     try {
@@ -154,8 +180,46 @@ export default function AdminCmsPage() {
     setPageContent(page?.content || '');
     setPageMetaTitle(page?.metaTitle || '');
     setPageMetaDescription(page?.metaDescription || '');
+    setPageLayout(page?.layout || 'prose');
+    setPageSections(
+      (page?.sections || []).map((section) => ({
+        icon: section.icon || 'FileText',
+        heading: section.heading || '',
+        body: section.body || '',
+      }))
+    );
     setPageError('');
     setShowPageModal(true);
+  };
+
+  const handleLayoutChange = (value: string) => {
+    setPageLayout(value);
+    // First switch to a structured layout: pre-fill sections from the text.
+    if (value !== 'prose' && pageSections.length === 0 && pageContent.trim()) {
+      setPageSections(parseContentToSections(pageContent));
+    }
+  };
+
+  const updateSection = (index: number, field: keyof PolicySection, value: string) => {
+    setPageSections((prev) => prev.map((section, i) => (i === index ? { ...section, [field]: value } : section)));
+  };
+
+  const moveSection = (index: number, direction: -1 | 1) => {
+    setPageSections((prev) => {
+      const target = index + direction;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
+  const removeSection = (index: number) => {
+    setPageSections((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const addSection = () => {
+    setPageSections((prev) => [...prev, { icon: 'Leaf', heading: '', body: '' }]);
   };
 
   const handleSavePage = async (e: React.FormEvent) => {
@@ -165,7 +229,24 @@ export default function AdminCmsPage() {
       return setPageError('Slug must use lowercase letters, numbers and hyphens (e.g. disclaimer).');
     }
     if (!pageTitle.trim()) return setPageError('Page title is required.');
-    if (!pageContent.trim()) return setPageError('Page content is required.');
+    const structured = pageLayout !== 'prose';
+    const cleanSections = pageSections.map((section) => ({
+      icon: section.icon || 'FileText',
+      heading: section.heading.trim(),
+      body: section.body.trim(),
+    }));
+    if (structured) {
+      if (cleanSections.length === 0) return setPageError('Add at least one section, or switch the layout to plain text.');
+      if (cleanSections.some((section) => !section.heading || !section.body)) {
+        return setPageError('Every section needs a heading and text.');
+      }
+    } else if (!pageContent.trim()) {
+      return setPageError('Page content is required.');
+    }
+    // Plain-text mirror stays in sync with the structured sections.
+    const derivedContent = structured
+      ? cleanSections.map((section) => `${section.heading}\n${section.body}`).join('\n\n')
+      : pageContent.trim();
 
     setPageSubmitting(true);
     setPageError('');
@@ -176,7 +257,9 @@ export default function AdminCmsPage() {
         body: JSON.stringify({
           slug: cleanSlug,
           title: pageTitle.trim(),
-          content: pageContent.trim(),
+          content: derivedContent,
+          layout: pageLayout,
+          sections: structured ? cleanSections : null,
           metaTitle: pageMetaTitle.trim() || null,
           metaDescription: pageMetaDescription.trim() || null,
         }),
@@ -288,8 +371,8 @@ export default function AdminCmsPage() {
               <FileText className="w-5 h-5 text-[#1B4332]" /> Policy &amp; Static Pages
             </h2>
             <p className="text-xs text-gray-500 mt-0.5 max-w-xl">
-              Pages saved here appear automatically in the footer Trust &amp; Policies list and open under /policies/ on the store.
-              The Privacy, Terms, Shipping and Refund texts are edited in Settings.
+              Every store policy page — Shipping, Returns, Privacy, Terms, Disclaimer and FAQ — is designed and edited here.
+              Pages open under /policies/ on the store and appear automatically in the footer Trust &amp; Policies list.
             </p>
           </div>
           <button
@@ -311,6 +394,8 @@ export default function AdminCmsPage() {
                   <p className="text-sm font-bold text-gray-900">{page.title}</p>
                   <p className="text-[11px] text-gray-500 font-mono">
                     /policies/{page.slug} · Updated {new Date(page.updatedAt).toLocaleDateString()}
+                    {page.layout && page.layout !== 'prose' ? ` · ${page.layout} layout` : ''}
+                    {page.sections?.length ? ` · ${page.sections.length} sections` : ''}
                   </p>
                 </div>
                 <button
@@ -503,18 +588,105 @@ export default function AdminCmsPage() {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
-                  Content *
+                  Page Layout
+                </label>
+                <select
+                  value={pageLayout}
+                  onChange={(e) => handleLayoutChange(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none bg-white"
+                >
+                  {POLICY_LAYOUTS.map((layout) => (
+                    <option key={layout.value} value={layout.value}>{layout.label}</option>
+                  ))}
+                </select>
+                <p className="text-[11px] text-gray-500 mt-1">
+                  Structured layouts show icon sections on the store. In the three-cards layout, sections after the first three appear as full-width assistance panels.
+                </p>
+              </div>
+
+              {pageLayout !== 'prose' && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                      Sections ({pageLayout === 'accordion' ? 'question = heading, answer = text' : 'icon, heading, text'})
+                    </label>
+                    <button
+                      type="button"
+                      onClick={addSection}
+                      className="inline-flex items-center gap-1 rounded-lg bg-[#1B4332] px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-[#2D6A4F]"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Add Section
+                    </button>
+                  </div>
+                  {pageSections.length === 0 && (
+                    <p className="text-[11px] text-gray-500">No sections yet. Add one, or write plain text below and re-select the layout to convert it.</p>
+                  )}
+                  {pageSections.map((section, index) => (
+                    <div key={index} className="space-y-2 rounded-2xl border border-gray-200 bg-gray-50 p-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-bold text-gray-500">#{index + 1}</span>
+                        <select
+                          value={section.icon || 'FileText'}
+                          onChange={(e) => updateSection(index, 'icon', e.target.value)}
+                          className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs"
+                          aria-label={`Section ${index + 1} icon`}
+                        >
+                          {POLICY_ICON_OPTIONS.map((option) => (
+                            <option key={option.name} value={option.name}>{option.label}</option>
+                          ))}
+                        </select>
+                        <div className="ml-auto flex items-center gap-1">
+                          <button type="button" onClick={() => moveSection(index, -1)} disabled={index === 0} className="rounded-lg p-1.5 text-gray-400 hover:text-[#1B4332] disabled:opacity-30" title="Move up" aria-label={`Move section ${index + 1} up`}>
+                            <ArrowUp className="h-4 w-4" />
+                          </button>
+                          <button type="button" onClick={() => moveSection(index, 1)} disabled={index === pageSections.length - 1} className="rounded-lg p-1.5 text-gray-400 hover:text-[#1B4332] disabled:opacity-30" title="Move down" aria-label={`Move section ${index + 1} down`}>
+                            <ArrowDown className="h-4 w-4" />
+                          </button>
+                          <button type="button" onClick={() => removeSection(index)} className="rounded-lg p-1.5 text-gray-400 hover:text-red-600" title="Remove section" aria-label={`Remove section ${index + 1}`}>
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        value={section.heading}
+                        onChange={(e) => updateSection(index, 'heading', e.target.value)}
+                        placeholder={pageLayout === 'accordion' ? 'e.g. How do I place an order?' : 'e.g. Delivery Charges'}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 bg-white text-sm focus:outline-none"
+                        aria-label={`Section ${index + 1} heading`}
+                      />
+                      <textarea
+                        rows={3}
+                        value={section.body}
+                        onChange={(e) => updateSection(index, 'body', e.target.value)}
+                        placeholder="Section text shown on the store."
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 bg-white text-xs focus:outline-none"
+                        aria-label={`Section ${index + 1} text`}
+                      />
+                    </div>
+                  ))}
+                  <p className="text-[11px] text-gray-500">
+                    Placeholders {'{{baseShippingFee}}'}, {'{{freeShippingThreshold}}'} and {'{{phone}}'} in headings or text are replaced with live settings values on the store.
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                  {pageLayout === 'prose' ? 'Content *' : 'Plain-Text Mirror (regenerated from sections on save)'}
                 </label>
                 <textarea
-                  rows={10}
-                  required
+                  rows={pageLayout === 'prose' ? 10 : 5}
+                  required={pageLayout === 'prose'}
                   value={pageContent}
                   onChange={(e) => setPageContent(e.target.value)}
                   placeholder="Write the page content. Separate paragraphs with a blank line."
                   className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none"
                 />
                 <p className="text-[11px] text-gray-500 mt-1">
-                  Separate paragraphs with a blank line. Placeholders {'{{baseShippingFee}}'}, {'{{freeShippingThreshold}}'} and {'{{phone}}'} are replaced with live settings values.
+                  {pageLayout === 'prose'
+                    ? <>Separate paragraphs with a blank line. Placeholders {'{{baseShippingFee}}'}, {'{{freeShippingThreshold}}'} and {'{{phone}}'} are replaced with live settings values.</>
+                    : 'Shown only if sections are emptied. Saving with sections rebuilds this text automatically.'}
                 </p>
               </div>
 

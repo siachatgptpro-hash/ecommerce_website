@@ -131,3 +131,43 @@ All public catalogue responses and server-rendered pages include each variant's 
 
 - `npx tsc --noEmit`, `next lint` (1 warning), `npm run build`, and all three existing test suites (`test:backend`, `test:qa`, `test:security`) pass.
 - Razorpay signature verification (checkout) uses HMAC + `timingSafeEqual`; payment/order ownership is checked on `/api/payments/*` and `/api/orders/*`; passwords are bcrypt-hashed; the Postgres payment-completion path is properly transactional with row locks; most admin APIs do enforce permission checks (the gaps are H1/C2 above).
+
+---
+
+## Addendum — 2026-10-23: policy-page CMS unification, admin-wiring & security audit
+
+Found and fixed while redesigning the six store policy pages (Shipping,
+Returns, Privacy, Terms, Disclaimer, FAQ) onto structured, fully
+admin-editable CMS sections (`scripts/audit-admin-wiring.mjs`, 77 checks):
+
+- **No HTTP security headers at all** — `X-Powered-By: Next.js` leaked and
+  there was no CSP / clickjacking / MIME-sniffing protection. Fixed in
+  `next.config.mjs`: CSP tuned for Razorpay + Google Fonts, `nosniff`,
+  `Referrer-Policy`, `Permissions-Policy`, `poweredByHeader: false`, and
+  production-only `X-Frame-Options: SAMEORIGIN` + HSTS (kept off in dev so
+  embedded previews keep working).
+- **Order status could regress** — `OrderService.updateFulfillment` only
+  guarded entry into CONFIRMED/SHIPPED/DELIVERED, so SHIPPED → PENDING
+  succeeded and desynced the shipment record. Now forward-only
+  (PENDING → CONFIRMED/PACKED → SHIPPED → DELIVERED → RETURNED); same-status
+  re-saves stay allowed so tracking details can be corrected at any stage
+  (previously impossible after shipping).
+- **Upload endpoint masked auth errors as 500** — the catch-all in
+  `/api/admin/uploads` collapsed 401/403 into "Image upload failed". Typed
+  errors now keep their real status.
+- **JWT algorithm not pinned** — `jwt.verify` now requires `HS256`
+  explicitly (signing pinned too).
+- **Dependency vulnerabilities 6 → 2** — `@vercel/blob` 1.1.1 → 2.8.2 and
+  `file-type` 19.6 → 22.2 clear the busboy/undici/file-type advisories
+  (admin-uploads chain). The remaining 2 are `next` (14.2.35, latest 14.2.x)
+  and its bundled PostCSS, fixable only by a **Next 15/16 major upgrade**
+  (React 19 + async `params`/`searchParams` migration) — recommended as a
+  planned project. Of the three Next advisories, two do not apply here
+  (image optimizer is disabled via `unoptimized: true`; no rewrites are
+  configured); the RSC deserialization DoS argues for scheduling the
+  upgrade rather than emergency action.
+
+Full re-verification after these fixes: `test:backend` 19/19, `test:qa`
+14/14, `test:security` pass, `retest-customers` 49/49,
+`probe-5-customers` 81/81, `audit-admin-wiring` 77/77, clean production
+build, production security headers verified against `next start`.

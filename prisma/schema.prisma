@@ -625,6 +625,8 @@ model StaticPage {
   content         String
   metaTitle       String?
   metaDescription String?
+  layout          String?
+  sections        Json?
   updatedAt       DateTime @updatedAt
 }
 

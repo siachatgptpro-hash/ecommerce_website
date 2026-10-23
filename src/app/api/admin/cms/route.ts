@@ -46,9 +46,14 @@ export async function POST(req: NextRequest) {
       // Static/policy pages: upsert by slug (creates or updates). Saved pages
       // are served at /policies/<slug> and listed in the footer automatically.
       const payload = StaticPageSchema.parse(json);
+      if (!payload.content?.trim() && !(payload.sections && payload.sections.length)) {
+        throw new ValidationError('Page content is required — add plain text or at least one section.');
+      }
       created = await CMSRepository.updateStaticPage(payload.slug, {
         title: payload.title,
         content: payload.content,
+        layout: payload.layout ?? null,
+        sections: payload.sections ?? null,
         metaTitle: payload.metaTitle ?? null,
         metaDescription: payload.metaDescription ?? null,
       });

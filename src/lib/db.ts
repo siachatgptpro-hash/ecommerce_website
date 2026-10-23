@@ -318,17 +318,91 @@ class DatabaseStore {
     }
 
     // Policy & static pages seed (editable in Admin -> CMS; auto-listed in
-    // the footer Trust & Policies column). Content is transcribed from this
+    // the footer Trust & Policies column). All six store policy pages plus
+    // the product-information notice live here as structured sections;
+    // `content` is the plain-text mirror. Copy is transcribed from this
     // storefront's own published notices and settings — no new legal copy.
+    // The /policies/<slug> page falls back to the Admin -> Settings policy
+    // texts only when the matching CMS page is missing.
     const pageNow = new Date().toISOString();
     const policyPages: StaticPage[] = [
+      {
+        id: 'page_shipping-policy',
+        slug: 'shipping-policy',
+        title: 'Shipping & Delivery',
+        content: 'The current checkout applies a ₹{{baseShippingFee}} delivery fee below ₹{{freeShippingThreshold}} and waives that fee at or above the configured threshold. The final amount is calculated from the current cart and displayed before order submission.\n\nDelivery coverage and timelines have not been configured. Please confirm serviceability and delivery estimates before placing an order.',
+        metaTitle: null,
+        metaDescription: 'Delivery charges are calculated at checkout.',
+        layout: 'list',
+        sections: [
+          { icon: 'Truck', heading: 'Delivery Charges', body: 'The current checkout applies a ₹{{baseShippingFee}} delivery fee below ₹{{freeShippingThreshold}} and waives that fee at or above the configured threshold.' },
+          { icon: 'MapPin', heading: 'Delivery Coverage', body: 'Delivery coverage and timelines have not been configured. Please confirm serviceability and delivery estimates before placing an order.' },
+          { icon: 'ShoppingCart', heading: 'Final Amount', body: 'The final amount is calculated from the current cart and displayed before order submission.' },
+        ],
+        updatedAt: pageNow,
+      },
+      {
+        id: 'page_refund-policy',
+        slug: 'refund-policy',
+        title: 'Returns, Cancellations & Refunds',
+        content: 'Please contact the store before requesting a return, cancellation or refund. Any applicable resolution will depend on the order status and the condition of the delivered product.\n\nFor assistance, contact the store at +{{phone}} and include your order reference.',
+        metaTitle: null,
+        metaDescription: 'Please review the store terms before making a purchase.',
+        layout: 'cards',
+        sections: [
+          { icon: 'Package', heading: 'Returns', body: 'Please contact the store before requesting a return. Any applicable resolution will depend on the order status and the condition of the delivered product.' },
+          { icon: 'CircleX', heading: 'Cancellations', body: 'Please contact the store before requesting a cancellation. Any applicable resolution will depend on the order status and the condition of the delivered product.' },
+          { icon: 'RotateCcw', heading: 'Refunds', body: 'Please contact the store before requesting a refund. Any applicable resolution will depend on the order status and the condition of the delivered product.' },
+          { icon: 'Info', heading: 'For Assistance', body: 'For assistance, contact the store at +{{phone}} and include your order reference.' },
+        ],
+        updatedAt: pageNow,
+      },
+      {
+        id: 'page_privacy-policy',
+        slug: 'privacy-policy',
+        title: 'Privacy Policy',
+        content: 'Checkout may collect your name, email address, phone number and delivery address. Registration also collects account details.\n\nOnline payment processing is available only when a valid payment gateway is configured. This storefront does not store card or UPI credentials.',
+        metaTitle: null,
+        metaDescription: 'Information handled by this Shlokveda storefront.',
+        layout: 'list',
+        sections: [
+          { icon: 'User', heading: 'Information We Collect', body: 'Checkout may collect your name, email address, phone number and delivery address.' },
+          { icon: 'ShieldCheck', heading: 'Account Details', body: 'Registration also collects account details.' },
+          { icon: 'Cog', heading: 'Payment Processing', body: 'Online payment processing is available only when a valid payment gateway is configured.' },
+          { icon: 'Leaf', heading: 'No Stored Credentials', body: 'This storefront does not store card or UPI credentials.' },
+        ],
+        updatedAt: pageNow,
+      },
+      {
+        id: 'page_terms-and-conditions',
+        slug: 'terms-and-conditions',
+        title: 'Terms & Conditions',
+        content: 'Product names, pack options and printed MRPs are transcribed from the supplied brochure. The checkout recalculates prices and availability from the current server catalogue before placing an order.\n\nCatalogue content is informational, may not include every package detail and is not medical advice. Read the product label and consult a qualified healthcare professional where appropriate.',
+        metaTitle: null,
+        metaDescription: 'Please review product and order information before proceeding.',
+        layout: 'grid',
+        sections: [
+          { icon: 'Package', heading: 'Catalogue Accuracy', body: 'Product names, pack options and printed MRPs are transcribed from the supplied brochure.' },
+          { icon: 'ShoppingCart', heading: 'Checkout Verification', body: 'The checkout recalculates prices and availability from the current server catalogue before placing an order.' },
+          { icon: 'FileText', heading: 'Informational Content', body: 'Catalogue content is informational, may not include every package detail and is not medical advice.' },
+          { icon: 'ShieldCheck', heading: 'Health Guidance', body: 'Read the product label and consult a qualified healthcare professional where appropriate.' },
+        ],
+        updatedAt: pageNow,
+      },
       {
         id: 'page_disclaimer',
         slug: 'disclaimer',
         title: 'Disclaimer',
         content: 'Product names, descriptions and ingredient notes on this store are transcribed from the supplied brochure where available. When a detail is not listed here, please refer to the product package for complete composition, directions, cautions and regulatory information.\n\nThis catalogue is for general information only and is not medical advice. It does not claim that any product diagnoses, treats, cures or prevents any health condition. Please read the package label carefully and consult a qualified healthcare professional before use.\n\nWe work to keep catalogue information accurate and consistent with the source brochure. If you notice an error, please contact the store so it can be reviewed.',
         metaTitle: null,
-        metaDescription: null,
+        metaDescription: 'Information about the catalogue, product details and your responsibilities.',
+        layout: 'grid',
+        sections: [
+          { icon: 'BookOpen', heading: 'Product Information', body: 'Product names, descriptions and ingredient notes on this store are transcribed from the supplied brochure where available. When a detail is not listed here, please refer to the product package for complete composition, directions, cautions and regulatory information.' },
+          { icon: 'Leaf', heading: 'General Information', body: 'This catalogue is for general information only and is not medical advice. It does not claim that any product diagnoses, treats, cures or prevents any health condition.' },
+          { icon: 'ShieldCheck', heading: 'Health & Safety', body: 'Please read the package label carefully and consult a qualified healthcare professional before use.' },
+          { icon: 'Users', heading: 'Accuracy & Corrections', body: 'We work to keep catalogue information accurate and consistent with the source brochure. If you notice an error, please contact the store so it can be reviewed.' },
+        ],
         updatedAt: pageNow,
       },
       {
@@ -337,7 +411,29 @@ class DatabaseStore {
         title: 'Frequently Asked Questions',
         content: 'How do I place an order?\nBrowse the catalogue, add products to your cart and proceed to checkout. You will be asked to log in or create an account so that your order can be tracked.\n\nWhat are the delivery charges?\nA delivery fee of ₹{{baseShippingFee}} applies on orders below ₹{{freeShippingThreshold}} and is waived at or above that amount. The final amount is calculated from your cart and shown before you place the order.\n\nHow can I pay?\nThe payment options available to you are shown at checkout. Online payments are processed through the configured payment gateway; this store does not store your card or UPI credentials.\n\nWhere does the product information come from?\nProduct names, pack sizes, printed MRPs and package photos are transcribed from the supplied product brochure. For complete composition, directions and cautions, please refer to the product package.\n\nHow do I request a return or refund?\nPlease contact the store with your order reference before requesting a return, cancellation or refund. Any applicable resolution will depend on the order status and the condition of the delivered product.',
         metaTitle: null,
-        metaDescription: null,
+        metaDescription: 'Find answers to common questions about ordering, delivery, payments and product information.',
+        layout: 'accordion',
+        sections: [
+          { icon: 'ShoppingCart', heading: 'How do I place an order?', body: 'Browse the catalogue, add products to your cart and proceed to checkout. You will be asked to log in or create an account so that your order can be tracked.' },
+          { icon: 'Truck', heading: 'What are the delivery charges?', body: 'A delivery fee of ₹{{baseShippingFee}} applies on orders below ₹{{freeShippingThreshold}} and is waived at or above that amount. The final amount is calculated from your cart and shown before you place the order.' },
+          { icon: 'CreditCard', heading: 'How can I pay?', body: 'The payment options available to you are shown at checkout. Online payments are processed through the configured payment gateway; this store does not store your card or UPI credentials.' },
+          { icon: 'Leaf', heading: 'Where does the product information come from?', body: 'Product names, pack sizes, printed MRPs and package photos are transcribed from the supplied product brochure. For complete composition, directions and cautions, please refer to the product package.' },
+          { icon: 'RotateCcw', heading: 'How do I request a return or refund?', body: 'Please contact the store with your order reference before requesting a return, cancellation or refund. Any applicable resolution will depend on the order status and the condition of the delivered product.' },
+        ],
+        updatedAt: pageNow,
+      },
+      {
+        id: 'page_ayush-compliance',
+        slug: 'ayush-compliance',
+        title: 'Product Information Notice',
+        content: 'Descriptions and ingredient notes are transcribed where available. When a detail is not listed here, refer to the product package for complete composition, directions, cautions and regulatory information.\n\nThis catalogue is not medical advice and does not claim that any product diagnoses, treats, cures or prevents a health condition. Consult a qualified healthcare professional before use.',
+        metaTitle: null,
+        metaDescription: 'Product detail shown on this site is based on the supplied brochure.',
+        layout: 'list',
+        sections: [
+          { icon: 'BookOpen', heading: 'Product Descriptions', body: 'Descriptions and ingredient notes are transcribed where available. When a detail is not listed here, refer to the product package for complete composition, directions, cautions and regulatory information.' },
+          { icon: 'ShieldCheck', heading: 'Not Medical Advice', body: 'This catalogue is not medical advice and does not claim that any product diagnoses, treats, cures or prevents a health condition. Consult a qualified healthcare professional before use.' },
+        ],
         updatedAt: pageNow,
       },
     ];

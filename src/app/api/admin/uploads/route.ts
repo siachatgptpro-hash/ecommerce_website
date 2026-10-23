@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 import { fileTypeFromBuffer } from "file-type";
 import { authenticateAdmin } from "@/lib/admin-auth";
+import { AppError, handleApiError } from "@/lib/errors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -68,6 +69,12 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
+    // Typed errors (401/403 auth, validation) keep their real status; only
+    // unexpected failures collapse to the friendly upload 500.
+    if (error instanceof AppError) {
+      const err = handleApiError(error);
+      return NextResponse.json(err.body, { status: err.status });
+    }
     console.error("Product image upload failed", error);
     return NextResponse.json(
       {

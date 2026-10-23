@@ -22,7 +22,9 @@ function mapSection(r:any):HomepageSection{let metadata=r.metadata??undefined;if
 function mapTestimonial(r:any):Testimonial{return{id:r.id,authorName:r.authorName,location:r.location??null,rating:r.rating,reviewQuote:r.reviewQuote,avatarUrl:r.avatarUrl??null,isActive:r.isActive,sortOrder:r.sortOrder,createdAt:iso(r.createdAt)}}
 function mapFaq(r:any):FaqItem{return{id:r.id,category:r.category,question:r.question,answer:r.answer,sortOrder:r.sortOrder,isActive:r.isActive,createdAt:iso(r.createdAt)}}
 function mapBlog(r:any):BlogPost{return{id:r.id,title:r.title,slug:r.slug,summary:r.summary??null,content:r.content,featuredImg:r.featuredImg??null,authorName:r.authorName,readTimeMinutes:r.readTimeMinutes,isPublished:r.isPublished,publishedAt:r.publishedAt?iso(r.publishedAt):null,metaTitle:r.metaTitle??null,metaDescription:r.metaDescription??null,createdAt:iso(r.createdAt),updatedAt:iso(r.updatedAt),excerpt:r.summary??null,coverImage:r.featuredImg??null}}
-function mapStatic(r:any):StaticPage{return{id:r.id,slug:r.slug,title:r.title,content:r.content,metaTitle:r.metaTitle??null,metaDescription:r.metaDescription??null,updatedAt:iso(r.updatedAt)}}
+function mapStatic(r:any):StaticPage{let sections:any=null;try{sections=typeof r.sections==='string'?JSON.parse(r.sections):(r.sections??null)}catch{sections=null}return{id:r.id,slug:r.slug,title:r.title,content:r.content,metaTitle:r.metaTitle??null,metaDescription:r.metaDescription??null,layout:r.layout??null,sections:Array.isArray(sections)?sections:null,updatedAt:iso(r.updatedAt)}}
+
+function deriveStaticContent(sections:any[]|null|undefined,content:string|undefined):string{if(content&&content.trim())return content;if(Array.isArray(sections)&&sections.length)return sections.map((s:any)=>`${s.heading}\n${s.body}`).join('\n\n');return content??''}
 function mapReview(r:any):Review{return{id:r.id,productId:r.productId,userId:r.userId,userName:r.userName??undefined,rating:r.rating,title:r.title??null,comment:r.comment,isVerified:r.isVerified,isApproved:r.isApproved,adminReply:r.adminReply??null,createdAt:iso(r.createdAt),updatedAt:iso(r.updatedAt),isVerifiedPurchase:r.isVerified,user:r.userName?{id:r.userId,name:r.userName,email:r.userEmail??undefined}:undefined,product:r.productName?{id:r.productId,name:r.productName,slug:r.productSlug}:undefined}}
 async function updateRow<T>(table:string,idValue:string,updates:Record<string,unknown>,columns:Record<string,string>,mapper:(r:any)=>T):Promise<T|null>{
   const entries=Object.entries(updates).filter(([key,value])=>columns[key]&&value!==undefined);
@@ -224,8 +226,19 @@ export class CMSRepository {
       const key=slug.toLowerCase(),existing=await pgQuery('SELECT * FROM "StaticPage" WHERE LOWER("slug")=LOWER($1) LIMIT 1',[key]);
       const before:StaticPage=existing.rows[0]?mapStatic(existing.rows[0]):{id:createId('page'),slug:key,title:key,content:'',updatedAt:new Date().toISOString()};
       const page={...before,...updates,slug:key};
-      const r=await pgQuery('INSERT INTO "StaticPage" ("id","slug","title","content","metaTitle","metaDescription","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP) ON CONFLICT ("slug") DO UPDATE SET "title"=EXCLUDED."title","content"=EXCLUDED."content","metaTitle"=EXCLUDED."metaTitle","metaDescription"=EXCLUDED."metaDescription","updatedAt"=CURRENT_TIMESTAMP RETURNING *',[page.id,page.slug,page.title,page.content,page.metaTitle??null,page.metaDescription??null]);
-      return mapStatic(r.rows[0]);
+      page.content=deriveStaticContent(page.sections as any,page.content);
+      try {
+        const r=await pgQuery('INSERT INTO "StaticPage" ("id","slug","title","content","metaTitle","metaDescription","layout","sections","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,CURRENT_TIMESTAMP) ON CONFLICT ("slug") DO UPDATE SET "title"=EXCLUDED."title","content"=EXCLUDED."content","metaTitle"=EXCLUDED."metaTitle","metaDescription"=EXCLUDED."metaDescription","layout"=EXCLUDED."layout","sections"=EXCLUDED."sections","updatedAt"=CURRENT_TIMESTAMP RETURNING *',[page.id,page.slug,page.title,page.content,page.metaTitle??null,page.metaDescription??null,page.layout??null,page.sections?JSON.stringify(page.sections):null]);
+        return mapStatic(r.rows[0]);
+      } catch (err:any) {
+        // Pre-migration databases (no layout/sections columns yet): fall back
+        // to the legacy upsert so page text still saves. Run
+        // prisma/migrations/20261023_add_static_page_sections.sql to enable
+        // structured policy layouts in production.
+        if (!String(err?.message||'').includes('column') && err?.code !== '42703') throw err;
+        const r=await pgQuery('INSERT INTO "StaticPage" ("id","slug","title","content","metaTitle","metaDescription","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP) ON CONFLICT ("slug") DO UPDATE SET "title"=EXCLUDED."title","content"=EXCLUDED."content","metaTitle"=EXCLUDED."metaTitle","metaDescription"=EXCLUDED."metaDescription","updatedAt"=CURRENT_TIMESTAMP RETURNING *',[page.id,page.slug,page.title,page.content,page.metaTitle??null,page.metaDescription??null]);
+        return mapStatic(r.rows[0]);
+      }
     }
     const existing = db.staticPages.get(slug.toLowerCase()) || {
       id: `page_${slug}`,
@@ -239,6 +252,7 @@ export class CMSRepository {
       ...updates,
       updatedAt: new Date().toISOString(),
     };
+    updated.content = deriveStaticContent(updated.sections as any, updated.content);
     db.staticPages.set(slug.toLowerCase(), updated);
     return { ...updated };
   }

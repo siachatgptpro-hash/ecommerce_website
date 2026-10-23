@@ -114,13 +114,13 @@ export class AuthService {
       roles: user.roles || [SystemRole.CUSTOMER],
       permissions: user.permissions || [],
     };
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_EXPIRY, algorithm: 'HS256' });
   }
 
   public static verifyToken(token: string): TokenPayload {
     assertProductionSecret();
     try {
-      return jwt.verify(token, JWT_SECRET) as TokenPayload;
+      return jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as TokenPayload;
     } catch {
       throw new AuthenticationError('Invalid or expired authentication session. Please log in.');
     }

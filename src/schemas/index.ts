@@ -303,6 +303,12 @@ export const NewsletterSubscribeSchema = z.object({
     .max(254, 'Email address is too long'),
 });
 
+export const PolicySectionSchema = z.object({
+  icon: z.string().trim().max(40).optional(),
+  heading: z.string().trim().min(1, 'Section heading is required').max(160),
+  body: z.string().trim().min(1, 'Section text is required').max(4000),
+});
+
 export const StaticPageSchema = z.object({
   slug: z
     .string()
@@ -311,7 +317,10 @@ export const StaticPageSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must use lowercase letters, numbers and hyphens')
     .max(80),
   title: z.string().trim().min(1, 'Title is required').max(160),
-  content: z.string().trim().min(1, 'Content is required').max(20000),
+  // Plain-text mirror; the route requires content OR at least one section.
+  content: z.string().trim().max(20000).optional().default(''),
+  layout: z.enum(['prose', 'list', 'grid', 'cards', 'accordion']).optional().nullable(),
+  sections: z.array(PolicySectionSchema).max(24).optional().nullable(),
   metaTitle: z.string().trim().max(160).optional().nullable(),
   metaDescription: z.string().trim().max(320).optional().nullable(),
 });

@@ -454,6 +454,14 @@ export interface BlogPost {
   coverImage?: string | null;
 }
 
+export type PolicyLayout = 'prose' | 'list' | 'grid' | 'cards' | 'accordion';
+
+export interface PolicySection {
+  icon?: string;
+  heading: string;
+  body: string;
+}
+
 export interface StaticPage {
   id: string;
   slug: string;
@@ -461,6 +469,10 @@ export interface StaticPage {
   content: string;
   metaTitle?: string | null;
   metaDescription?: string | null;
+  /** Storefront layout for /policies/<slug> (Admin -> CMS). Null = prose. */
+  layout?: PolicyLayout | string | null;
+  /** Structured icon sections (Admin -> CMS). `content` stays as the plain-text mirror. */
+  sections?: PolicySection[] | null;
   updatedAt: string;
 }
 

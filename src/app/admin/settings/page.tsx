@@ -443,7 +443,7 @@ export default function AdminSettingsPage() {
         <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-[#F3EFE6] shadow-sm space-y-5">
           <div>
             <h2 className="font-serif text-lg font-bold text-gray-900">Store Policies</h2>
-            <p className="text-xs text-gray-500 mt-1">Edit the policy text displayed on the public policy pages. Separate paragraphs with a blank line. Use {'{{baseShippingFee}}'}, {'{{freeShippingThreshold}}'}, and {'{{phone}}'} as dynamic placeholders where needed.</p>
+            <p className="text-xs text-gray-500 mt-1">Policy pages are now designed and edited in <strong>CMS → Policy &amp; Static Pages</strong> (icon sections, layouts, FAQ accordion). The four texts below are used only as a fallback if the matching CMS page is missing. Separate paragraphs with a blank line. Use {'{{baseShippingFee}}'}, {'{{freeShippingThreshold}}'}, and {'{{phone}}'} as dynamic placeholders where needed.</p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {[

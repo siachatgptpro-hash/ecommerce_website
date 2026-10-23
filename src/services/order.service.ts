@@ -307,18 +307,39 @@ export class OrderService {
       throw new NotFoundError('Order');
     }
 
-    // Enforce the business fulfillment sequence server-side, not only in the admin UI.
-    if (status === OrderStatus.CONFIRMED) {
-      if (order.paymentStatus !== PaymentStatus.PAID) {
-        throw new ValidationError('Approve is available only after online payment is confirmed.');
-      }
-    } else if (status === OrderStatus.SHIPPED) {
-      if (order.orderStatus !== OrderStatus.CONFIRMED && order.orderStatus !== OrderStatus.PACKED) {
-        throw new ValidationError('Approve the paid order before marking it Shipped.');
-      }
-    } else if (status === OrderStatus.DELIVERED) {
-      if (order.orderStatus !== OrderStatus.SHIPPED) {
-        throw new ValidationError('Mark the order Shipped before marking it Delivered.');
+    // Forward-only state machine: a fulfilled order must never regress
+    // (e.g. SHIPPED -> PENDING previously succeeded, desyncing the shipment
+    // record and the customer's tracking view). Re-saving the SAME status
+    // stays allowed so tracking details can be edited in place. Cancellation
+    // never reaches this method — both admin routes send it to cancelOrder.
+    const FORWARD_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+      [OrderStatus.PENDING]: [OrderStatus.CONFIRMED, OrderStatus.PACKED],
+      [OrderStatus.CONFIRMED]: [OrderStatus.PACKED, OrderStatus.SHIPPED],
+      [OrderStatus.PACKED]: [OrderStatus.SHIPPED],
+      [OrderStatus.SHIPPED]: [OrderStatus.DELIVERED],
+      [OrderStatus.DELIVERED]: [OrderStatus.RETURNED],
+      [OrderStatus.CANCELLED]: [],
+      [OrderStatus.RETURNED]: [],
+    };
+    if (status !== order.orderStatus && !(FORWARD_TRANSITIONS[order.orderStatus] || []).includes(status)) {
+      throw new ValidationError(`Order cannot move from ${order.orderStatus} to ${status}.`);
+    }
+
+    // Enforce the business fulfillment sequence server-side, not only in the
+    // admin UI. Skipped for same-status re-saves (tracking edits).
+    if (status !== order.orderStatus) {
+      if (status === OrderStatus.CONFIRMED) {
+        if (order.paymentStatus !== PaymentStatus.PAID) {
+          throw new ValidationError('Approve is available only after online payment is confirmed.');
+        }
+      } else if (status === OrderStatus.SHIPPED) {
+        if (order.orderStatus !== OrderStatus.CONFIRMED && order.orderStatus !== OrderStatus.PACKED) {
+          throw new ValidationError('Approve the paid order before marking it Shipped.');
+        }
+      } else if (status === OrderStatus.DELIVERED) {
+        if (order.orderStatus !== OrderStatus.SHIPPED) {
+          throw new ValidationError('Mark the order Shipped before marking it Delivered.');
+        }
       }
     }
 
