@@ -37,6 +37,15 @@ export function ProductCard({ product }: ProductCardProps) {
   const inWishlist = isInWishlist(product.id);
   const isOutOfStock = !selectedVariant || selectedVariant.stockQuantity <= 0;
   const formulationLabel = product.ayurvedicFormulation?.replace(/_/g, ' ').trim();
+  const formulationKey = (product.ayurvedicFormulation || '').toUpperCase();
+  const stageImage =
+    formulationKey.includes('SYRUP') || formulationKey.includes('JUICE')
+      ? '/stages/stage-syrup.webp'
+      : formulationKey.includes('CAPSULE') || formulationKey.includes('TABLET')
+        ? '/stages/stage-capsule.webp'
+        : formulationKey.includes('OIL')
+          ? '/stages/stage-oil.webp'
+          : '/stages/stage-herbal.webp';
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -58,9 +67,17 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="group relative flex flex-col justify-between overflow-hidden rounded-[1.25rem] border border-[#EFE7D8] bg-white shadow-[0_6px_20px_-8px_rgba(27,67,50,0.12)] transition-all duration-300 hover:border-[#C5A880]/60 hover:shadow-[0_20px_40px_-16px_rgba(27,67,50,0.28)] motion-safe:hover:-translate-y-1">
       {/* MEDIA CONTAINER */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[radial-gradient(circle_at_50%_45%,#FFFFFF_0%,#FFFDF8_42%,#F3ECD9_78%,#E2EDCE_100%)]">
-        <Leaf aria-hidden="true" className="absolute -left-2 -top-2 h-16 w-16 rotate-[20deg] text-[#1B4332]/10" />
-        <Leaf aria-hidden="true" className="absolute -bottom-3 -right-2 h-20 w-20 -scale-x-100 rotate-[15deg] text-[#1B4332]/10" />
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F8F3E7]">
+        {/* Botanical display stage (decorative) — the real pack photo blends over its bright centre */}
+        <Image
+          src={stageImage}
+          alt=""
+          aria-hidden="true"
+          fill
+          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+          className="object-cover"
+        />
+        <div aria-hidden="true" className="absolute bottom-[12%] left-1/2 h-3 w-2/5 -translate-x-1/2 rounded-full bg-[#3A2A18]/15 blur-[6px]" />
         {/* Discount Badge */}
         {discountPercent > 0 && (
           <div className="absolute top-3 left-3 z-10 bg-[#C62828] text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm">
@@ -82,6 +99,13 @@ export function ProductCard({ product }: ProductCardProps) {
           <Heart className={`w-4 h-4 ${inWishlist ? 'fill-red-600 text-red-600' : 'text-gray-500'}`} aria-hidden="true" />
         </button>
 
+        {/* Formulation tag overlapping the scene, as in the design reference */}
+        {formulationLabel && (
+          <span className="absolute bottom-3 left-3 z-10 inline-flex rounded-full bg-[#FBD9C2] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#7C4A21] shadow-sm">
+            {formulationLabel}
+          </span>
+        )}
+
         {/* Product Image Link */}
         <Link href={`/product/${product.slug}`} className="block w-full h-full" aria-label={`View ${product.name}`}>
           {primaryImage ? (
@@ -89,7 +113,7 @@ export function ProductCard({ product }: ProductCardProps) {
               src={primaryImage}
               alt={primaryImageAlt}
               fill
-              className="object-contain p-4 mix-blend-multiply transition-transform duration-300 motion-safe:group-hover:scale-105 sm:p-5"
+              className="object-contain p-3 mix-blend-multiply transition-transform duration-300 motion-safe:group-hover:scale-105 sm:p-4"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             />
           ) : (
@@ -103,21 +127,14 @@ export function ProductCard({ product }: ProductCardProps) {
       {/* CARD BODY CONTENT */}
       <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
         <div>
-          {/* Formulation Badge */}
-          <div className="mb-2 flex items-center justify-between gap-2">
-            {formulationLabel ? (
-              <span className="inline-flex rounded-full bg-[#FBEEE6] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#9A6B3F]">
-                {formulationLabel}
-              </span>
-            ) : (
-              <span aria-hidden="true" />
-            )}
-            {product.isBestseller && (
+          {/* Bestseller Badge (the formulation tag sits on the image) */}
+          {product.isBestseller && (
+            <div className="mb-2 flex items-center justify-end gap-2">
               <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-extrabold tracking-wider text-emerald-700">
                 ★ BESTSELLER
               </span>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Product Title */}
           <Link href={`/product/${product.slug}`}>

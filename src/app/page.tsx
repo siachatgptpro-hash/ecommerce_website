@@ -141,15 +141,15 @@ export default async function HomePage() {
       {/* CATALOGUE HIGHLIGHTS */}
       <section className="relative overflow-hidden" aria-labelledby="catalogue-highlights-heading">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[url('/banners/highlights-botanical-bg.webp')] bg-cover bg-center" />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[#FAF7F2]/45" />
-        <div className="relative mx-auto max-w-7xl space-y-8 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(250,247,242,0.3)_0%,rgba(250,247,242,0.12)_45%,rgba(250,247,242,0.34)_100%)]" />
+        <div className="relative mx-auto max-w-7xl space-y-8 px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#1B4332]">
               <Leaf className="h-4 w-4 text-[#1B4332]" aria-hidden="true" />
               From Our Ayurvedic Catalogue
             </span>
-            <h2 id="catalogue-highlights-heading" className="mt-2 font-serif text-3xl font-bold text-[#0F281E] sm:text-4xl">
+            <h2 id="catalogue-highlights-heading" className="mt-2 font-serif text-4xl font-bold text-[#0F281E] sm:text-5xl">
               Catalogue <span className="text-[#A67C2E]">Highlights</span>
             </h2>
             <p className="mt-2 text-sm text-gray-500 sm:text-base">
