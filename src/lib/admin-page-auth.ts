@@ -1,19 +1,10 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { AuthService } from '@/services/auth.service';
-import { SystemRole } from '@/types';
+import { ADMIN_ROLES, hasAdminRole } from '@/lib/admin-roles';
+import { resolveCookieSessionToken } from '@/lib/session';
 
-export const ADMIN_ROLES: SystemRole[] = [
-  SystemRole.SUPER_ADMIN,
-  SystemRole.ADMIN,
-  SystemRole.PRODUCT_MANAGER,
-  SystemRole.ORDER_MANAGER,
-  SystemRole.CONTENT_MANAGER,
-];
-
-export function hasAdminRole(roles?: SystemRole[] | null): boolean {
-  return !!roles?.some((role) => ADMIN_ROLES.includes(role));
-}
+export { ADMIN_ROLES, hasAdminRole };
 
 /**
  * Server-side guard for admin *pages* (Server Components).
@@ -25,14 +16,14 @@ export function hasAdminRole(roles?: SystemRole[] | null): boolean {
  * deactivated accounts and revoked roles take effect immediately.
  */
 export async function requireAdminPage() {
-  const token = cookies().get('shlokveda_session_token')?.value;
-  if (!token) {
+  const resolved = resolveCookieSessionToken(cookies(), 'admin');
+  if (!resolved) {
     redirect('/admin/login');
   }
 
   let user: Awaited<ReturnType<typeof AuthService.getCurrentUser>> | null = null;
   try {
-    user = await AuthService.getCurrentUser(token);
+    user = await AuthService.getCurrentUser(resolved.token, { scope: 'admin' });
   } catch {
     user = null;
   }

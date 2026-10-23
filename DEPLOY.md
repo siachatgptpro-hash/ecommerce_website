@@ -49,6 +49,19 @@ DATABASE_URL='postgresql://…' ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='min-
 This creates the SUPER_ADMIN/ADMIN roles, all permissions, and your login.
 It refuses to promote/reset an existing account.
 
+### If your email was already registered as a customer
+
+Do **not** run the database setup again. From your private computer terminal,
+run this one command to add the missing admin roles to that existing account.
+It does not change the account password:
+
+```bash
+DATABASE_URL='postgresql://…' ADMIN_EMAIL=you@example.com CONFIRM_PROMOTE_ADMIN=YES npm run admin:promote
+```
+
+Success must say that the account has `SUPER_ADMIN`, `ADMIN`, and
+`MANAGE_CMS`. Then sign in at `/admin/login`.
+
 
 ## 3. Deploy on Vercel (use Import, not "clone template")
 All fixes are merged into `main` (PR #1). Deploy `main` — it is Vercel's

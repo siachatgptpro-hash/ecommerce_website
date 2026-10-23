@@ -141,7 +141,7 @@ async function main() {
 
     const reg = await register('asha', 'Asha Verma', ph(1));
     const A = personas.asha;
-    check('A6 register succeeds with session cookie', reg.status === 201 && !!A.jar.get('shlokveda_session_token'), `status ${reg.status}`);
+    check('A6 register succeeds with customer session cookie', reg.status === 201 && !!A.jar.get('shlokveda_customer_session'), `status ${reg.status}`);
     const dupUpper = await call('POST', '/api/auth/register', { body: { fullName: 'Asha Clone', email: A.email.toUpperCase(), password: 'probe-password-6' } });
     check('A7 duplicate email (different case) rejected', dupUpper.status === 409, `status ${dupUpper.status}`);
 
@@ -280,9 +280,9 @@ async function main() {
     check('C6 admin page not served to customer', adminPage.status !== 200 || !/Admin Dashboard|Total Revenue|Audit Logs/.test(adminPage.text), `status ${adminPage.status}`);
 
     const forged = new Jar();
-    const tok = C.jar.get('shlokveda_session_token') || '';
+    const tok = C.jar.get('shlokveda_customer_session') || '';
     const flipped = tok.slice(0, 12) + (tok[12] === 'A' ? 'B' : 'A') + tok.slice(13);
-    forged.set('shlokveda_session_token', flipped);
+    forged.set('shlokveda_customer_session', flipped);
     const meForged = await call('GET', '/api/auth/me', { jar: forged });
     check('C7 tampered session token rejected', meForged.status === 401, `status ${meForged.status}`);
 

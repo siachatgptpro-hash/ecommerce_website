@@ -11,7 +11,7 @@ import { Lock, Mail, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user, isLoading: authLoading, logout } = useAuth();
   const [logoUrl, setLogoUrl] = useState('/logo-emblem.png');
   const [storeName, setStoreName] = useState('SHLOKVEDA');
   const [nextPath, setNextPath] = useState('/account');
@@ -21,7 +21,7 @@ export default function LoginPage() {
     // instead of always dumping them on /account. Only same-site paths are
     // honoured (open-redirect guard).
     const next = new URLSearchParams(window.location.search).get('next');
-    if (next && next.startsWith('/') && !next.startsWith('//')) {
+    if (next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/admin')) {
       setNextPath(next);
     }
 
@@ -35,6 +35,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [switchingAccount, setSwitchingAccount] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,8 +43,9 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email.trim(), password);
+      await login(email.trim(), password, 'customer');
       router.push(nextPath);
+      router.refresh();
     } catch (err: any) {
       setErrorMsg(err.message || 'Invalid email or password.');
     } finally {
@@ -68,6 +70,33 @@ export default function LoginPage() {
           </div>
         )}
 
+        {!authLoading && user && !switchingAccount ? (
+          <div className="space-y-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 text-center">
+            <p className="text-sm text-gray-700">
+              You are already signed in as{' '}
+              <strong className="text-gray-900">{user.fullName || user.name || 'your account'}</strong>
+              {user.email ? <span className="block text-xs text-gray-500">{user.email}</span> : null}
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push(nextPath)}
+              className="w-full py-3 rounded-xl bg-[#1B4332] text-white font-bold text-sm"
+            >
+              Continue
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                logout('customer');
+                setSwitchingAccount(true);
+                setErrorMsg('');
+              }}
+              className="w-full py-3 rounded-xl bg-white border border-gray-200 text-gray-700 font-bold text-sm"
+            >
+              Sign in with a different account
+            </button>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
@@ -114,6 +143,7 @@ export default function LoginPage() {
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
+        )}
 
         <div className="pt-4 border-t border-gray-100 text-center space-y-3">
           <p className="text-xs text-gray-600">

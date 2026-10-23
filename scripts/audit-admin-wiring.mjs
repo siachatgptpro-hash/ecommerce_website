@@ -19,7 +19,7 @@ const BASE = process.argv[2] || 'http://localhost:3000';
 const ADMIN_EMAIL = process.env.AUDIT_ADMIN_EMAIL || 'admin@example.com';
 const ADMIN_PASSWORD = process.env.AUDIT_ADMIN_PASSWORD || 'sandbox-admin-pass-123';
 const TS = Date.now();
-const COOKIE_NAME = 'shlokveda_session_token';
+const COOKIE_NAME = 'shlokveda_admin_session';
 
 let pass = 0, fail = 0;
 const failures = [];
@@ -62,7 +62,7 @@ check('H5 X-Powered-By removed', !home.headers.get('x-powered-by'), home.headers
 check('H6 home renders under CSP', home.status === 200 && home.text.includes('SHLOKVEDA'));
 
 const admin = jar();
-const loginRes = await call('POST', '/api/auth/login', { jar: admin, body: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD } });
+const loginRes = await call('POST', '/api/auth/login', { jar: admin, body: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD, scope: 'admin' } });
 check('H7 admin login', loginRes.status === 200, `status ${loginRes.status}`);
 const setCookies = loginRes.headers.getSetCookie ? loginRes.headers.getSetCookie().join(' | ') : (loginRes.headers.get('set-cookie') || '');
 const sessionCookie = setCookies.split('|').map((s) => s.trim()).find((c) => c.startsWith(COOKIE_NAME)) || '';

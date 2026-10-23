@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CheckoutInitiateSchema } from '@/schemas';
 import { OrderService } from '@/services/order.service';
 import { AuthService } from '@/services/auth.service';
+import { resolveRequestSessionToken } from '@/lib/session';
 import { AuthenticationError, handleApiError } from '@/lib/errors';
 import { enforceRateLimit } from '@/lib/rate-limit';
 
@@ -13,11 +14,10 @@ export async function POST(req: NextRequest) {
     const payload = CheckoutInitiateSchema.parse(json);
 
     let userId: string | undefined = undefined;
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '') || req.cookies.get('shlokveda_session_token')?.value;
+    const token = resolveRequestSessionToken(req, 'customer')?.token;
     if (token) {
       try {
-        const decoded = AuthService.verifyToken(token);
+        const decoded = AuthService.verifyToken(token, { scope: 'customer' });
         userId = decoded.userId;
       } catch {
         throw new AuthenticationError('Please log in before starting payment.');

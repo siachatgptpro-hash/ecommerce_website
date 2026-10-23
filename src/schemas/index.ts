@@ -58,6 +58,10 @@ export const LoginSchema = z.object({
   email: z.string().trim().optional(),
   phone: z.string().trim().optional(),
   password: z.string().min(1, 'Password is required'),
+  // The storefront and admin sign-in pages send this explicitly so their
+  // browser sessions stay independent. Omitting it preserves the legacy
+  // single-cookie API behaviour for older clients and audit scripts.
+  scope: z.enum(['customer', 'admin']).optional(),
 }).refine((data) => !!(data.emailOrPhone || data.email || data.phone), {
   message: 'Email or phone number is required',
   path: ['emailOrPhone'],

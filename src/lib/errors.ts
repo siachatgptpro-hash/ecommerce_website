@@ -28,14 +28,22 @@ export class ValidationError extends AppError {
 }
 
 export class AuthenticationError extends AppError {
-  constructor(message = 'Authentication required. Please log in.') {
-    super('AUTHENTICATION_ERROR', message, 401);
+  constructor(
+    message = 'Authentication required. Please log in.',
+    code = 'AUTHENTICATION_ERROR',
+    details?: any
+  ) {
+    super(code, message, 401, details);
   }
 }
 
 export class AuthorizationError extends AppError {
-  constructor(message = 'Access denied. You do not have the required permissions.') {
-    super('FORBIDDEN', message, 403);
+  constructor(
+    message = 'Access denied. You do not have the required permissions.',
+    code = 'FORBIDDEN',
+    details?: any
+  ) {
+    super(code, message, 403, details);
   }
 }
 

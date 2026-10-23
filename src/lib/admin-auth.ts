@@ -2,11 +2,13 @@ import { NextRequest } from 'next/server';
 import { AuthService, TokenPayload } from '@/services/auth.service';
 import { UserRepository } from '@/repositories/user.repository';
 import { AuthenticationError, AuthorizationError } from '@/lib/errors';
-import { ADMIN_ROLES } from '@/lib/admin-page-auth';
+import { ADMIN_ROLES } from '@/lib/admin-roles';
+import { resolveRequestSessionToken } from '@/lib/session';
 import { PermissionKey, SystemRole } from '@/types';
 
 /**
- * Authenticates an admin API request.
+ * Authenticates an admin API request using the admin-scoped browser session
+ * (with the legacy cookie as a migration fallback).
  *
  * The JWT proves the caller logged in at some point, but roles, permissions
  * and account status are ALWAYS re-loaded from the database — a deactivated
@@ -14,18 +16,17 @@ import { PermissionKey, SystemRole } from '@/types';
  * 7-day token happens to expire.
  */
 export async function authenticateAdmin(req: NextRequest, requiredPermission?: PermissionKey): Promise<TokenPayload> {
-  const authHeader = req.headers.get('authorization');
-  const token = authHeader?.replace('Bearer ', '') || req.cookies.get('shlokveda_session_token')?.value;
+  const resolved = resolveRequestSessionToken(req, 'admin');
 
-  if (!token) {
-    throw new AuthenticationError('Admin authentication required.');
+  if (!resolved) {
+    throw new AuthenticationError('Admin authentication required.', 'ADMIN_SESSION_REQUIRED');
   }
 
-  const tokenPayload = AuthService.verifyToken(token);
+  const tokenPayload = AuthService.verifyToken(resolved.token, { scope: 'admin' });
 
   const user = await UserRepository.findById(tokenPayload.userId);
   if (!user || !user.isActive) {
-    throw new AuthenticationError('Admin session is no longer valid.');
+    throw new AuthenticationError('Admin session is no longer valid.', 'ADMIN_SESSION_REQUIRED');
   }
 
   const payload: TokenPayload = {
@@ -34,11 +35,15 @@ export async function authenticateAdmin(req: NextRequest, requiredPermission?: P
     fullName: user.fullName,
     roles: user.roles || [SystemRole.CUSTOMER],
     permissions: user.permissions || [],
+    scope: 'admin',
   };
 
   const isAdmin = payload.roles.some((r) => ADMIN_ROLES.includes(r));
   if (!isAdmin) {
-    throw new AuthorizationError('Administrative privileges required.');
+    throw new AuthorizationError(
+      'This account does not have admin access. Please sign in with an administrator account.',
+      'ADMIN_ROLE_REQUIRED'
+    );
   }
 
   if (requiredPermission) {

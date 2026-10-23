@@ -5,12 +5,12 @@ import { OrderService } from '@/services/order.service';
 import { CheckoutInitiateSchema } from '@/schemas';
 import { AuthenticationError, handleApiError, ValidationError } from '@/lib/errors';
 import { PaymentGateway } from '@/types';
+import { resolveRequestSessionToken } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
 function getToken(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  return authHeader?.replace(/^Bearer\s+/i, '') || req.cookies.get('shlokveda_session_token')?.value;
+  return resolveRequestSessionToken(req, 'customer')?.token;
 }
 
 export async function GET(req: NextRequest) {
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     const token = getToken(req);
     if (!token) throw new AuthenticationError();
 
-    const user = await AuthService.getCurrentUser(token);
+    const user = await AuthService.getCurrentUser(token, { scope: 'customer' });
     const { searchParams } = new URL(req.url);
     const pageParam = parseInt(searchParams.get('page') || '1', 10);
     const limitParam = parseInt(searchParams.get('limit') || '20', 10);
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
   try {
     const token = getToken(req);
     if (!token) throw new AuthenticationError('Please log in before placing an order.');
-    const user = await AuthService.getCurrentUser(token);
+    const user = await AuthService.getCurrentUser(token, { scope: 'customer' });
 
     const json = await req.json();
     const rawAddress = json?.shippingAddress || {};

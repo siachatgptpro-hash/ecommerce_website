@@ -29,7 +29,7 @@ Open the local Next.js URL printed by the dev server. Without `DATABASE_URL`, th
 1. In Neon, rotate any credential previously shared outside the private dashboard, then use the new connection string.
 2. Run `prisma/neon-setup.sql` once against an **empty** Neon schema. Do not rerun it over an initialized database.
 3. Set `DATABASE_URL`, a strong stable `AUTH_SECRET`, and required payment/webhook variables in the **private deployment environment** (for example, Vercel Production). Never commit or paste secrets into source control or chat.
-4. Create the first administrator from a private execution environment using `npm run admin:bootstrap` with `DATABASE_URL`, `ADMIN_EMAIL`, and a unique `ADMIN_PASSWORD` of at least 14 characters. The command only creates a new account; it will not promote or reset an existing email. Do not put the database URL or password in a shared terminal transcript.
+4. Create the first administrator from a private execution environment using `npm run admin:bootstrap` with `DATABASE_URL`, `ADMIN_EMAIL`, and a unique `ADMIN_PASSWORD` of at least 14 characters. The command only creates a new account; it will not promote or reset an existing email. If the owner email already exists as a customer, use `npm run admin:promote` with `DATABASE_URL`, `ADMIN_EMAIL`, and `CONFIRM_PROMOTE_ADMIN=YES` to add the administrator roles without changing its password. Do not put the database URL or password in a shared terminal transcript.
 5. Enter verified inventory quantities in the admin inventory screen and verify checkout, order persistence, stock-ledger changes, payment callbacks, and cancellation/refund flows against the private database before accepting live orders.
 
 `DATABASE_URL` is deliberately not stored in this checkout. The optional `ADMIN_EMAIL` / `ADMIN_PASSWORD` values are consumed only by the explicit bootstrap script; they are not an automatic production-startup mechanism.
@@ -38,7 +38,7 @@ Open the local Next.js URL printed by the dev server. Without `DATABASE_URL`, th
 
 - `DATABASE_URL`: Neon PostgreSQL connection string; required by the production runtime.
 - `AUTH_SECRET`: stable, random secret of at least 32 characters for signed sessions.
-- `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_FULL_NAME`: used only by the explicit administrator bootstrap command.
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_FULL_NAME`: used only by the explicit administrator bootstrap command. `CONFIRM_PROMOTE_ADMIN=YES` is additionally required by the existing-account promotion command.
 - `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`: server-side payment configuration for live Razorpay operations.
 - `NEXT_PUBLIC_SITE_URL`: verified public site origin for absolute sitemap links.
 
@@ -63,3 +63,4 @@ The automated backend checks run against the in-memory preview mode unless a dat
 - `prisma/schema.prisma` — relational schema.
 - `prisma/neon-setup.sql` — one-time schema and brochure-catalog bootstrap for an empty Neon schema.
 - `scripts/bootstrap-admin.ts` — one-time secure first-administrator creation command.
+- `scripts/promote-admin.ts` — confirmed repair command that adds administrator roles to an existing owner account without changing its password.
