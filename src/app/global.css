@@ -181,3 +181,32 @@ textarea {
     transform: rotate(1.4deg) translate3d(4px, 3px, 0);
   }
 }
+
+/* Sparse falling leaves for the wishlist. The outer element owns the
+   long vertical journey and opacity; a nested element owns the flutter,
+   so their transforms compose instead of overriding one another. */
+@keyframes leaf-fall {
+  0% {
+    transform: translate3d(0, -12vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: var(--leaf-opacity, 0.65);
+  }
+  88% {
+    opacity: var(--leaf-opacity, 0.65);
+  }
+  100% {
+    transform: translate3d(var(--leaf-drift, 4rem), 112vh, 0) rotate(300deg);
+    opacity: 0;
+  }
+}
+
+@keyframes leaf-flutter {
+  from {
+    transform: translate3d(-1.25rem, 0, 0) rotate(-24deg);
+  }
+  to {
+    transform: translate3d(1.25rem, 0.5rem, 0) rotate(28deg);
+  }
+}
