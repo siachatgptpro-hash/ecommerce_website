@@ -125,7 +125,7 @@ export function Footer() {
                 alt={`${settings.storeName} logo`}
                 loading="lazy"
                 decoding="async"
-                className="h-16 w-auto max-w-44 shrink-0 object-contain sm:h-[4.5rem]"
+                className="h-20 w-auto max-w-56 shrink-0 object-contain sm:h-24"
               />
               <span>
                 <span className="block font-serif text-[26px] font-bold leading-none tracking-tight text-white">

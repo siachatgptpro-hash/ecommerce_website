@@ -130,7 +130,7 @@ export function Header() {
 
       {/* 2. MAIN HEADER */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 gap-4">
+        <div className="flex items-center justify-between h-20 gap-4 sm:h-24">
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -150,7 +150,7 @@ export function Header() {
               alt=""
               fetchPriority="high"
               decoding="async"
-              className="h-14 w-auto max-w-44 shrink-0 object-contain sm:h-16 sm:max-w-60"
+              className="h-[3.75rem] w-auto max-w-44 shrink-0 object-contain sm:h-20 sm:max-w-64"
             />
             <span className="flex flex-col">
               <span className="font-serif text-lg font-extrabold leading-none tracking-tight text-[#1B4332] sm:text-2xl">
