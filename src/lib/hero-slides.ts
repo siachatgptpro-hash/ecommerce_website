@@ -30,16 +30,16 @@ export interface HeroSlide {
   secondaryCtaLink?: string;
 }
 
-export const DEFAULT_HERO_EYEBROW = 'Tradition for a Healthier Tomorrow';
+export const DEFAULT_HERO_EYEBROW = 'Pure Ayurveda · Natural Wellness · Trusted by Families';
 
 export const DEFAULT_HERO_SLIDES: HeroSlide[] = [
   {
     id: 'hero-personal-care',
-    eyebrow: 'Personal Care Collection',
+    eyebrow: 'Pure Ayurveda · Natural Wellness · Trusted by Families',
     title: 'Natural Personal Care for a Healthier You',
-    titleHighlight: 'Healthier You',
+    titleHighlight: 'for a Healthier You',
     subtitle:
-      'Gentle herbal personal care essentials from our Ayurvedic catalogue, made to fit your everyday routine.',
+      'Explore authentic Ayurvedic products crafted with traditional herbs for your everyday wellness routine.',
     imageUrl: '/banners/natural-care.jpg',
     imageAlt:
       'Ayurvedic personal care still life with aloe vera, herbal jars, roses and a mortar and pestle',
@@ -50,11 +50,11 @@ export const DEFAULT_HERO_SLIDES: HeroSlide[] = [
   },
   {
     id: 'hero-daily-wellness',
-    eyebrow: 'Immunity & Daily Wellness',
+    eyebrow: 'Pure Ayurveda · Natural Wellness · Trusted by Families',
     title: 'Everyday Wellness, Rooted in Ayurveda',
-    titleHighlight: 'Ayurveda',
+    titleHighlight: 'Rooted in Ayurveda',
     subtitle:
-      'Classical Ayurvedic formulations for daily balance — clear pack sizes and printed prices on every product.',
+      'Discover traditional Ayurvedic formulations for your daily wellness routine.',
     imageUrl: '/banners/daily-immunity.jpg',
     imageAlt: 'Family sharing herbal tea with amla, honey and ginger on the table',
     ctaText: 'Explore Wellness',
@@ -64,11 +64,11 @@ export const DEFAULT_HERO_SLIDES: HeroSlide[] = [
   },
   {
     id: 'hero-herbal-oils',
-    eyebrow: 'Classical Herbal Oils',
+    eyebrow: 'Pure Ayurveda · Natural Wellness · Trusted by Families',
     title: 'Ancient Wisdom. Everyday Care.',
     titleHighlight: 'Everyday Care.',
     subtitle:
-      'Traditional herbal oils and liniments for massage and everyday self-care, prepared the classical way.',
+      'Explore traditional herbal oils and Ayurvedic preparations for your daily care rituals.',
     imageUrl: '/banners/herbal-oils.jpg',
     imageAlt: 'Amber bottles of herbal oil beside a lit brass diya and fresh herbs',
     ctaText: 'Shop Herbal Oils',
@@ -78,11 +78,11 @@ export const DEFAULT_HERO_SLIDES: HeroSlide[] = [
   },
   {
     id: 'hero-complete-catalogue',
-    eyebrow: 'The Complete Catalogue',
+    eyebrow: 'Pure Ayurveda · Natural Wellness · Trusted by Families',
     title: 'Bring the Goodness of Ayurveda Home',
-    titleHighlight: 'Ayurveda',
+    titleHighlight: 'Ayurveda Home',
     subtitle:
-      'Syrups, juices, arks, oils, capsules and more — our complete Ayurvedic catalogue in one place.',
+      "Find Ayurvedic essentials for your family's everyday wellness needs.",
     imageUrl: '/banners/ayurvedic-wellness.jpg',
     imageAlt: 'Ayurvedic wellness essentials with dropper bottles, turmeric and amla',
     ctaText: 'Shop All Products',

@@ -27,7 +27,7 @@ export default function AdminSettingsPage() {
   const [logoUrl, setLogoUrl] = useState('/logo.png');
   const [logoUploading, setLogoUploading] = useState(false);
   const [announcementText, setAnnouncementText] = useState(
-    'Free shipping on orders of ₹499 & above · Authentic Ayurvedic Products'
+    'Authentic Ayurvedic Products | Free shipping on orders of ₹499 & above | Tradition for a Healthier Tomorrow'
   );
   const [privacyPolicy, setPrivacyPolicy] = useState('');
   const [termsPolicy, setTermsPolicy] = useState('');

@@ -8,6 +8,7 @@ import {
   ArrowRight,
   Award,
   Heart,
+  LayoutGrid,
   Leaf,
   Pause,
   Play,
@@ -32,7 +33,7 @@ function renderTitle(slide: HeroSlide) {
   return (
     <>
       {before}
-      <span className="italic text-[#B08968]">{titleHighlight}</span>
+      <span className="text-[#A67C2E]">{titleHighlight}</span>
       {after}
     </>
   );
@@ -111,7 +112,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
     <section
       aria-roledescription="carousel"
       aria-label="Featured Ayurvedic collections"
-      className="relative h-[560px] overflow-hidden bg-[#F3EFE6] sm:h-[540px] lg:h-[600px]"
+      className="relative h-[560px] overflow-hidden bg-[#E9F1DB] sm:h-[540px] lg:h-[600px]"
       onMouseEnter={() => setInteractionPaused(true)}
       onMouseLeave={() => setInteractionPaused(false)}
       onFocus={() => setInteractionPaused(true)}
@@ -176,19 +177,19 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
               />
             )}
 
-            {/* Ivory gradients keep the dark-green copy readable on photography */}
-            <div className="absolute inset-0 bg-[#FAF7F2]/45 sm:bg-transparent" aria-hidden="true" />
+            {/* Botanical-green gradients keep the dark-green copy readable */}
+            <div className="absolute inset-0 bg-[#EDF3E0]/50 sm:bg-transparent" aria-hidden="true" />
             <div
-              className="absolute inset-0 bg-gradient-to-r from-[#FAF7F2] via-[#FAF7F2]/85 to-transparent sm:via-[#FAF7F2]/70 lg:via-[#FAF7F2]/55"
+              className="absolute inset-0 bg-gradient-to-r from-[#EDF3E0] via-[#EDF3E0]/85 to-transparent sm:via-[#EDF3E0]/70 lg:via-[#EDF3E0]/45"
               aria-hidden="true"
             />
 
             {/* Slide copy — real HTML text, never baked into the image */}
-            <div className="relative z-10 mx-auto flex h-full max-w-7xl items-center px-4 pb-28 pt-6 sm:px-6 lg:px-8">
+            <div className="relative z-10 mx-auto flex h-full max-w-7xl items-center px-4 pb-24 pt-6 sm:px-6 lg:px-8">
               <div className="max-w-xl space-y-4 sm:space-y-5">
                 {slide.eyebrow && (
-                  <span className="inline-flex items-center gap-2 rounded-full border border-[#C5A880]/60 bg-white/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#1B4332] backdrop-blur-sm sm:text-[11px]">
-                    <Leaf className="h-3.5 w-3.5 text-[#B08968]" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[#1B4332]/20 bg-white/70 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#1B4332] backdrop-blur-sm sm:text-[11px]">
+                    <Leaf className="h-3.5 w-3.5 text-[#2D6A4F]" aria-hidden="true" />
                     {slide.eyebrow}
                   </span>
                 )}
@@ -200,6 +201,21 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                 <p className="max-w-lg text-sm leading-relaxed text-[#3F4A42] sm:text-base">
                   {slide.subtitle}
                 </p>
+
+                {/* Trust indicators */}
+                <ul className="hidden flex-wrap items-center gap-x-5 gap-y-3 pt-1 md:flex" aria-label="Product assurances">
+                  {TRUST_CHIPS.map(({ icon: Icon, label }) => (
+                    <li key={label} className="flex items-center gap-2.5">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-full border border-[#1B4332]/25 bg-white/60 backdrop-blur-sm">
+                        <Icon className="h-5 w-5 text-[#1B4332]" aria-hidden="true" />
+                      </span>
+                      <span className="max-w-[6rem] text-xs font-bold leading-tight text-[#1B4332]">
+                        {label}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
                 <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:flex-wrap">
                   <Link
                     href={slide.ctaLink}
@@ -215,6 +231,9 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                       tabIndex={isActive ? 0 : -1}
                       className="inline-flex items-center justify-center gap-2 rounded-full border border-[#1B4332]/25 bg-white/85 px-6 py-3.5 text-sm font-bold text-[#1B4332] backdrop-blur-sm transition-colors hover:bg-white sm:px-7"
                     >
+                      {slide.secondaryCtaLink.includes('#categories') && (
+                        <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+                      )}
                       {slide.secondaryCtaText}
                     </Link>
                   )}
@@ -224,6 +243,30 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
           </div>
         );
       })}
+
+      {/* Decorative brand accents (desktop): script note + circular seal */}
+      <p
+        aria-hidden="true"
+        style={{ fontFamily: "'Dancing Script', cursive" }}
+        className="absolute right-[15%] top-[20%] z-10 hidden -rotate-3 text-4xl font-semibold leading-tight text-[#1B4332]/90 [text-shadow:0_1px_14px_rgba(251,247,236,0.95)] xl:block"
+      >
+        Ancient Wisdom
+        <br />
+        Modern Wellness
+      </p>
+      <div
+        aria-hidden="true"
+        className="absolute right-5 top-5 z-20 hidden h-24 w-24 flex-col items-center justify-center rounded-full border border-[#1B4332]/30 bg-[#FBF7EC]/90 text-center shadow-lg ring-1 ring-inset ring-[#1B4332]/15 backdrop-blur-sm md:flex lg:right-8 lg:top-8 lg:h-28 lg:w-28"
+      >
+        <span className="font-serif text-[13px] font-bold leading-tight text-[#1B4332] lg:text-sm">
+          Live
+          <br />
+          Ayurvedic
+          <br />
+          Store
+        </span>
+        <Leaf className="mt-1 h-4 w-4 text-[#2D6A4F]" />
+      </div>
 
       {/* Previous / next arrows */}
       {count > 1 && (
@@ -247,58 +290,41 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
         </>
       )}
 
-      {/* Bottom bar: trust chips (desktop) + dots + autoplay toggle.
-          Sits at bottom-16 so the overlapping benefits strip (-mt-12) never covers it. */}
-      <div className="absolute inset-x-0 bottom-16 z-20">
-        <div className="mx-auto flex max-w-7xl items-end justify-center gap-6 px-4 sm:px-6 lg:justify-between lg:px-8">
-          <ul className="hidden items-center gap-6 lg:flex" aria-label="Why shop with us">
-            {TRUST_CHIPS.map(({ icon: Icon, label }) => (
-              <li key={label} className="flex items-center gap-2.5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[#1B4332]/20 bg-white/80 backdrop-blur-sm">
-                  <Icon className="h-[18px] w-[18px] text-[#1B4332]" aria-hidden="true" />
-                </span>
-                <span className="max-w-[5.5rem] text-[11px] font-semibold leading-tight text-[#1B4332]">
-                  {label}
-                </span>
-              </li>
-            ))}
-          </ul>
-
-          {count > 1 && (
-            <div className="flex items-center gap-1">
-              {slides.map((slide, index) => (
-                <button
-                  key={`dot-${slide.id}`}
-                  type="button"
-                  onClick={() => goTo(index)}
-                  aria-label={`Go to slide ${index + 1}: ${slide.title}`}
-                  aria-current={index === active || undefined}
-                  className="flex h-8 items-center px-1"
-                >
-                  <span
-                    className={`block h-2 rounded-full transition-all ${
-                      index === active ? 'w-7 bg-[#1B4332]' : 'w-2 bg-[#1B4332]/30 hover:bg-[#1B4332]/50'
-                    } ${reducedMotion ? 'transition-none' : ''}`}
-                  />
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => setUserPaused((value) => !value)}
-                aria-pressed={userPaused}
-                aria-label={userPaused ? 'Play automatic slide rotation' : 'Pause automatic slide rotation'}
-                className="ml-2 flex h-8 w-8 items-center justify-center rounded-full border border-[#1B4332]/20 bg-white/85 text-[#1B4332] backdrop-blur-sm transition-colors hover:bg-white"
-              >
-                {userPaused ? (
-                  <Play className="h-3.5 w-3.5" aria-hidden="true" />
-                ) : (
-                  <Pause className="h-3.5 w-3.5" aria-hidden="true" />
-                )}
-              </button>
-            </div>
-          )}
+      {/* Pagination dots + autoplay toggle. Sits at bottom-16 so the
+          overlapping benefits strip (-mt-12) never covers it. */}
+      {count > 1 && (
+        <div className="absolute inset-x-0 bottom-16 z-20 flex items-center justify-center gap-1">
+          {slides.map((slide, index) => (
+            <button
+              key={`dot-${slide.id}`}
+              type="button"
+              onClick={() => goTo(index)}
+              aria-label={`Go to slide ${index + 1}: ${slide.title}`}
+              aria-current={index === active || undefined}
+              className="flex h-8 items-center px-1"
+            >
+              <span
+                className={`block h-2 rounded-full transition-all ${
+                  index === active ? 'w-7 bg-[#1B4332]' : 'w-2 bg-[#1B4332]/30 hover:bg-[#1B4332]/50'
+                } ${reducedMotion ? 'transition-none' : ''}`}
+              />
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setUserPaused((value) => !value)}
+            aria-pressed={userPaused}
+            aria-label={userPaused ? 'Play automatic slide rotation' : 'Pause automatic slide rotation'}
+            className="ml-2 flex h-8 w-8 items-center justify-center rounded-full border border-[#1B4332]/20 bg-white/85 text-[#1B4332] backdrop-blur-sm transition-colors hover:bg-white"
+          >
+            {userPaused ? (
+              <Play className="h-3.5 w-3.5" aria-hidden="true" />
+            ) : (
+              <Pause className="h-3.5 w-3.5" aria-hidden="true" />
+            )}
+          </button>
         </div>
-      </div>
+      )}
 
       {/* Screen-reader announcement of the visible slide */}
       <span className="sr-only" role="status" aria-live="polite">

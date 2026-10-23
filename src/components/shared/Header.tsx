@@ -20,6 +20,7 @@ import {
   BadgePercent,
   Package,
   CircleHelp,
+  Gift,
 } from 'lucide-react';
 import { Category } from '@/types';
 
@@ -36,7 +37,7 @@ export function Header() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   // Initial value mirrors the server-side default so the bar never flashes a
   // wrong offer (the configured free-shipping threshold is ₹499 by default).
-  const [announcementText, setAnnouncementText] = useState('Free shipping on orders of ₹499 & above · Authentic Ayurvedic Products');
+  const [announcementText, setAnnouncementText] = useState('Authentic Ayurvedic Products | Free shipping on orders of ₹499 & above | Tradition for a Healthier Tomorrow');
   const [storeName, setStoreName] = useState('SHLOKVEDA');
   const [logoUrl, setLogoUrl] = useState('/logo.png');
 
@@ -80,7 +81,7 @@ export function Header() {
         type="search"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Search for products, categories & more"
+        placeholder="Search herbs, chyawanprash, oils, tablets, wellness..."
         aria-label="Search products"
         className="w-full rounded-full border border-[#E3DCCB] bg-white py-2.5 pl-11 pr-28 text-sm shadow-sm focus:border-[#1B4332] focus:outline-none focus:ring-1 focus:ring-[#1B4332]"
       />
@@ -109,7 +110,11 @@ export function Header() {
             </Link>
             <Link href="/contact" className="flex items-center gap-1.5 transition-colors hover:text-[#C5A880]">
               <CircleHelp className="h-3.5 w-3.5" aria-hidden="true" />
-              Help & Support
+              Help
+            </Link>
+            <Link href="/shop" className="flex items-center gap-1.5 transition-colors hover:text-[#C5A880]">
+              <Gift className="h-3.5 w-3.5" aria-hidden="true" />
+              Offers
             </Link>
           </nav>
         </div>

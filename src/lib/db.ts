@@ -242,7 +242,7 @@ class DatabaseStore {
         {
           id: 'ban_hero_personal_care',
           title: 'Natural Personal Care for a Healthier You',
-          subtitle: 'Gentle herbal personal care essentials from our Ayurvedic catalogue, made to fit your everyday routine.',
+          subtitle: 'Explore authentic Ayurvedic products crafted with traditional herbs for your everyday wellness routine.',
           imageUrl: '/banners/natural-care.jpg',
           mobileImgUrl: null,
           linkUrl: '/category/personal-care',
@@ -260,7 +260,7 @@ class DatabaseStore {
         {
           id: 'ban_hero_daily_wellness',
           title: 'Everyday Wellness, Rooted in Ayurveda',
-          subtitle: 'Classical Ayurvedic formulations for daily balance - clear pack sizes and printed prices on every product.',
+          subtitle: 'Discover traditional Ayurvedic formulations for your daily wellness routine.',
           imageUrl: '/banners/daily-immunity.jpg',
           mobileImgUrl: null,
           linkUrl: '/category/immunity-rasayana',
@@ -278,7 +278,7 @@ class DatabaseStore {
         {
           id: 'ban_hero_herbal_oils',
           title: 'Ancient Wisdom. Everyday Care.',
-          subtitle: 'Traditional herbal oils and liniments for massage and everyday self-care, prepared the classical way.',
+          subtitle: 'Explore traditional herbal oils and Ayurvedic preparations for your daily care rituals.',
           imageUrl: '/banners/herbal-oils.jpg',
           mobileImgUrl: null,
           linkUrl: '/category/herbal-oils',
@@ -296,7 +296,7 @@ class DatabaseStore {
         {
           id: 'ban_hero_catalogue',
           title: 'Bring the Goodness of Ayurveda Home',
-          subtitle: 'Syrups, juices, arks, oils, capsules and more - our complete Ayurvedic catalogue in one place.',
+          subtitle: "Find Ayurvedic essentials for your family's everyday wellness needs.",
           imageUrl: '/banners/ayurvedic-wellness.jpg',
           mobileImgUrl: null,
           linkUrl: '/shop',

@@ -52,7 +52,7 @@ export class SettingsRepository {
       taxIncluded: all['TAX_INCLUDED'] !== 'false',
       // Online-payment-only unless an admin explicitly enables COD.
       enableCod: (all['ENABLE_COD'] ?? all['COD_ENABLED']) === 'true',
-      announcementText: value('ANNOUNCEMENT_TEXT', 'Free shipping on orders of ₹499 & above · Authentic Ayurvedic Products'),
+      announcementText: value('ANNOUNCEMENT_TEXT', 'Authentic Ayurvedic Products | Free shipping on orders of ₹499 & above | Tradition for a Healthier Tomorrow'),
       logoUrl: value('LOGO_URL', '/logo.png'),
       privacyPolicy: value('POLICY_PRIVACY', 'Checkout may collect your name, email address, phone number and delivery address. Registration also collects account details.\n\nOnline payment processing is available only when a valid payment gateway is configured. This storefront does not store card or UPI credentials.'),
       termsPolicy: value('POLICY_TERMS', 'Product names, pack options and printed MRPs are transcribed from the supplied brochure. The checkout recalculates prices and availability from the current server catalogue before placing an order.\n\nCatalogue content is informational, may not include every package detail and is not medical advice. Read the product label and consult a qualified healthcare professional where appropriate.'),

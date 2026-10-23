@@ -20,8 +20,8 @@ import {
   CheckCircle2,
   BookOpen,
   Headphones,
-  Users,
   Sparkles,
+  Sprout,
 } from 'lucide-react';
 
 export const revalidate = 60; // 1 minute ISR
@@ -29,7 +29,7 @@ export const revalidate = 60; // 1 minute ISR
 export const metadata: Metadata = {
   title: { absolute: 'SHLOKVEDA | Authentic Ayurvedic Products & Herbal Wellness' },
   description:
-    'Shop authentic Ayurvedic products at SHLOKVEDA — herbal syrups & juices, arks & drops, oils, capsules, tablets and natural personal care, rooted in classical Ayurvedic tradition.',
+    "Explore SHLOKVEDA's Ayurvedic products, herbal oils, wellness essentials, and natural personal care products. Discover traditional formulations for everyday care.",
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     siteName: 'SHLOKVEDA',
     title: 'SHLOKVEDA | Authentic Ayurvedic Products & Herbal Wellness',
     description:
-      'Herbal syrups & juices, arks & drops, oils, capsules, tablets and natural personal care — rooted in classical Ayurvedic tradition.',
+      "Explore SHLOKVEDA's Ayurvedic products, herbal oils, wellness essentials, and natural personal care products. Discover traditional formulations for everyday care.",
     images: [
       {
         url: '/banners/natural-care.jpg',
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'SHLOKVEDA | Authentic Ayurvedic Products & Herbal Wellness',
     description:
-      'Herbal syrups & juices, arks & drops, oils, capsules, tablets and natural personal care — rooted in classical Ayurvedic tradition.',
+      "Explore SHLOKVEDA's Ayurvedic products, herbal oils, wellness essentials, and natural personal care products. Discover traditional formulations for everyday care.",
     images: ['/banners/natural-care.jpg'],
   },
 };
@@ -74,15 +74,15 @@ export default async function HomePage() {
   // The Free Shipping claim always reflects the live store setting.
   const freeShippingThreshold = settings.freeShippingThreshold;
   const benefits = [
-    { icon: Leaf, title: 'Authentic Products', text: 'Genuine Ayurvedic formulations' },
+    { icon: Leaf, title: 'Authentic Products', text: 'Sourced with care' },
     {
       icon: Truck,
       title: 'Free Shipping',
       text: freeShippingThreshold > 0 ? `On orders of ₹${freeShippingThreshold} & above` : 'On every order',
     },
-    { icon: ShieldCheck, title: 'Secure Payments', text: 'Safe & protected checkout' },
-    { icon: Headphones, title: 'Customer Support', text: 'Help whenever you need it' },
-    { icon: Users, title: 'Trusted by Families', text: 'For everyday wellness' },
+    { icon: ShieldCheck, title: 'Secure Payments', text: 'Safe & encrypted checkout' },
+    { icon: Headphones, title: 'Customer Support', text: 'Always here to help' },
+    { icon: Sprout, title: 'Trusted by Families', text: 'For everyday wellness' },
   ];
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
@@ -121,12 +121,10 @@ export default async function HomePage() {
           className="relative z-20 mx-auto -mt-12 max-w-7xl px-4 sm:px-6 lg:px-8"
         >
           <h2 className="sr-only">Why shop with SHLOKVEDA</h2>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-5 rounded-2xl border border-[#F3EFE6] bg-white p-5 shadow-[0_18px_45px_-18px_rgba(27,67,50,0.35)] sm:p-6 md:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-5 rounded-2xl border border-[#F3EFE6] bg-white p-5 shadow-[0_18px_45px_-18px_rgba(27,67,50,0.35)] sm:p-6 md:grid-cols-3 lg:grid-cols-5 lg:gap-x-0 lg:divide-x lg:divide-[#EFE9DA]">
             {benefits.map(({ icon: Icon, title, text }) => (
-              <div key={title} className="flex items-center gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#1B4332]/[0.07]">
-                  <Icon className="h-5 w-5 text-[#1B4332]" aria-hidden="true" />
-                </span>
+              <div key={title} className="flex items-center gap-3 lg:justify-center lg:px-4">
+                <Icon className="h-8 w-8 shrink-0 text-[#1B4332]" strokeWidth={1.6} aria-hidden="true" />
                 <div>
                   <h3 className="text-[13px] font-bold leading-tight text-gray-900">{title}</h3>
                   <p className="mt-0.5 text-[11px] leading-snug text-gray-500">{text}</p>
