@@ -210,3 +210,13 @@ textarea {
     transform: translate3d(1.25rem, 0.5rem, 0) rotate(28deg);
   }
 }
+
+/* Cart drawer entrance: one smooth slide from the right edge. */
+@keyframes cart-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
