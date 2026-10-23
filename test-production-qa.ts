@@ -22,6 +22,15 @@ async function runPreviewQA() {
   record('catalogue search resolves source product names', search.products.some((product) => product.slug === 'triphala-ras'));
   record('every source product has a listed MRP and pack-size option', BROCHURE_PRODUCTS.every((product) => product.variants.length > 0 && product.variants.every((variant) => variant.mrp > 0 && variant.sellingPrice === variant.mrp)));
 
+  const neonSetup = fs.readFileSync('prisma/neon-setup.sql', 'utf8');
+  const neonVariantRows = neonSetup.split('\n').filter((line) => line.includes("('pdfv_"));
+  record('fresh Neon setup seeds all 101 brochure variants at 100 units', neonVariantRows.length === 101 && neonVariantRows.every((line) => line.includes(', 0, 100, 0, 5, 0,')));
+  record('fresh Neon setup writes matching opening-stock ledger rows', neonSetup.includes('INSERT INTO "InventoryLedger"') && neonSetup.includes("'inv_' || \"id\" || '_opening_100'") && neonSetup.includes("'OPENING_STOCK_100_20261024'"));
+
+  const stockMigration = fs.readFileSync('prisma/migrations/20261024_fill_brochure_opening_stock_100.sql', 'utf8');
+  const stockFillScript = fs.readFileSync('scripts/fill-brochure-stock.ts', 'utf8');
+  record('existing-database stock fill is brochure-only, guarded and rerun-safe', stockMigration.includes("starts_with(v.\"id\", 'pdfv_')") && stockMigration.includes('"reservedQuantity" > 100') && stockMigration.includes("'OPENING_STOCK_100_20261024'") && stockMigration.includes("'STOCK_AUDIT_ADJUSTMENT'::\"InventoryChangeReason\"") && stockMigration.includes('ON CONFLICT ("id") DO NOTHING') && stockFillScript.includes('CONFIRM_FILL_BROCHURE_STOCK_100') && stockFillScript.includes('20261024_fill_brochure_opening_stock_100.sql'));
+
   const product = BROCHURE_PRODUCTS[0];
   const checkout = CheckoutInitiateSchema.safeParse({
     items: [{ variantId: product.variants[0].id, quantity: 1 }],
