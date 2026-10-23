@@ -67,7 +67,14 @@ export class UserRepository {
 
   public static async findByEmailOrPhone(query: string): Promise<User | null> {
     const clean = query.trim();
-    return (await this.findByEmail(clean)) || (await this.findByPhone(clean));
+    const byEmail = await this.findByEmail(clean);
+    if (byEmail) return byEmail;
+    // Accept Indian mobile numbers written with +91 / 0 prefixes or spaces,
+    // matching the 10-digit format enforced at registration.
+    let digits = clean.replace(/\D/g, '');
+    if (digits.length === 12 && digits.startsWith('91')) digits = digits.slice(2);
+    if (digits.length === 11 && digits.startsWith('0')) digits = digits.slice(1);
+    return this.findByPhone(digits.length === 10 ? digits : clean);
   }
 
   public static async create(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {

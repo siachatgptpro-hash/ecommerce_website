@@ -98,7 +98,10 @@ export async function POST(req: NextRequest) {
       userId: user.id,
     });
 
-    return NextResponse.json({ success: true, data: result.order }, { status: 201 });
+    // Return the same aliased shape as GET /api/orders (status, subtotal,
+    // totalAmount, paymentMethod) by refetching through the repository.
+    const createdOrder = (await OrderRepository.findById(result.order.id)) || result.order;
+    return NextResponse.json({ success: true, data: createdOrder }, { status: 201 });
   } catch (error) {
     const err = handleApiError(error);
     return NextResponse.json(err.body, { status: err.status });

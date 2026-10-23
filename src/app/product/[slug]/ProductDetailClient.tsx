@@ -38,7 +38,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const { isInWishlist, toggleWishlist } = useWishlist();
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(() => {
+    const defaultIndex = (product.variants || []).findIndex((v) => v.isDefault);
+    return defaultIndex >= 0 ? defaultIndex : 0;
+  });
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'desc' | 'ingredients' | 'dosage' | 'safety'>('desc');
   const [isAdding, setIsAdding] = useState(false);

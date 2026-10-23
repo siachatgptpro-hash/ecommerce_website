@@ -13,14 +13,18 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     const secret = process.env.CRON_SECRET;
-    if (secret) {
-      const provided = req.headers.get('authorization')?.replace('Bearer ', '') || req.headers.get('x-cron-secret');
-      if (provided !== secret) {
-        return NextResponse.json(
-          { success: false, error: { code: 'UNAUTHORIZED', message: 'Invalid cron secret' } },
-          { status: 401 }
-        );
-      }
+    if (!secret) {
+      return NextResponse.json(
+        { success: false, error: { code: 'CRON_NOT_CONFIGURED', message: 'Cron secret is not configured' } },
+        { status: 503 }
+      );
+    }
+    const provided = req.headers.get('authorization')?.replace('Bearer ', '') || req.headers.get('x-cron-secret');
+    if (provided !== secret) {
+      return NextResponse.json(
+        { success: false, error: { code: 'UNAUTHORIZED', message: 'Invalid cron secret' } },
+        { status: 401 }
+      );
     }
 
     const expired = await OrderService.expireStalePendingOrders();

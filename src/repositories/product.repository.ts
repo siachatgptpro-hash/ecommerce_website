@@ -141,8 +141,10 @@ async function listProductsFromPostgres(options: ProductFilterOptions) {
     });
   }
   switch (options.sortBy) {
-    case 'price-low': products.sort((a,b) => Math.min(...(a.variants?.map(v=>v.sellingPrice)||[0])) - Math.min(...(b.variants?.map(v=>v.sellingPrice)||[0]))); break;
-    case 'price-high': products.sort((a,b) => Math.max(...(b.variants?.map(v=>v.sellingPrice)||[0])) - Math.max(...(a.variants?.map(v=>v.sellingPrice)||[0]))); break;
+    // Sort by the price cards actually display (the default variant), so the
+    // visible price sequence is monotonic in both directions.
+    case 'price-low': products.sort((a,b) => ((a.variants?.find(v=>v.isDefault)||a.variants?.[0])?.sellingPrice||0) - ((b.variants?.find(v=>v.isDefault)||b.variants?.[0])?.sellingPrice||0)); break;
+    case 'price-high': products.sort((a,b) => ((b.variants?.find(v=>v.isDefault)||b.variants?.[0])?.sellingPrice||0) - ((a.variants?.find(v=>v.isDefault)||a.variants?.[0])?.sellingPrice||0)); break;
     case 'rating': products.sort((a,b) => (b.ratingAverage || 0) - (a.ratingAverage || 0)); break;
     case 'newest': products.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); break;
     default: products.sort((a,b) => Number(b.isFeatured) - Number(a.isFeatured));
@@ -308,18 +310,19 @@ export class ProductRepository {
 
     // Sorting
     switch (options.sortBy) {
+      // Sort by the price cards actually display (the default variant).
       case 'price-low':
         filtered.sort((a, b) => {
-          const aMin = Math.min(...(a.variants?.map((v) => v.sellingPrice) || [0]));
-          const bMin = Math.min(...(b.variants?.map((v) => v.sellingPrice) || [0]));
-          return aMin - bMin;
+          const aPrice = (a.variants?.find((v) => v.isDefault) || a.variants?.[0])?.sellingPrice || 0;
+          const bPrice = (b.variants?.find((v) => v.isDefault) || b.variants?.[0])?.sellingPrice || 0;
+          return aPrice - bPrice;
         });
         break;
       case 'price-high':
         filtered.sort((a, b) => {
-          const aMax = Math.max(...(a.variants?.map((v) => v.sellingPrice) || [0]));
-          const bMax = Math.max(...(b.variants?.map((v) => v.sellingPrice) || [0]));
-          return bMax - aMax;
+          const aPrice = (a.variants?.find((v) => v.isDefault) || a.variants?.[0])?.sellingPrice || 0;
+          const bPrice = (b.variants?.find((v) => v.isDefault) || b.variants?.[0])?.sellingPrice || 0;
+          return bPrice - aPrice;
         });
         break;
       case 'rating':

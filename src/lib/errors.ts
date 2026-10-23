@@ -69,6 +69,21 @@ export class PaymentError extends AppError {
 }
 
 export function handleApiError(error: unknown) {
+  // Body-parsing failures (e.g. malformed JSON sent to a POST route) are
+  // client errors, not server faults.
+  if (error instanceof SyntaxError) {
+    return {
+      status: 400,
+      body: {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Request body must be valid JSON.',
+        },
+      },
+    };
+  }
+
   if (error instanceof ZodError) {
     return {
       status: 422,

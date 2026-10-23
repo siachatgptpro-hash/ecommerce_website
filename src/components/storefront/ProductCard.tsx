@@ -22,7 +22,10 @@ export function ProductCard({ product, entranceDelay }: ProductCardProps) {
   const { addItem } = useCart();
   const { user, isLoading: authLoading } = useAuth();
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(() => {
+    const defaultIndex = (product.variants || []).findIndex((v) => v.isDefault);
+    return defaultIndex >= 0 ? defaultIndex : 0;
+  });
   const [isAdding, setIsAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
   const [heartPulse, setHeartPulse] = useState(false);
