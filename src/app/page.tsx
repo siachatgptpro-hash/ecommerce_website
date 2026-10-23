@@ -144,6 +144,7 @@ export default async function HomePage() {
       <section className="relative overflow-hidden" aria-labelledby="catalogue-highlights-heading">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[url('/banners/highlights-botanical-bg.webp')] bg-cover bg-center" />
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(250,247,242,0.12)_0%,rgba(250,247,242,0.04)_45%,rgba(250,247,242,0.16)_100%)]" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_48%_40%_at_80%_10%,rgba(250,247,242,0.82),transparent_72%),radial-gradient(ellipse_44%_42%_at_13%_13%,rgba(250,247,242,0.6),transparent_70%)]" />
         {/* Midground foliage: masked corner crops swaying over the static
             backdrop for depth; sparse leaves drift down above them. */}
         <div aria-hidden="true" className="pointer-events-none absolute -left-8 -top-8 h-44 w-44 origin-top-left bg-[url('/banners/highlights-botanical-bg.webp')] bg-[size:230%_auto] bg-[position:0%_0%] bg-no-repeat opacity-70 [mask-image:radial-gradient(ellipse_85%_85%_at_10%_10%,black_40%,transparent_72%)] motion-safe:animate-[leaf-sway_9s_ease-in-out_infinite_alternate] sm:h-56 sm:w-56" />
@@ -156,23 +157,23 @@ export default async function HomePage() {
               <Leaf className="h-4 w-4 text-[#1B4332]" aria-hidden="true" />
               From Our Ayurvedic Catalogue
             </span>
-            <h2 id="catalogue-highlights-heading" className="mt-3 font-serif text-[40px] font-bold leading-[1.06] text-[#0F281E] sm:text-6xl">
+            <h2 id="catalogue-highlights-heading" className="mt-3 font-serif text-[40px] font-bold leading-[1.14] text-[#0F281E] sm:text-6xl">
               Catalogue
               <span className="block bg-[linear-gradient(180deg,#D9B45B,#A67C2E)] bg-clip-text text-transparent">Highlights</span>
             </h2>
-            <p className="mt-4 max-w-md text-sm leading-relaxed text-gray-600 sm:text-base">
+            <p className="mt-5 max-w-sm text-sm leading-relaxed text-gray-600 sm:mt-6 sm:text-base">
               Discover Ayurvedic products for your everyday wellness routine.
             </p>
           </Reveal>
 
           <Reveal delay={120} className="flex flex-col items-start gap-6 lg:items-center lg:pt-3">
-            <ul className="hidden items-center gap-7 md:flex" aria-label="Catalogue assurances">
+            <ul className="hidden flex-wrap items-center justify-center gap-x-6 gap-y-3 md:flex xl:gap-x-7" aria-label="Catalogue assurances">
               {[
                 { icon: Leaf, filled: true, title: 'Authentic Formulations', text: 'Rooted in classical Ayurveda' },
                 { icon: ShieldCheck, filled: false, title: 'Quality Checked', text: 'Verified pack information' },
                 { icon: Soup, filled: false, title: 'Wide Range', text: 'For your daily wellness needs' },
               ].map(({ icon: Icon, filled, title, text }, index) => (
-                <li key={title} className="flex items-center gap-2.5">
+                <li key={title} className="flex shrink-0 items-center gap-2.5">
                   <span className="relative grid h-12 w-12 shrink-0 place-items-center">
                     <span aria-hidden="true" className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(197,168,128,0.55),transparent_70%)] motion-safe:animate-[banner-breathe_5.5s_ease-in-out_infinite]" style={{ animationDelay: `${index * 0.8}s` }} />
                     <span className="relative grid h-11 w-11 place-items-center rounded-full border border-[#D9BE8C]/80 bg-[#FBF3E2] shadow-[0_0_16px_rgba(197,168,128,0.45)]">
@@ -180,8 +181,8 @@ export default async function HomePage() {
                     </span>
                   </span>
                   <span>
-                    <span className="block text-[13px] font-bold leading-tight text-gray-900">{title}</span>
-                    <span className="mt-0.5 block text-[11px] leading-snug text-gray-500">{text}</span>
+                    <span className="block whitespace-nowrap text-[13px] font-bold leading-tight text-gray-900">{title}</span>
+                    <span className="mt-0.5 block whitespace-nowrap text-[11px] leading-snug text-gray-600">{text}</span>
                   </span>
                 </li>
               ))}
