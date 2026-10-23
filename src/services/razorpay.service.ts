@@ -102,7 +102,7 @@ export class RazorpayService {
     webhookSignature: string,
     webhookSecret?: string
   ): Promise<boolean> {
-    const secret = webhookSecret || (await SettingsRepository.get('RAZORPAY_WEBHOOK_SECRET')) || process.env.Razorpay_WEBHOOK_SECRET;
+    const secret = webhookSecret || (await SettingsRepository.get('RAZORPAY_WEBHOOK_SECRET')) || process.env.Razorpay_WEBHOOK_SECRET || process.env.RAZORPAY_WEBHOOK_SECRET;
     if (!secret) throw new PaymentError('Razorpay webhook secret is not configured.');
     const expectedSignature = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
     const expected = Buffer.from(expectedSignature);
