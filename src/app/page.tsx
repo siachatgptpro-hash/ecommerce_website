@@ -1,7 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
 import { ProductCard } from '@/components/storefront/ProductCard';
 import { HeroCarousel } from '@/components/storefront/HeroCarousel';
 import { productRepository } from '@/repositories/product.repository';
@@ -10,6 +9,9 @@ import { SettingsRepository } from '@/repositories/settings.repository';
 import { toPublicProduct } from '@/lib/public-dto';
 import { toHeroSlides } from '@/lib/hero-slides';
 import { CategoryShowcase } from '@/components/storefront/CategoryShowcase';
+import { ProductInfoHero } from '@/components/storefront/ProductInfoHero';
+import { TransparencyBanner } from '@/components/storefront/TransparencyBanner';
+import { CatalogueTrustStrip } from '@/components/storefront/CatalogueTrustStrip';
 import { selectFeaturedCategories } from '@/lib/homepage-categories';
 import { jsonLdScriptContent } from '@/lib/seo';
 import {
@@ -17,8 +19,6 @@ import {
   Leaf,
   Truck,
   ArrowRight,
-  CheckCircle2,
-  BookOpen,
   Headphones,
   Soup,
   Sprout,
@@ -193,80 +193,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* HATHRAS HERITAGE & AYURVEDIC PURITY */}
-      <section className="bg-[#FAF7F2] py-16 sm:py-24 border-y border-[#F3EFE6]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1B4332]/10 text-[#1B4332] text-xs font-bold uppercase tracking-wider">
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>Source-led product information</span>
-            </div>
+{/* PRODUCT INFORMATION + TRANSPARENCY BANNER + TRUST STRIP */}
+      <ProductInfoHero />
+      <TransparencyBanner />
+      <CatalogueTrustStrip />
 
-            <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 leading-snug">
-              Product details, brought together with care
-            </h2>
-
-            <p className="text-sm sm:text-base text-gray-700 leading-relaxed font-light">
-              Shlokveda brings the supplied product brochure into a modern storefront. Each listing keeps the printed product name, pack size and MRP together, with available package photos and a reference back to the source page.
-            </p>
-
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0" />
-                <span className="text-xs sm:text-sm font-medium text-gray-800">
-                  Product-page references point back to the relevant brochure page
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0" />
-                <span className="text-xs sm:text-sm font-medium text-gray-800">
-                  Ingredients are shown only where transcribed from the source
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0" />
-                <span className="text-xs sm:text-sm font-medium text-gray-800">
-                  No extra discounts or product claims have been invented here
-                </span>
-              </div>
-            </div>
-
-            <div className="pt-4">
-              <Link
-                href="/about"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[#1B4332] text-white font-bold text-xs hover:bg-[#2D6A4F] transition-all shadow-md"
-              >
-                <span>How the catalogue is sourced</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
-
-          <div className="relative aspect-4/3 rounded-3xl overflow-hidden border border-[#F3EFE6] shadow-xl">
-            <Image
-              src="/products/pdf-p5-i3.webp"
-              alt="Triphala Ras package image from the supplied brochure"
-              fill
-              className="object-contain p-4 sm:p-8"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        <div className="relative rounded-3xl bg-[#1B4332] text-white p-8 sm:p-12 overflow-hidden shadow-xl text-center space-y-5">
-          <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#C5A880]">Want to see the original?</span>
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold">Product details, from their source</h2>
-          <p className="text-sm text-gray-200 max-w-xl mx-auto">Package photography and printed product details remain attributable to the supplied brochure.</p>
-          <div className="flex flex-col sm:flex-row justify-center gap-3">
-            <Link href="/shop" className="inline-flex justify-center items-center rounded-full px-6 py-3 bg-[#C5A880] text-[#1B4332] font-bold text-sm">Browse products</Link>
-            <Link href="/about" className="inline-flex justify-center items-center rounded-full px-6 py-3 border border-white/30 text-white font-bold text-sm">How this catalogue is sourced</Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Structured data: brand entity + site search (no invented ratings) */}
+            {/* Structured data: brand entity + site search (no invented ratings) */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdScriptContent(organizationJsonLd) }}

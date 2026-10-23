@@ -537,3 +537,9 @@ export interface CartCalculationResult {
   estimatedGst: number;
   finalPayableAmount: number;
 }
+
+export interface NewsletterSubscriber {
+  id: string;
+  email: string;
+  createdAt: string;
+}

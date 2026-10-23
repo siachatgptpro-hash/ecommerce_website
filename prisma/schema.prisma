@@ -672,3 +672,9 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
 }
+
+model NewsletterSubscriber {
+  id        String   @id
+  email     String   @unique
+  createdAt DateTime @default(now())
+}

@@ -809,4 +809,12 @@ CREATE TABLE IF NOT EXISTS "RazorpayWebhookEvent" (
 CREATE INDEX IF NOT EXISTS "RazorpayWebhookEvent_event_idx" ON "RazorpayWebhookEvent" ("event");
 CREATE INDEX IF NOT EXISTS "RazorpayWebhookEvent_status_idx" ON "RazorpayWebhookEvent" ("status");
 
+-- Newsletter subscribers (footer "Stay Updated" form, POST /api/newsletter)
+CREATE TABLE IF NOT EXISTS "NewsletterSubscriber" (
+  "id" TEXT PRIMARY KEY,
+  "email" TEXT NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "NewsletterSubscriber_email_key" ON "NewsletterSubscriber" ("email");
+
 COMMIT;

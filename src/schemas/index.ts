@@ -293,3 +293,12 @@ export const OrderStatusUpdateSchema = z.object({
   trackingUrl: z.string().trim().url('Tracking URL must be a valid URL').optional().or(z.literal('')),
   adminNotes: z.string().trim().optional(),
 });
+
+export const NewsletterSubscribeSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email('Please enter a valid email address')
+    .max(254, 'Email address is too long'),
+});

@@ -21,6 +21,7 @@ import {
   HomepageSection,
   InventoryChangeReason,
   InventoryLedger,
+  NewsletterSubscriber,
   Order,
   OrderItem,
   OrderStatus,
@@ -58,6 +59,7 @@ class DatabaseStore {
   public orders: Map<string, Order> = new Map();
   public orderItems: Map<string, OrderItem> = new Map();
   public payments: Map<string, Payment> = new Map();
+  public newsletterSubscribers: Map<string, NewsletterSubscriber> = new Map();
   public shipments: Map<string, Shipment> = new Map();
   public coupons: Map<string, Coupon> = new Map();
   public couponUsages: Map<string, CouponUsage> = new Map();
