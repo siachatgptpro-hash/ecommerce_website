@@ -4,7 +4,6 @@ import { getCatalogueCategories, getPublicSettings } from '@/lib/client-data';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/cart-context';
 import { useWishlist } from '@/context/wishlist-context';
@@ -144,13 +143,14 @@ export function Header() {
 
           {/* Brand Logo */}
           <Link href="/" className="flex flex-shrink-0 items-center gap-2.5 sm:gap-3" aria-label={`${storeName} home`}>
-            <Image
+            {/* Plain img: the logo URL and its aspect are admin-managed. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={logoUrl}
               alt=""
-              width={210}
-              height={100}
-              priority
-              className="h-11 w-auto object-contain sm:h-14"
+              fetchPriority="high"
+              decoding="async"
+              className="h-14 w-auto max-w-44 shrink-0 object-contain sm:h-16 sm:max-w-60"
             />
             <span className="flex flex-col">
               <span className="font-serif text-lg font-extrabold leading-none tracking-tight text-[#1B4332] sm:text-2xl">

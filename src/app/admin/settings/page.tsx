@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { BusinessSettings } from '@/types';
 import { Settings, Save, CheckCircle2, AlertCircle, Building, Phone, ShieldCheck, UploadCloud } from 'lucide-react';
+import { ImageCropper } from '@/components/admin/ImageCropper';
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<BusinessSettings | null>(null);
@@ -26,6 +27,7 @@ export default function AdminSettingsPage() {
   const [enableCod, setEnableCod] = useState(true);
   const [logoUrl, setLogoUrl] = useState('/logo.png');
   const [logoUploading, setLogoUploading] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const [aboutShowcaseImageUrl, setAboutShowcaseImageUrl] = useState('');
   const [showcaseUploading, setShowcaseUploading] = useState(false);
   const [announcementText, setAnnouncementText] = useState(
@@ -192,15 +194,55 @@ export default function AdminSettingsPage() {
       <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-[#F3EFE6] shadow-sm">
           <h2 className="font-serif text-lg font-bold text-gray-900">Store Logo</h2>
-          <p className="text-xs text-gray-500 mt-1">Upload a JPG, PNG, or WEBP logo. It will appear in the storefront header and footer.</p>
+          <p className="text-xs text-gray-500 mt-1">Upload a JPG, PNG, or WEBP logo and crop it to fit. It will appear in the storefront header and footer. A square crop pairs best with the SHLOKVEDA wordmark.</p>
           <div className="mt-4 flex flex-wrap items-center gap-5">
             <div className="h-28 w-28 rounded-xl border bg-[#FAF7F2] p-2"><img src={logoUrl} alt="Current store logo" className="h-full w-full object-contain" /></div>
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#1B4332] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#2D6A4F]">
-              <UploadCloud className="h-4 w-4" /> {logoUploading ? 'Uploading...' : 'Choose Logo'}
-              <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={logoUploading} onChange={(e) => { if (e.target.files?.[0]) handleLogoUpload(e.target.files[0]); }} />
-            </label>
+            <div className="min-w-64 flex-1 space-y-3">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#1B4332] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#2D6A4F]">
+                <UploadCloud className="h-4 w-4" /> {logoUploading ? 'Uploading...' : 'Upload & Crop Logo'}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="sr-only"
+                  disabled={logoUploading}
+                  onChange={(e) => {
+                    const chosen = e.target.files?.[0];
+                    e.target.value = '';
+                    if (!chosen) return;
+                    if (!['image/jpeg', 'image/png', 'image/webp'].includes(chosen.type) || chosen.size > 5 * 1024 * 1024) {
+                      setMsg({ type: 'error', text: 'Logo must be a JPG, PNG, or WEBP image up to 5 MB.' });
+                      return;
+                    }
+                    setCropFile(chosen);
+                  }}
+                />
+              </label>
+              <div>
+                <label htmlFor="logo-url" className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                  …or paste an image URL
+                </label>
+                <input
+                  id="logo-url"
+                  type="text"
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  placeholder="/logo.png or https://…"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#1B4332] focus:border-[#1B4332]"
+                />
+              </div>
+            </div>
           </div>
         </div>
+        {cropFile && (
+          <ImageCropper
+            file={cropFile}
+            onCancel={() => setCropFile(null)}
+            onCropped={(cropped) => {
+              setCropFile(null);
+              handleLogoUpload(cropped);
+            }}
+          />
+        )}
         {/* ABOUT PAGE SHOWCASE IMAGE */}
         <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-[#F3EFE6] shadow-sm">
           <h2 className="font-serif text-lg font-bold text-gray-900">About Page Showcase Image</h2>

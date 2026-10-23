@@ -4,7 +4,6 @@ import { getCatalogueCategories, getFooterPolicyLinks, getPublicSettings } from 
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   Facebook,
   Instagram,
@@ -119,12 +118,14 @@ export function Footer() {
           {/* Column 1: Brand & Contact */}
           <div className="space-y-5 lg:col-span-2">
             <div className="flex items-center gap-3.5">
-              <Image
+              {/* Plain img: the logo URL and its aspect are admin-managed. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src={settings.logoUrl}
                 alt={`${settings.storeName} logo`}
-                width={96}
-                height={96}
-                className="h-14 w-14 shrink-0 object-contain"
+                loading="lazy"
+                decoding="async"
+                className="h-16 w-auto max-w-44 shrink-0 object-contain sm:h-[4.5rem]"
               />
               <span>
                 <span className="block font-serif text-[26px] font-bold leading-none tracking-tight text-white">
