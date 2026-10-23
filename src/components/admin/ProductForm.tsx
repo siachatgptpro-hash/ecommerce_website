@@ -56,7 +56,7 @@ export function ProductForm({ initialProduct, categories }: ProductFormProps) {
     initialProduct ? initialProduct.isActive : true,
   );
 
-  // Images are URL records after an authenticated object-storage upload. Existing URLs remain supported.
+  // Images are URL records after an authenticated Neon-backed upload. Existing URLs remain supported.
   type FormImage = { imageUrl: string; altText: string; isPrimary: boolean; sortOrder: number; filename?: string; status?: 'complete' | 'uploading' | 'error' };
   const [images, setImages] = useState<FormImage[]>((initialProduct?.images || []).map((image, index) => ({ imageUrl: image.imageUrl, altText: image.altText || '', isPrimary: image.isPrimary || index === 0, sortOrder: image.sortOrder ?? index, status: 'complete' })));
   const [dragActive, setDragActive] = useState(false); const [uploading, setUploading] = useState(false); const maxImageBytes = 5 * 1024 * 1024; const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
