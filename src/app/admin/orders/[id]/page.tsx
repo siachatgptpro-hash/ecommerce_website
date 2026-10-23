@@ -107,7 +107,7 @@ export default function AdminOrderDetailPage({ params }: AdminOrderDetailPagePro
       if (!res.ok || !data.success) throw new Error(data.error?.message || 'Failed to update order');
       setStatus(nextStatus);
       setOrder(data.data);
-      setMsg({ type: 'success', text: `${nextStatus === OrderStatus.CONFIRMED ? 'Approved' : nextStatus === OrderStatus.SHIPPED ? 'Shifted' : 'Delivered'} status saved.` });
+      setMsg({ type: 'success', text: `${nextStatus === OrderStatus.CONFIRMED ? 'Approved' : nextStatus === OrderStatus.SHIPPED ? 'Shipped' : 'Delivered'} status saved.` });
     } catch (err: any) {
       setMsg({ type: 'error', text: err.message || 'Error updating order' });
     } finally {
@@ -193,10 +193,10 @@ export default function AdminOrderDetailPage({ params }: AdminOrderDetailPagePro
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 rounded-2xl bg-[#FAF7F2] p-3">
               <button type="button" disabled={updating || order.paymentStatus !== 'PAID'} onClick={() => handleQuickStatus(OrderStatus.CONFIRMED)} className="rounded-xl bg-emerald-700 px-3 py-2.5 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">✓ Approved</button>
-              <button type="button" disabled={updating || order.status === OrderStatus.PENDING} onClick={() => handleQuickStatus(OrderStatus.SHIPPED)} className="rounded-xl bg-blue-700 px-3 py-2.5 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">↗ Shifted</button>
+              <button type="button" disabled={updating || order.status === OrderStatus.PENDING} onClick={() => handleQuickStatus(OrderStatus.SHIPPED)} className="rounded-xl bg-blue-700 px-3 py-2.5 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">↗ Shipped</button>
               <button type="button" disabled={updating || order.status !== OrderStatus.SHIPPED} onClick={() => handleQuickStatus(OrderStatus.DELIVERED)} className="rounded-xl bg-[#1B4332] px-3 py-2.5 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">✓ Delivered</button>
             </div>
-            <p className="text-[10px] text-gray-500">Approve after online payment is confirmed, mark Shifted after handing the parcel to the courier, and mark Delivered only after customer confirmation.</p>
+            <p className="text-[10px] text-gray-500">Approve after online payment is confirmed, mark Shipped after handing the parcel to the courier, and mark Delivered only after customer confirmation.</p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>

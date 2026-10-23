@@ -176,7 +176,7 @@ export default async function AdminDashboardPage() {
                             : 'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        {ord.paymentStatus === 'PAID' && ord.status === 'PENDING' ? 'AWAITING APPROVAL' : ord.status === 'CONFIRMED' ? 'APPROVED' : ord.status === 'SHIPPED' ? 'SHIFTED' : ord.status}
+                        {ord.paymentStatus === 'PAID' && ord.status === 'PENDING' ? 'AWAITING APPROVAL' : ord.status === 'CONFIRMED' ? 'APPROVED' : ord.status === 'SHIPPED' ? 'SHIPPED' : ord.status}
                       </span>
                     </td>
                     <td className="py-3 px-2 font-bold text-gray-900">₹{ord.totalAmount}</td>

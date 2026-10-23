@@ -314,11 +314,11 @@ export class OrderService {
       }
     } else if (status === OrderStatus.SHIPPED) {
       if (order.orderStatus !== OrderStatus.CONFIRMED && order.orderStatus !== OrderStatus.PACKED) {
-        throw new ValidationError('Approve the paid order before marking it Shifted.');
+        throw new ValidationError('Approve the paid order before marking it Shipped.');
       }
     } else if (status === OrderStatus.DELIVERED) {
       if (order.orderStatus !== OrderStatus.SHIPPED) {
-        throw new ValidationError('Mark the order Shifted before marking it Delivered.');
+        throw new ValidationError('Mark the order Shipped before marking it Delivered.');
       }
     }
 

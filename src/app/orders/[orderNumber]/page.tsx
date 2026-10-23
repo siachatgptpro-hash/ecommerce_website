@@ -39,7 +39,7 @@ export default async function OrderTrackingPage({ params }: OrderTrackingPagePro
   const steps = [
     { key: 'PENDING', label: order.paymentStatus === 'PAID' ? 'Awaiting Approval' : 'Payment Processing' },
     { key: 'CONFIRMED', label: 'Approved' },
-    { key: 'SHIPPED', label: 'Shifted to Courier' },
+    { key: 'SHIPPED', label: 'Handed to Courier' },
     { key: 'DELIVERED', label: 'Delivered' },
   ];
 
@@ -99,7 +99,7 @@ export default async function OrderTrackingPage({ params }: OrderTrackingPagePro
               : (order.orderStatus || order.status || 'PENDING') === 'CONFIRMED'
               ? 'APPROVED'
               : (order.orderStatus || order.status || 'PENDING') === 'SHIPPED'
-              ? 'SHIFTED'
+              ? 'SHIPPED'
               : (order.orderStatus || order.status || 'PENDING')}
           </span>
         </div>

@@ -168,7 +168,7 @@ export default function AdminOrdersPage() {
                             : 'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        {ord.paymentStatus === 'PAID' && ord.status === 'PENDING' ? 'AWAITING APPROVAL' : ord.status === 'CONFIRMED' ? 'APPROVED' : ord.status === 'SHIPPED' ? 'SHIFTED' : ord.status}
+                        {ord.paymentStatus === 'PAID' && ord.status === 'PENDING' ? 'AWAITING APPROVAL' : ord.status === 'CONFIRMED' ? 'APPROVED' : ord.status === 'SHIPPED' ? 'SHIPPED' : ord.status}
                       </span>
                     </td>
                     <td className="py-3 px-4 font-bold text-[#1B4332]">₹{ord.totalAmount}</td>
