@@ -10,9 +10,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    authenticateAdmin(req, PermissionKey.MANAGE_REVIEWS);
+    await authenticateAdmin(req, PermissionKey.MANAGE_REVIEWS);
     const { searchParams } = new URL(req.url);
-    const approvedOnly = searchParams.get('all') === 'true' ? false : false;
+    // Moderation needs every review by default; ?approvedOnly=true narrows it.
+    const approvedOnly = searchParams.get('approvedOnly') === 'true';
 
     const reviews = await CMSRepository.listReviews(undefined, approvedOnly);
     return NextResponse.json({ success: true, data: { reviews } });
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const admin = authenticateAdmin(req, PermissionKey.MANAGE_REVIEWS);
+    const admin = await authenticateAdmin(req, PermissionKey.MANAGE_REVIEWS);
     const { searchParams } = new URL(req.url);
     const reviewId = searchParams.get('id');
 

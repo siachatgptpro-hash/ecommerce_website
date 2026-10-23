@@ -12,3 +12,7 @@ brochure_text.txt
 .vercel
 .env*
 !.env.example
+*.tsbuildinfo
+
+# Raw logo generation staging (processed asset lives in public/logo-emblem.png)
+logo-new-source.png

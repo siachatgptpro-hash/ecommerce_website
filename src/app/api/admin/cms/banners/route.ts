@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminPermission } from '@/lib/admin-auth';
+import { BannerWriteSchema } from '@/schemas';
 import { CMSRepository } from '@/repositories/cms.repository';
 import { PermissionKey } from '@/types';
 import { handleApiError } from '@/lib/errors';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    await requireAdminPermission(req, PermissionKey.MANAGE_CMS);
     const banners = await CMSRepository.listBanners(false);
     return NextResponse.json({
       success: true,
@@ -23,19 +25,22 @@ export async function POST(req: NextRequest) {
   try {
     await requireAdminPermission(req, PermissionKey.MANAGE_CMS);
     const json = await req.json();
+    const input = BannerWriteSchema.parse(json);
 
     const banner = await CMSRepository.createBanner({
-      title: json.title,
-      subtitle: json.subtitle || null,
-      imageUrl: json.imageUrl,
-      mobileImgUrl: json.mobileImgUrl || null,
-      linkUrl: json.ctaLink || json.linkUrl || '/shop',
-      buttonText: json.ctaText || json.buttonText || 'Explore',
-      sortOrder: json.sortOrder || 0,
-      isActive: json.isActive !== undefined ? json.isActive : true,
-      slot: json.slot || 'HERO_PRIMARY',
-      ctaText: json.ctaText,
-      ctaLink: json.ctaLink,
+      title: input.title,
+      subtitle: input.subtitle || null,
+      imageUrl: input.imageUrl,
+      mobileImgUrl: input.mobileImgUrl || null,
+      linkUrl: input.ctaLink || input.linkUrl || '/shop',
+      buttonText: input.ctaText || input.buttonText || 'Explore',
+      secondaryCtaText: input.secondaryCtaText || null,
+      secondaryCtaLink: input.secondaryCtaLink || null,
+      sortOrder: input.sortOrder ?? 0,
+      isActive: input.isActive !== undefined ? input.isActive : true,
+      slot: input.slot || 'HERO_PRIMARY',
+      ctaText: input.ctaText,
+      ctaLink: input.ctaLink,
     });
 
     return NextResponse.json({

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ProductRepository } from '@/repositories/product.repository';
 import { AyurvedicFormulation } from '@/types';
 import { handleApiError } from '@/lib/errors';
+import { toPublicProduct } from '@/lib/public-dto';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data,
+      data: { ...data, products: data.products.map(toPublicProduct) },
     }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     const err = handleApiError(error);

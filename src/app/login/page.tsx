@@ -1,5 +1,7 @@
 'use client';
 
+import { getPublicSettings } from '@/lib/client-data';
+
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -10,16 +12,23 @@ import { Lock, Mail, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
-  const [logoUrl, setLogoUrl] = useState('/logo.png');
-  const [storeName, setStoreName] = useState('SHOLKVEDA');
+  const [logoUrl, setLogoUrl] = useState('/logo-emblem.png');
+  const [storeName, setStoreName] = useState('SHLOKVEDA');
+  const [nextPath, setNextPath] = useState('/account');
 
   useEffect(() => {
-    fetch('/api/settings').then((res) => res.json()).then((data) => {
-      if (data.success && data.data) {
-        if (data.data.logoUrl) setLogoUrl(data.data.logoUrl);
-        if (data.data.storeName) setStoreName(data.data.storeName.toUpperCase());
-      }
-    }).catch(() => {});
+    // Return the shopper to where they were headed (checkout, an order page…)
+    // instead of always dumping them on /account. Only same-site paths are
+    // honoured (open-redirect guard).
+    const next = new URLSearchParams(window.location.search).get('next');
+    if (next && next.startsWith('/') && !next.startsWith('//')) {
+      setNextPath(next);
+    }
+
+    getPublicSettings().then((settings) => {
+      if (settings?.logoUrl) setLogoUrl(settings.logoUrl);
+      if (settings?.storeName) setStoreName(settings.storeName.toUpperCase());
+    });
   }, []);
 
   const [email, setEmail] = useState('');
@@ -34,7 +43,7 @@ export default function LoginPage() {
 
     try {
       await login(email.trim(), password);
-      router.push('/account');
+      router.push(nextPath);
     } catch (err: any) {
       setErrorMsg(err.message || 'Invalid email or password.');
     } finally {
@@ -109,7 +118,7 @@ export default function LoginPage() {
         <div className="pt-4 border-t border-gray-100 text-center space-y-3">
           <p className="text-xs text-gray-600">
             Don&apos;t have an account?{' '}
-            <Link href="/register" className="font-bold text-[#1B4332] underline hover:text-[#2D6A4F]">
+            <Link href={`/register?next=${encodeURIComponent(nextPath)}`} className="font-bold text-[#1B4332] underline hover:text-[#2D6A4F]">
               Create an Account
             </Link>
           </p>

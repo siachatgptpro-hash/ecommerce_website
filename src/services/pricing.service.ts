@@ -1,5 +1,5 @@
 // ==============================================================================
-// PRICING & CART CALCULATION SERVICE — SHOLKVEDA
+// PRICING & CART CALCULATION SERVICE — SHLOKVEDA
 // Server-Side Pricing Engine (Never trusts browser prices)
 // ==============================================================================
 
@@ -14,12 +14,36 @@ export interface CartItemRequest {
   quantity: number;
 }
 
+export interface CalculateCartOptions {
+  /**
+   * When true (checkout), a supplied-but-unusable coupon aborts with a clear
+   * error instead of silently charging full price.
+   */
+  strictCoupon?: boolean;
+}
+
+/** Parses a money setting; "0" is a legitimate configured value, not "unset". */
+function parseMoneySetting(value: string | null | undefined, fallback: number): number {
+  if (value === null || value === undefined || String(value).trim() === '') return fallback;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
 export class PricingService {
   public static async calculateCart(
     items: CartItemRequest[],
     couponCode?: string,
-    userId?: string
+    userId?: string,
+    options: CalculateCartOptions = {}
   ): Promise<CartCalculationResult> {
+    // Shipping rules are needed even for the empty-cart response so the UI can
+    // show accurate free-shipping progress (no hardcoded client thresholds).
+    const freeShippingThreshold = parseMoneySetting(await SettingsRepository.get('FREE_SHIPPING_THRESHOLD'), 499);
+    const defaultShippingFee = parseMoneySetting(
+      (await SettingsRepository.get('BASE_SHIPPING_FEE')) || (await SettingsRepository.get('DEFAULT_SHIPPING_FEE')),
+      50
+    );
+
     if (!items || items.length === 0) {
       return {
         items: [],
@@ -29,25 +53,34 @@ export class PricingService {
         couponDiscount: 0,
         shippingFee: 0,
         isFreeShipping: false,
-        freeShippingThreshold: 499,
-        amountNeededForFreeShipping: 499,
+        freeShippingThreshold,
+        amountNeededForFreeShipping: freeShippingThreshold,
         estimatedGst: 0,
         finalPayableAmount: 0,
       };
+    }
+
+    // Aggregate duplicate lines for the same variant BEFORE any stock check —
+    // otherwise 20 + 20 slips past a stock of 25 (each line passes alone).
+    const quantityByVariant = new Map<string, number>();
+    for (const item of items) {
+      if (!item || typeof item.variantId !== 'string' || !item.variantId) {
+        throw new ValidationError('Each cart item must include a valid variantId');
+      }
+      if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
+        throw new ValidationError(`Quantity for item ${item.variantId} must be a positive whole number`);
+      }
+      quantityByVariant.set(item.variantId, (quantityByVariant.get(item.variantId) || 0) + item.quantity);
     }
 
     const calculatedItems: CartCalculationResult['items'] = [];
     let subtotal = 0;
     let mrpTotal = 0;
 
-    for (const item of items) {
-      if (item.quantity <= 0) {
-        throw new ValidationError(`Quantity for item ${item.variantId} must be greater than 0`);
-      }
-
-      const variant = await ProductRepository.findVariantById(item.variantId);
+    for (const [variantId, quantity] of quantityByVariant) {
+      const variant = await ProductRepository.findVariantById(variantId);
       if (!variant || !variant.isActive) {
-        throw new ValidationError(`Product variant ${item.variantId} not found or is no longer active`);
+        throw new ValidationError(`Product variant ${variantId} not found or is no longer active`);
       }
 
       const product = await ProductRepository.findProductById(variant.productId);
@@ -55,10 +88,11 @@ export class PricingService {
         throw new ValidationError(`Product for variant ${variant.sku} is unavailable`);
       }
 
-      const quantity = item.quantity;
-      if (quantity > variant.stockQuantity) {
+      // Units already reserved by pending checkouts are not sellable.
+      const availableStock = Math.max(0, variant.stockQuantity - (variant.reservedQuantity || 0));
+      if (quantity > availableStock) {
         throw new ValidationError(
-          `${product.name} has only ${variant.stockQuantity} unit${variant.stockQuantity === 1 ? '' : 's'} available`
+          `${product.name} has only ${availableStock} unit${availableStock === 1 ? '' : 's'} available`
         );
       }
 
@@ -78,7 +112,7 @@ export class PricingService {
         mrp,
         quantity,
         lineTotal,
-        availableStock: variant.stockQuantity,
+        availableStock,
       });
 
       subtotal += lineTotal;
@@ -89,12 +123,6 @@ export class PricingService {
     mrpTotal = Number(mrpTotal.toFixed(2));
     const discountSavings = Number((mrpTotal - subtotal).toFixed(2));
 
-    // Shipping rules from settings
-    const freeShippingThresholdStr = (await SettingsRepository.get('FREE_SHIPPING_THRESHOLD')) || '499';
-    const defaultShippingFeeStr = (await SettingsRepository.get('BASE_SHIPPING_FEE')) || (await SettingsRepository.get('DEFAULT_SHIPPING_FEE')) || '50';
-    const freeShippingThreshold = parseFloat(freeShippingThresholdStr) || 499;
-    const defaultShippingFee = parseFloat(defaultShippingFeeStr) || 50;
-
     let isFreeShipping = subtotal >= freeShippingThreshold;
     let shippingFee = isFreeShipping ? 0 : defaultShippingFee;
     const amountNeededForFreeShipping = isFreeShipping ? 0 : Number((freeShippingThreshold - subtotal).toFixed(2));
@@ -102,40 +130,44 @@ export class PricingService {
     // Coupon calculation
     let couponDiscount = 0;
     let appliedCouponCode: string | undefined = undefined;
+    let couponError: string | undefined = undefined;
 
     if (couponCode && couponCode.trim()) {
       const coupon = await CouponRepository.findByCode(couponCode);
-      if (coupon && coupon.isActive) {
+      if (!coupon || !coupon.isActive) {
+        couponError = 'Invalid or expired coupon code';
+      } else {
         const now = new Date();
-        const start = new Date(coupon.startDate);
-        const end = new Date(coupon.endDate);
-
-        const isDateValid = now >= start && now <= end;
-        const isUsageValid = !coupon.usageLimit || coupon.usedCount < coupon.usageLimit;
-        const isMovValid = subtotal >= coupon.minOrderValue;
-
-        let isUserValid = true;
-        if (userId) {
-          const userCount = await CouponRepository.getUserUsageCount(coupon.id, userId);
-          if (userCount >= coupon.perUserLimit) {
-            isUserValid = false;
-          }
-        }
-
-        if (isDateValid && isUsageValid && isMovValid && isUserValid) {
+        if (now < new Date(coupon.startDate) || now > new Date(coupon.endDate)) {
+          couponError = 'This coupon has expired';
+        } else if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+          couponError = 'Coupon usage limit has been reached';
+        } else if (subtotal < coupon.minOrderValue) {
+          couponError = `Minimum order value of ₹${coupon.minOrderValue} required for this coupon`;
+        } else if (userId && (await CouponRepository.getUserUsageCount(coupon.id, userId)) >= coupon.perUserLimit) {
+          couponError = 'You have already utilized this coupon code';
+        } else {
           appliedCouponCode = coupon.code;
           if (coupon.discountType === DiscountType.PERCENTAGE) {
             const rawDiscount = (subtotal * coupon.discountValue) / 100;
             couponDiscount = coupon.maxDiscountCap ? Math.min(rawDiscount, coupon.maxDiscountCap) : rawDiscount;
           } else if (coupon.discountType === DiscountType.FIXED_AMOUNT) {
-            couponDiscount = Math.min(coupon.discountValue, subtotal);
+            couponDiscount = coupon.discountValue;
           } else if (coupon.discountType === DiscountType.FREE_SHIPPING) {
+            // The benefit of a free-shipping coupon is the waived fee ONLY.
+            // (Previously it also subtracted the fee from merchandise,
+            // discounting every such order twice.)
             shippingFee = 0;
             isFreeShipping = true;
-            couponDiscount = defaultShippingFee;
+            couponDiscount = 0;
           }
-          couponDiscount = Number(couponDiscount.toFixed(2));
+          // A coupon can never discount more than the merchandise subtotal.
+          couponDiscount = Number(Math.min(couponDiscount, subtotal).toFixed(2));
         }
+      }
+
+      if (couponError && options.strictCoupon) {
+        throw new ValidationError(couponError);
       }
     }
 
@@ -151,6 +183,7 @@ export class PricingService {
       discountSavings,
       couponCode: appliedCouponCode,
       couponDiscount,
+      ...(couponError ? { couponError } : {}),
       shippingFee,
       isFreeShipping,
       freeShippingThreshold,
@@ -198,10 +231,15 @@ export class PricingService {
     if (coupon.discountType === DiscountType.PERCENTAGE) {
       const raw = (subtotal * coupon.discountValue) / 100;
       discount = coupon.maxDiscountCap ? Math.min(raw, coupon.maxDiscountCap) : raw;
+      discount = Math.min(discount, subtotal);
     } else if (coupon.discountType === DiscountType.FIXED_AMOUNT) {
       discount = Math.min(coupon.discountValue, subtotal);
     } else if (coupon.discountType === DiscountType.FREE_SHIPPING) {
-      discount = 50;
+      // Report the actual configured shipping fee that will be waived.
+      discount = parseMoneySetting(
+        (await SettingsRepository.get('BASE_SHIPPING_FEE')) || (await SettingsRepository.get('DEFAULT_SHIPPING_FEE')),
+        50
+      );
     }
 
     return {
@@ -212,8 +250,8 @@ export class PricingService {
     };
   }
 
-  public calculateCart(items: any[], couponCode?: string, userId?: string) {
-    return PricingService.calculateCart(items, couponCode, userId);
+  public calculateCart(items: any[], couponCode?: string, userId?: string, options?: CalculateCartOptions) {
+    return PricingService.calculateCart(items, couponCode, userId, options);
   }
   public validateCoupon(couponCode: string, subtotal: number, userId?: string) {
     return PricingService.validateCoupon(couponCode, subtotal, userId);
@@ -221,4 +259,3 @@ export class PricingService {
 }
 
 export const pricingService = new PricingService();
-

@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    authenticateAdmin(req, PermissionKey.MANAGE_SETTINGS);
+    await authenticateAdmin(req, PermissionKey.MANAGE_SETTINGS);
     const settings = await SettingsRepository.getBusinessSettings();
     return NextResponse.json({ success: true, data: settings });
   } catch (error) {
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const admin = authenticateAdmin(req, PermissionKey.MANAGE_SETTINGS);
+    const admin = await authenticateAdmin(req, PermissionKey.MANAGE_SETTINGS);
     const json = await req.json();
 
     const oldSettings = await SettingsRepository.getBusinessSettings();

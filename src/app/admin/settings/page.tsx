@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { BusinessSettings } from '@/types';
 import { Settings, Save, CheckCircle2, AlertCircle, Building, Phone, ShieldCheck, UploadCloud } from 'lucide-react';
+import { ImageCropper } from '@/components/admin/ImageCropper';
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<BusinessSettings | null>(null);
@@ -11,7 +12,7 @@ export default function AdminSettingsPage() {
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Form State
-  const [storeName, setStoreName] = useState('Sholkveda');
+  const [storeName, setStoreName] = useState('Shlokveda');
   const [gstin, setGstin] = useState('09ANCPV6879P1ZP');
   const [phone, setPhone] = useState('7017840020');
   const [email, setEmail] = useState('');
@@ -24,10 +25,13 @@ export default function AdminSettingsPage() {
   const [baseShippingFee, setBaseShippingFee] = useState(50);
   const [taxIncluded, setTaxIncluded] = useState(true);
   const [enableCod, setEnableCod] = useState(true);
-  const [logoUrl, setLogoUrl] = useState('/logo.png');
+  const [logoUrl, setLogoUrl] = useState('/logo-emblem.png');
   const [logoUploading, setLogoUploading] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [aboutShowcaseImageUrl, setAboutShowcaseImageUrl] = useState('');
+  const [showcaseUploading, setShowcaseUploading] = useState(false);
   const [announcementText, setAnnouncementText] = useState(
-    'Sholkveda product names, pack sizes and listed MRPs from the supplied brochure'
+    'Authentic Ayurvedic Products | Free shipping on orders of ₹499 & above | Tradition for a Healthier Tomorrow'
   );
   const [privacyPolicy, setPrivacyPolicy] = useState('');
   const [termsPolicy, setTermsPolicy] = useState('');
@@ -60,7 +64,8 @@ export default function AdminSettingsPage() {
           setTermsPolicy(s.termsPolicy || '');
           setShippingPolicy(s.shippingPolicy || '');
           setRefundPolicy(s.refundPolicy || '');
-          setLogoUrl(s.logoUrl || '/logo.png');
+          setLogoUrl(s.logoUrl || '/logo-emblem.png');
+          setAboutShowcaseImageUrl(s.aboutShowcaseImageUrl || '');
         }
       } catch (err) {
         console.error('Error fetching settings:', err);
@@ -83,6 +88,20 @@ export default function AdminSettingsPage() {
       if (!response.ok || !result.success) throw new Error(result.error?.message || 'Logo upload failed');
       setLogoUrl(result.data.url); setMsg({ type: 'success', text: 'Logo uploaded. Save settings to publish it.' });
     } catch (error: any) { setMsg({ type: 'error', text: error.message || 'Logo upload failed.' }); } finally { setLogoUploading(false); }
+  };
+
+  const handleShowcaseUpload = async (file?: File) => {
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      setMsg({ type: 'error', text: 'Showcase image must be a JPG, PNG, or WEBP image up to 5 MB.' }); return;
+    }
+    setShowcaseUploading(true);
+    try {
+      const body = new FormData(); body.append('file', file);
+      const response = await fetch('/api/admin/uploads', { method: 'POST', body }); const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error?.message || 'Showcase image upload failed');
+      setAboutShowcaseImageUrl(result.data.url); setMsg({ type: 'success', text: 'Showcase image uploaded. Save settings to publish it.' });
+    } catch (error: any) { setMsg({ type: 'error', text: error.message || 'Showcase image upload failed.' }); } finally { setShowcaseUploading(false); }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -114,6 +133,8 @@ export default function AdminSettingsPage() {
           shippingPolicy: shippingPolicy.trim() || undefined,
           refundPolicy: refundPolicy.trim() || undefined,
           logoUrl,
+          // Always send (even empty) so clearing the field removes the custom image.
+          aboutShowcaseImageUrl: aboutShowcaseImageUrl.trim(),
         }),
       });
 
@@ -173,13 +194,95 @@ export default function AdminSettingsPage() {
       <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-[#F3EFE6] shadow-sm">
           <h2 className="font-serif text-lg font-bold text-gray-900">Store Logo</h2>
-          <p className="text-xs text-gray-500 mt-1">Upload a JPG, PNG, or WEBP logo. It will appear in the storefront header and footer.</p>
+          <p className="text-xs text-gray-500 mt-1">Upload a JPG, PNG, or WEBP logo and crop it to fit. It will appear in the storefront header and footer. A square crop pairs best with the SHLOKVEDA wordmark.</p>
           <div className="mt-4 flex flex-wrap items-center gap-5">
             <div className="h-28 w-28 rounded-xl border bg-[#FAF7F2] p-2"><img src={logoUrl} alt="Current store logo" className="h-full w-full object-contain" /></div>
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#1B4332] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#2D6A4F]">
-              <UploadCloud className="h-4 w-4" /> {logoUploading ? 'Uploading...' : 'Choose Logo'}
-              <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={logoUploading} onChange={(e) => { if (e.target.files?.[0]) handleLogoUpload(e.target.files[0]); }} />
-            </label>
+            <div className="min-w-64 flex-1 space-y-3">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#1B4332] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#2D6A4F]">
+                <UploadCloud className="h-4 w-4" /> {logoUploading ? 'Uploading...' : 'Upload & Crop Logo'}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="sr-only"
+                  disabled={logoUploading}
+                  onChange={(e) => {
+                    const chosen = e.target.files?.[0];
+                    e.target.value = '';
+                    if (!chosen) return;
+                    if (!['image/jpeg', 'image/png', 'image/webp'].includes(chosen.type) || chosen.size > 5 * 1024 * 1024) {
+                      setMsg({ type: 'error', text: 'Logo must be a JPG, PNG, or WEBP image up to 5 MB.' });
+                      return;
+                    }
+                    setCropFile(chosen);
+                  }}
+                />
+              </label>
+              <div>
+                <label htmlFor="logo-url" className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                  …or paste an image URL
+                </label>
+                <input
+                  id="logo-url"
+                  type="text"
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  placeholder="/logo-emblem.png or https://…"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#1B4332] focus:border-[#1B4332]"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        {cropFile && (
+          <ImageCropper
+            file={cropFile}
+            onCancel={() => setCropFile(null)}
+            onCropped={(cropped) => {
+              setCropFile(null);
+              handleLogoUpload(cropped);
+            }}
+          />
+        )}
+        {/* ABOUT PAGE SHOWCASE IMAGE */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-[#F3EFE6] shadow-sm">
+          <h2 className="font-serif text-lg font-bold text-gray-900">About Page Showcase Image</h2>
+          <p className="text-xs text-gray-500 mt-1">This is the large image shown beside &ldquo;How this catalogue is put together&rdquo; on the About page. Upload your own image (a wide 4:3 landscape image works best), or paste an image URL. Leave it empty to use the built-in Triphala Ras scene.</p>
+          <div className="mt-4 flex flex-wrap items-start gap-5">
+            <div className="relative aspect-[4/3] w-72 max-w-full overflow-hidden rounded-xl border bg-[#FAF7F2]">
+              {aboutShowcaseImageUrl.trim() ? (
+                <img src={aboutShowcaseImageUrl.trim()} alt="Custom About page showcase" className="h-full w-full object-cover" />
+              ) : (
+                <>
+                  <img src="/stages/stage-showcase.webp" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
+                  <span aria-hidden="true" className="absolute bottom-[23%] left-1/2 h-[2.5%] w-[21%] -translate-x-1/2 rounded-full bg-[#3A2A18]/25 blur-md" />
+                  <span className="absolute inset-x-0 bottom-[24%] flex justify-center">
+                    <img src="/products/pdf-p5-i3.webp" alt="Built-in showcase: Triphala Ras pack on the catalogue stage" className="h-auto w-[25%] mix-blend-multiply" />
+                  </span>
+                </>
+              )}
+            </div>
+            <div className="min-w-64 flex-1 space-y-3">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#1B4332] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#2D6A4F]">
+                <UploadCloud className="h-4 w-4" /> {showcaseUploading ? 'Uploading...' : 'Choose Image'}
+                <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={showcaseUploading} onChange={(e) => { if (e.target.files?.[0]) handleShowcaseUpload(e.target.files[0]); }} />
+              </label>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Or paste image URL</label>
+                <input
+                  type="text"
+                  value={aboutShowcaseImageUrl}
+                  onChange={(e) => setAboutShowcaseImageUrl(e.target.value)}
+                  placeholder="https://... or /stages/stage-showcase.webp"
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B4332]"
+                />
+              </div>
+              {aboutShowcaseImageUrl.trim() && (
+                <button type="button" onClick={() => setAboutShowcaseImageUrl('')} className="text-xs font-bold text-red-600 underline underline-offset-2 hover:text-red-700">
+                  Remove custom image (use built-in scene)
+                </button>
+              )}
+              <p className="text-[11px] text-gray-400">Changes appear on the About page after you click Save Settings.</p>
+            </div>
           </div>
         </div>
         {/* BUSINESS LEGAL ENTITY */}
@@ -382,7 +485,7 @@ export default function AdminSettingsPage() {
         <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-[#F3EFE6] shadow-sm space-y-5">
           <div>
             <h2 className="font-serif text-lg font-bold text-gray-900">Store Policies</h2>
-            <p className="text-xs text-gray-500 mt-1">Edit the policy text displayed on the public policy pages. Separate paragraphs with a blank line. Use {'{{baseShippingFee}}'}, {'{{freeShippingThreshold}}'}, and {'{{phone}}'} as dynamic placeholders where needed.</p>
+            <p className="text-xs text-gray-500 mt-1">Policy pages are now designed and edited in <strong>CMS → Policy &amp; Static Pages</strong> (icon sections, layouts, FAQ accordion). The four texts below are used only as a fallback if the matching CMS page is missing. Separate paragraphs with a blank line. Use {'{{baseShippingFee}}'}, {'{{freeShippingThreshold}}'}, and {'{{phone}}'} as dynamic placeholders where needed.</p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {[

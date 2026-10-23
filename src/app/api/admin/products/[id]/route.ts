@@ -1,16 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { requireAdminPermission } from '@/lib/admin-auth';
+import { ProductImageInputSchema, ProductVariantInputSchema } from '@/schemas';
 import { ProductRepository } from '@/repositories/product.repository';
 import { AuditRepository } from '@/repositories/audit.repository';
 import { PermissionKey } from '@/types';
-import { handleApiError } from '@/lib/errors';
+import { ValidationError, handleApiError } from '@/lib/errors';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    await requireAdminPermission(req, PermissionKey.MANAGE_PRODUCTS);
     const product = await ProductRepository.findProductById(params.id);
+    if (!product) {
+      return NextResponse.json(
+        { success: false, error: { code: 'NOT_FOUND', message: 'Product not found' } },
+        { status: 404 }
+      );
+    }
     return NextResponse.json({ success: true, data: product });
   } catch (error) {
     const err = handleApiError(error);
@@ -25,13 +34,27 @@ export async function PUT(
   try {
     const admin = await requireAdminPermission(req, PermissionKey.MANAGE_PRODUCTS);
     const json = await req.json();
+    if (!json || typeof json !== 'object' || Array.isArray(json)) {
+      throw new ValidationError('Product update payload must be a JSON object');
+    }
+    // Variant/image rows are validated so malformed numbers (NaN prices or
+    // stock) can never be persisted. Product fields are allow-listed by the
+    // repository in both data modes.
+    const variants = json.variants !== undefined ? z.array(ProductVariantInputSchema).parse(json.variants) : undefined;
+    const images = json.images !== undefined ? z.array(ProductImageInputSchema).parse(json.images) : undefined;
     const previousProduct = await ProductRepository.findProductById(params.id);
+    if (!previousProduct) {
+      return NextResponse.json(
+        { success: false, error: { code: 'NOT_FOUND', message: 'Product not found' } },
+        { status: 404 }
+      );
+    }
 
     const product = await ProductRepository.updateProduct(
       params.id,
       json,
-      json.variants,
-      Array.isArray(json.images) && json.images.length > 0 ? json.images : undefined
+      variants,
+      images && images.length > 0 ? images : undefined
     );
 
     await AuditRepository.log(

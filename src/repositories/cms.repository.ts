@@ -1,5 +1,5 @@
 // ==============================================================================
-// CMS, BLOG & REVIEW REPOSITORY — SHOLKVEDA
+// CMS, BLOG & REVIEW REPOSITORY — SHLOKVEDA
 // ==============================================================================
 
 import { db } from '@/lib/db';
@@ -17,12 +17,14 @@ import {
 
 const iso=(value:Date|string)=>new Date(value).toISOString();
 const createId=(prefix:string)=>`${prefix}_${crypto.randomUUID()}`;
-function mapBanner(r:any):Banner{return{id:r.id,title:r.title,subtitle:r.subtitle??null,imageUrl:r.imageUrl,mobileImgUrl:r.mobileImgUrl??null,linkUrl:r.linkUrl??null,buttonText:r.buttonText??null,sortOrder:r.sortOrder,isActive:r.isActive,createdAt:iso(r.createdAt),updatedAt:iso(r.updatedAt),ctaText:r.buttonText??undefined,ctaLink:r.linkUrl??undefined}}
+function mapBanner(r:any):Banner{return{id:r.id,title:r.title,subtitle:r.subtitle??null,imageUrl:r.imageUrl,mobileImgUrl:r.mobileImgUrl??null,linkUrl:r.linkUrl??null,buttonText:r.buttonText??null,sortOrder:r.sortOrder,isActive:r.isActive,createdAt:iso(r.createdAt),updatedAt:iso(r.updatedAt),secondaryCtaText:r.secondaryCtaText??null,secondaryCtaLink:r.secondaryCtaLink??null,ctaText:r.buttonText??undefined,ctaLink:r.linkUrl??undefined}}
 function mapSection(r:any):HomepageSection{let metadata=r.metadata??undefined;if(typeof metadata==='string'){try{metadata=JSON.parse(metadata)}catch{}}return{id:r.id,sectionKey:r.sectionKey,title:r.title,subtitle:r.subtitle??null,sortOrder:r.sortOrder,isActive:r.isActive,metadata,updatedAt:iso(r.updatedAt)}}
 function mapTestimonial(r:any):Testimonial{return{id:r.id,authorName:r.authorName,location:r.location??null,rating:r.rating,reviewQuote:r.reviewQuote,avatarUrl:r.avatarUrl??null,isActive:r.isActive,sortOrder:r.sortOrder,createdAt:iso(r.createdAt)}}
 function mapFaq(r:any):FaqItem{return{id:r.id,category:r.category,question:r.question,answer:r.answer,sortOrder:r.sortOrder,isActive:r.isActive,createdAt:iso(r.createdAt)}}
 function mapBlog(r:any):BlogPost{return{id:r.id,title:r.title,slug:r.slug,summary:r.summary??null,content:r.content,featuredImg:r.featuredImg??null,authorName:r.authorName,readTimeMinutes:r.readTimeMinutes,isPublished:r.isPublished,publishedAt:r.publishedAt?iso(r.publishedAt):null,metaTitle:r.metaTitle??null,metaDescription:r.metaDescription??null,createdAt:iso(r.createdAt),updatedAt:iso(r.updatedAt),excerpt:r.summary??null,coverImage:r.featuredImg??null}}
-function mapStatic(r:any):StaticPage{return{id:r.id,slug:r.slug,title:r.title,content:r.content,metaTitle:r.metaTitle??null,metaDescription:r.metaDescription??null,updatedAt:iso(r.updatedAt)}}
+function mapStatic(r:any):StaticPage{let sections:any=null;try{sections=typeof r.sections==='string'?JSON.parse(r.sections):(r.sections??null)}catch{sections=null}return{id:r.id,slug:r.slug,title:r.title,content:r.content,metaTitle:r.metaTitle??null,metaDescription:r.metaDescription??null,layout:r.layout??null,sections:Array.isArray(sections)?sections:null,updatedAt:iso(r.updatedAt)}}
+
+function deriveStaticContent(sections:any[]|null|undefined,content:string|undefined):string{if(content&&content.trim())return content;if(Array.isArray(sections)&&sections.length)return sections.map((s:any)=>`${s.heading}\n${s.body}`).join('\n\n');return content??''}
 function mapReview(r:any):Review{return{id:r.id,productId:r.productId,userId:r.userId,userName:r.userName??undefined,rating:r.rating,title:r.title??null,comment:r.comment,isVerified:r.isVerified,isApproved:r.isApproved,adminReply:r.adminReply??null,createdAt:iso(r.createdAt),updatedAt:iso(r.updatedAt),isVerifiedPurchase:r.isVerified,user:r.userName?{id:r.userId,name:r.userName,email:r.userEmail??undefined}:undefined,product:r.productName?{id:r.productId,name:r.productName,slug:r.productSlug}:undefined}}
 async function updateRow<T>(table:string,idValue:string,updates:Record<string,unknown>,columns:Record<string,string>,mapper:(r:any)=>T):Promise<T|null>{
   const entries=Object.entries(updates).filter(([key,value])=>columns[key]&&value!==undefined);
@@ -47,7 +49,7 @@ export class CMSRepository {
   }
 
   public static async createBanner(data: Omit<Banner, 'id' | 'createdAt' | 'updatedAt'>): Promise<Banner> {
-    if (isPostgresConfigured()) { const r=await pgQuery('INSERT INTO "Banner" ("id","title","subtitle","imageUrl","mobileImgUrl","linkUrl","buttonText","sortOrder","isActive","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) RETURNING *',[createId('ban'),data.title,data.subtitle??null,data.imageUrl,data.mobileImgUrl??null,data.linkUrl??data.ctaLink??null,data.buttonText??data.ctaText??null,data.sortOrder,data.isActive]); return mapBanner(r.rows[0]); }
+    if (isPostgresConfigured()) { const r=await pgQuery('INSERT INTO "Banner" ("id","title","subtitle","imageUrl","mobileImgUrl","linkUrl","buttonText","secondaryCtaText","secondaryCtaLink","sortOrder","isActive","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) RETURNING *',[createId('ban'),data.title,data.subtitle??null,data.imageUrl,data.mobileImgUrl??null,data.linkUrl??data.ctaLink??null,data.buttonText??data.ctaText??null,data.secondaryCtaText??null,data.secondaryCtaLink??null,data.sortOrder,data.isActive]); return mapBanner(r.rows[0]); }
     const id = `ban_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const now = new Date().toISOString();
     const banner: Banner = { ...data, id, createdAt: now, updatedAt: now };
@@ -56,7 +58,7 @@ export class CMSRepository {
   }
 
   public static async updateBanner(id: string, updates: Partial<Banner>): Promise<Banner | null> {
-    if (isPostgresConfigured()) return updateRow('Banner',id,updates as Record<string,unknown>,{title:'title',subtitle:'subtitle',imageUrl:'imageUrl',mobileImgUrl:'mobileImgUrl',linkUrl:'linkUrl',buttonText:'buttonText',ctaText:'buttonText',ctaLink:'linkUrl',sortOrder:'sortOrder',isActive:'isActive'},mapBanner);
+    if (isPostgresConfigured()) return updateRow('Banner',id,updates as Record<string,unknown>,{title:'title',subtitle:'subtitle',imageUrl:'imageUrl',mobileImgUrl:'mobileImgUrl',linkUrl:'linkUrl',buttonText:'buttonText',ctaText:'buttonText',ctaLink:'linkUrl',secondaryCtaText:'secondaryCtaText',secondaryCtaLink:'secondaryCtaLink',sortOrder:'sortOrder',isActive:'isActive'},mapBanner);
     const banner = db.banners.get(id);
     if (!banner) return null;
     const updated: Banner = { ...banner, ...updates, updatedAt: new Date().toISOString() };
@@ -155,6 +157,12 @@ export class CMSRepository {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
+  public static async findBlogPostById(id: string): Promise<BlogPost | null> {
+    if (isPostgresConfigured()) { const r=await pgQuery('SELECT * FROM "BlogPost" WHERE "id"=$1 LIMIT 1',[id]); return r.rows[0]?mapBlog(r.rows[0]):null; }
+    const post = db.blogPosts.get(id);
+    return post ? { ...post } : null;
+  }
+
   public static async findBlogPostBySlug(slug: string): Promise<BlogPost | null> {
     if (isPostgresConfigured()) { const r=await pgQuery('SELECT * FROM "BlogPost" WHERE LOWER("slug")=LOWER($1) LIMIT 1',[slug]); return r.rows[0]?mapBlog(r.rows[0]):null; }
     const posts = Array.from(db.blogPosts.values());
@@ -224,8 +232,19 @@ export class CMSRepository {
       const key=slug.toLowerCase(),existing=await pgQuery('SELECT * FROM "StaticPage" WHERE LOWER("slug")=LOWER($1) LIMIT 1',[key]);
       const before:StaticPage=existing.rows[0]?mapStatic(existing.rows[0]):{id:createId('page'),slug:key,title:key,content:'',updatedAt:new Date().toISOString()};
       const page={...before,...updates,slug:key};
-      const r=await pgQuery('INSERT INTO "StaticPage" ("id","slug","title","content","metaTitle","metaDescription","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP) ON CONFLICT ("slug") DO UPDATE SET "title"=EXCLUDED."title","content"=EXCLUDED."content","metaTitle"=EXCLUDED."metaTitle","metaDescription"=EXCLUDED."metaDescription","updatedAt"=CURRENT_TIMESTAMP RETURNING *',[page.id,page.slug,page.title,page.content,page.metaTitle??null,page.metaDescription??null]);
-      return mapStatic(r.rows[0]);
+      page.content=deriveStaticContent(page.sections as any,page.content);
+      try {
+        const r=await pgQuery('INSERT INTO "StaticPage" ("id","slug","title","content","metaTitle","metaDescription","layout","sections","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,CURRENT_TIMESTAMP) ON CONFLICT ("slug") DO UPDATE SET "title"=EXCLUDED."title","content"=EXCLUDED."content","metaTitle"=EXCLUDED."metaTitle","metaDescription"=EXCLUDED."metaDescription","layout"=EXCLUDED."layout","sections"=EXCLUDED."sections","updatedAt"=CURRENT_TIMESTAMP RETURNING *',[page.id,page.slug,page.title,page.content,page.metaTitle??null,page.metaDescription??null,page.layout??null,page.sections?JSON.stringify(page.sections):null]);
+        return mapStatic(r.rows[0]);
+      } catch (err:any) {
+        // Pre-migration databases (no layout/sections columns yet): fall back
+        // to the legacy upsert so page text still saves. Run
+        // prisma/migrations/20261023_add_static_page_sections.sql to enable
+        // structured policy layouts in production.
+        if (!String(err?.message||'').includes('column') && err?.code !== '42703') throw err;
+        const r=await pgQuery('INSERT INTO "StaticPage" ("id","slug","title","content","metaTitle","metaDescription","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP) ON CONFLICT ("slug") DO UPDATE SET "title"=EXCLUDED."title","content"=EXCLUDED."content","metaTitle"=EXCLUDED."metaTitle","metaDescription"=EXCLUDED."metaDescription","updatedAt"=CURRENT_TIMESTAMP RETURNING *',[page.id,page.slug,page.title,page.content,page.metaTitle??null,page.metaDescription??null]);
+        return mapStatic(r.rows[0]);
+      }
     }
     const existing = db.staticPages.get(slug.toLowerCase()) || {
       id: `page_${slug}`,
@@ -239,6 +258,7 @@ export class CMSRepository {
       ...updates,
       updatedAt: new Date().toISOString(),
     };
+    updated.content = deriveStaticContent(updated.sections as any, updated.content);
     db.staticPages.set(slug.toLowerCase(), updated);
     return { ...updated };
   }
@@ -289,6 +309,40 @@ export class CMSRepository {
     };
     db.reviews.set(id, review);
     return { ...review };
+  }
+
+  /**
+   * Updates a customer's own review when they submit again for the same
+   * product. The edit goes back through moderation (isApproved reset) so a
+   * previously-approved review can't be swapped for unmoderated content.
+   */
+  public static async updateReviewByUser(
+    id: string,
+    data: { rating: number; title?: string | null; comment: string; isVerified?: boolean }
+  ): Promise<Review | null> {
+    if (isPostgresConfigured()) {
+      const r = await pgQuery(
+        'UPDATE "Review" SET "rating"=$2,"title"=$3,"comment"=$4,"isVerified"=$5,"isApproved"=FALSE,"adminReply"=NULL,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=$1 RETURNING "id"',
+        [id, data.rating, data.title ?? null, data.comment, data.isVerified ?? false]
+      );
+      if (!r.rows[0]) return null;
+      const full = await pgQuery('SELECT r.*,u."fullName" AS "userName",u."email" AS "userEmail",p."name" AS "productName",p."slug" AS "productSlug" FROM "Review" r JOIN "User" u ON u."id"=r."userId" JOIN "Product" p ON p."id"=r."productId" WHERE r."id"=$1', [id]);
+      return full.rows[0] ? mapReview(full.rows[0]) : null;
+    }
+    const rev = db.reviews.get(id);
+    if (!rev) return null;
+    const updated: Review = {
+      ...rev,
+      rating: data.rating,
+      title: data.title ?? null,
+      comment: data.comment,
+      isVerified: data.isVerified ?? rev.isVerified,
+      isApproved: false,
+      adminReply: null,
+      updatedAt: new Date().toISOString(),
+    };
+    db.reviews.set(id, updated);
+    return { ...updated };
   }
 
   public static async moderateReview(

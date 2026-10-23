@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { ProductRepository } from '@/repositories/product.repository';
+import { getPolicyLinks } from '@/lib/policies';
 import { CMSRepository } from '@/repositories/cms.repository';
 
 export const dynamic = 'force-dynamic';
@@ -13,14 +14,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${siteUrl}`, lastModified: now, changeFrequency: 'daily', priority: 1.0 },
     { url: `${siteUrl}/shop`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
-    { url: `${siteUrl}/blog`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${siteUrl}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${siteUrl}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${siteUrl}/policies/shipping-policy`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${siteUrl}/policies/refund-policy`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${siteUrl}/policies/privacy-policy`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${siteUrl}/policies/terms-and-conditions`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${siteUrl}/blog`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
   ];
+
+  // Every Trust & Policies page (built-ins + admin-managed CMS pages such
+  // as Disclaimer and FAQ) from the same source the footer renders.
+  const policyLinks = await getPolicyLinks();
+  const policyRoutes: MetadataRoute.Sitemap = policyLinks.map((policy) => ({
+    url: `${siteUrl}/policies/${policy.slug}`,
+    lastModified: now,
+    changeFrequency: 'monthly',
+    priority: 0.5,
+  }));
 
   const categories = await ProductRepository.listCategories(true);
   const categoryRoutes: MetadataRoute.Sitemap = categories.map((cat) => ({
@@ -38,13 +45,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.95,
   }));
 
-  const blogs = await CMSRepository.listBlogPosts(true);
-  const blogRoutes: MetadataRoute.Sitemap = blogs.map((blog) => ({
-    url: `${siteUrl}/blog/${blog.slug}`,
-    lastModified: new Date(blog.updatedAt),
+  // Published journal articles (drafts stay out — their pages 404 publicly).
+  const posts = await CMSRepository.listBlogPosts(true);
+  const blogRoutes: MetadataRoute.Sitemap = posts.map((post) => ({
+    url: `${siteUrl}/blog/${post.slug}`,
+    lastModified: new Date(post.updatedAt),
     changeFrequency: 'monthly',
-    priority: 0.75,
+    priority: 0.6,
   }));
 
-  return [...staticRoutes, ...categoryRoutes, ...productRoutes, ...blogRoutes];
+  return [...staticRoutes, ...policyRoutes, ...categoryRoutes, ...productRoutes, ...blogRoutes];
 }

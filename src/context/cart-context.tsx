@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode, useCallback } from 'react';
 import { CartCalculationResult, ProductVariant, Product, AyurvedicFormulation } from '@/types';
 import { useAuth } from './auth-context';
 
@@ -29,6 +29,10 @@ interface CartContextType {
   isCartOpen: boolean;
   couponCode: string;
   appliedCoupon: { code: string } | null;
+  /** Last server-side coupon problem (expired, limit reached…) for display. */
+  couponError: string | null;
+  /** Last cart-calculation failure (e.g. an item went out of stock). */
+  cartError: string | null;
   openCart: () => void;
   openMiniCart: () => void;
   closeCart: () => void;
@@ -50,6 +54,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [calculation, setCalculation] = useState<CartCalculationResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [cartError, setCartError] = useState<string | null>(null);
 
   const cartStorageKey = user ? `shlokveda_cart_${user.id}` : null;
   const couponStorageKey = user ? `shlokveda_coupon_${user.id}` : null;
@@ -72,26 +78,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [authLoading, cartStorageKey, couponStorageKey]);
 
-  // Sync and recalculate cart with server whenever items, coupon or token changes
+  // Sync and recalculate cart with server whenever items, coupon or token changes.
+  // Rapid quantity taps fire several recalculations: abort the superseded
+  // request and ignore any late response, so an earlier request landing
+  // after a newer one can never resurrect stale totals.
+  const calcSeqRef = useRef(0);
+  const calcAbortRef = useRef<AbortController | null>(null);
   const refreshCart = useCallback(
     async (currentItems: Array<{ variantId: string; quantity: number }>, code: string) => {
-      if (currentItems.length === 0) {
-        setCalculation({
-          items: [],
-          subtotal: 0,
-          mrpTotal: 0,
-          discountSavings: 0,
-          couponDiscount: 0,
-          shippingFee: 0,
-          isFreeShipping: false,
-          freeShippingThreshold: 999,
-          amountNeededForFreeShipping: 999,
-          estimatedGst: 0,
-          finalPayableAmount: 0,
-        });
-        return;
-      }
-
+      // Even an empty cart is calculated by the server now: it returns the
+      // real free-shipping threshold from settings instead of the client
+      // guessing (it previously hardcoded ₹999 vs the server's ₹499).
+      const seq = ++calcSeqRef.current;
+      calcAbortRef.current?.abort();
+      const controller = new AbortController();
+      calcAbortRef.current = controller;
+      const isStale = () => seq !== calcSeqRef.current;
       setIsLoading(true);
       try {
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -100,6 +102,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const res = await fetch('/api/cart/calculate', {
           method: 'POST',
           headers,
+          signal: controller.signal,
           body: JSON.stringify({
             items: currentItems.map((i) => ({
               variantId: i.variantId,
@@ -110,16 +113,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
         });
 
         const data = await res.json();
+        if (isStale()) return;
         if (data.success && data.data) {
           setCalculation(data.data);
+          setCartError(null);
+          if (code && data.data.couponError) {
+            // The stored coupon no longer applies — drop it and tell the
+            // shopper why, instead of silently charging full price later.
+            setCouponError(data.data.couponError);
+            setCouponCode('');
+            if (couponStorageKey) localStorage.removeItem(couponStorageKey);
+          } else if (data.data.couponCode) {
+            setCouponError(null);
+          }
+        } else {
+          // Surface calculation failures (out of stock, removed product…)
+          // instead of leaving stale/zero totals on screen.
+          setCartError(data.error?.message || 'We could not update your cart totals. Please review your items.');
         }
       } catch (err) {
+        if ((err as Error)?.name === 'AbortError' || isStale()) return;
         console.error('[Cart Sync Error]:', err);
+        setCartError('We could not update your cart totals. Please check your connection.');
       } finally {
-        setIsLoading(false);
+        if (!isStale()) setIsLoading(false);
       }
     },
-    [token]
+    [token, couponStorageKey]
   );
 
   useEffect(() => {
@@ -141,9 +161,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     let updated;
     if (existingIndex > -1) {
       updated = [...itemsList];
-      updated[existingIndex].quantity += quantity;
+      // Cap at the server's per-line maximum so the cart never enters a
+      // state the pricing API rejects outright.
+      updated[existingIndex].quantity = Math.min(50, updated[existingIndex].quantity + quantity);
     } else {
-      updated = [...itemsList, { variantId, quantity }];
+      updated = [...itemsList, { variantId, quantity: Math.min(50, Math.max(1, quantity)) }];
     }
     saveItems(updated);
     setIsCartOpen(true);
@@ -154,6 +176,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       await removeItem(variantIdOrItemId);
       return;
     }
+    quantity = Math.min(50, Math.floor(quantity));
     const matches = (variantId: string) => variantId === variantIdOrItemId || `item_${variantId}` === variantIdOrItemId;
     const updated = itemsList.map((i) => (matches(i.variantId) ? { ...i, quantity } : i));
     // Update the drawer immediately; server recalculation continues in the background.
@@ -194,10 +217,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       if (data.success && data.data?.valid) {
         setCouponCode(cleanCode);
+        setCouponError(null);
         if (couponStorageKey) localStorage.setItem(couponStorageKey, cleanCode);
         return { success: true, message: data.data.message || 'Coupon applied successfully!' };
       } else {
-        return { success: false, message: data.error?.message || 'Invalid coupon code' };
+        // The API returns the specific reason (expired, minimum order…)
+        // in data.data.message — show it instead of a generic failure.
+        return { success: false, message: data.data?.message || data.error?.message || 'Invalid coupon code' };
       }
     } catch {
       return { success: false, message: 'Failed to validate coupon' };
@@ -206,12 +232,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const removeCoupon = async () => {
     setCouponCode('');
+    setCouponError(null);
     if (couponStorageKey) localStorage.removeItem(couponStorageKey);
   };
 
   const clearCart = () => {
     setItemsList([]);
     setCouponCode('');
+    setCouponError(null);
+    setCartError(null);
     if (cartStorageKey) localStorage.removeItem(cartStorageKey);
     if (couponStorageKey) localStorage.removeItem(couponStorageKey);
     localStorage.removeItem('shlokveda_cart');
@@ -294,6 +323,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         isCartOpen,
         couponCode,
         appliedCoupon: couponCode ? { code: couponCode } : null,
+        couponError,
+        cartError,
         openCart,
         openMiniCart,
         closeCart,

@@ -1,5 +1,5 @@
 // ==============================================================================
-// PRODUCT & CATALOG REPOSITORY — SHOLKVEDA
+// PRODUCT & CATALOG REPOSITORY — SHLOKVEDA
 // ==============================================================================
 
 import { db } from '@/lib/db';
@@ -124,7 +124,8 @@ async function listProductsFromPostgres(options: ProductFilterOptions) {
   if (options.isNewArrival !== undefined) add('p."isNewArrival" = ?', options.isNewArrival);
   const search = (options.searchQuery || options.search)?.trim();
   if (search) {
-    values.push(`%${search}%`);
+    // Escape LIKE wildcards so user input is matched literally.
+    values.push(`%${search.replace(/[%_\\]/g, (ch) => '\\' + ch)}%`);
     const n = values.length;
     clauses.push(`(p."name" ILIKE $${n} OR p."shortDescription" ILIKE $${n} OR p."ingredients" ILIKE $${n} OR p."benefits" ILIKE $${n})`);
   }
@@ -140,8 +141,10 @@ async function listProductsFromPostgres(options: ProductFilterOptions) {
     });
   }
   switch (options.sortBy) {
-    case 'price-low': products.sort((a,b) => Math.min(...(a.variants?.map(v=>v.sellingPrice)||[0])) - Math.min(...(b.variants?.map(v=>v.sellingPrice)||[0]))); break;
-    case 'price-high': products.sort((a,b) => Math.max(...(b.variants?.map(v=>v.sellingPrice)||[0])) - Math.max(...(a.variants?.map(v=>v.sellingPrice)||[0]))); break;
+    // Sort by the price cards actually display (the default variant), so the
+    // visible price sequence is monotonic in both directions.
+    case 'price-low': products.sort((a,b) => ((a.variants?.find(v=>v.isDefault)||a.variants?.[0])?.sellingPrice||0) - ((b.variants?.find(v=>v.isDefault)||b.variants?.[0])?.sellingPrice||0)); break;
+    case 'price-high': products.sort((a,b) => ((b.variants?.find(v=>v.isDefault)||b.variants?.[0])?.sellingPrice||0) - ((a.variants?.find(v=>v.isDefault)||a.variants?.[0])?.sellingPrice||0)); break;
     case 'rating': products.sort((a,b) => (b.ratingAverage || 0) - (a.ratingAverage || 0)); break;
     case 'newest': products.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); break;
     default: products.sort((a,b) => Number(b.isFeatured) - Number(a.isFeatured));
@@ -232,6 +235,18 @@ export class ProductRepository {
     return db.categories.delete(id);
   }
 
+  public static async countProductsByCategory(categoryId: string): Promise<number> {
+    if (isPostgresConfigured()) {
+      const result = await pgQuery('SELECT COUNT(*)::int AS count FROM "Product" WHERE "categoryId" = $1', [categoryId]);
+      return result.rows[0]?.count ?? 0;
+    }
+    let count = 0;
+    for (const product of db.products.values()) {
+      if (product.categoryId === categoryId) count += 1;
+    }
+    return count;
+  }
+
   // ----------------------------------------------------------------------------
   // PRODUCTS & VARIANTS
   // ----------------------------------------------------------------------------
@@ -248,9 +263,8 @@ export class ProductRepository {
     // Filter by Category Slug or ID
     if (options.categorySlug) {
       const cat = await this.findCategoryBySlug(options.categorySlug);
-      if (cat) {
-        result = result.filter((p) => p.categoryId === cat.id);
-      }
+      // An unknown category must return nothing — never the whole catalogue.
+      result = cat ? result.filter((p) => p.categoryId === cat.id) : [];
     } else if (options.categoryId) {
       result = result.filter((p) => p.categoryId === options.categoryId);
     }
@@ -308,18 +322,19 @@ export class ProductRepository {
 
     // Sorting
     switch (options.sortBy) {
+      // Sort by the price cards actually display (the default variant).
       case 'price-low':
         filtered.sort((a, b) => {
-          const aMin = Math.min(...(a.variants?.map((v) => v.sellingPrice) || [0]));
-          const bMin = Math.min(...(b.variants?.map((v) => v.sellingPrice) || [0]));
-          return aMin - bMin;
+          const aPrice = (a.variants?.find((v) => v.isDefault) || a.variants?.[0])?.sellingPrice || 0;
+          const bPrice = (b.variants?.find((v) => v.isDefault) || b.variants?.[0])?.sellingPrice || 0;
+          return aPrice - bPrice;
         });
         break;
       case 'price-high':
         filtered.sort((a, b) => {
-          const aMax = Math.max(...(a.variants?.map((v) => v.sellingPrice) || [0]));
-          const bMax = Math.max(...(b.variants?.map((v) => v.sellingPrice) || [0]));
-          return bMax - aMax;
+          const aPrice = (a.variants?.find((v) => v.isDefault) || a.variants?.[0])?.sellingPrice || 0;
+          const bPrice = (b.variants?.find((v) => v.isDefault) || b.variants?.[0])?.sellingPrice || 0;
+          return bPrice - aPrice;
         });
         break;
       case 'rating':
@@ -349,13 +364,15 @@ export class ProductRepository {
   }
 
   public static async findProductBySlug(slug: string): Promise<Product | null> {
+    // Slug lookup serves only public pages/APIs — inactive (draft/deleted)
+    // products must not be reachable by guessing a slug.
     if (isPostgresConfigured()) {
-      const result = await pgQuery('SELECT * FROM "Product" WHERE LOWER("slug") = LOWER($1) LIMIT 1', [slug]);
+      const result = await pgQuery('SELECT * FROM "Product" WHERE LOWER("slug") = LOWER($1) AND "isActive" = TRUE LIMIT 1', [slug]);
       if (!result.rows[0]) return null;
       return (await hydrateDbProducts([result.rows[0]]))[0];
     }
     for (const p of db.products.values()) {
-      if (p.slug === slug.toLowerCase()) {
+      if (p.slug === slug.toLowerCase() && p.isActive) {
         return this.populateProduct(p);
       }
     }
@@ -382,11 +399,20 @@ export class ProductRepository {
   }
 
   public static async listAllVariants(): Promise<ProductVariant[]> {
+    // Include the parent product's name — the admin inventory screen lists
+    // variants standalone and previously rendered blank product names.
     if (isPostgresConfigured()) {
-      const result = await pgQuery('SELECT * FROM "ProductVariant" ORDER BY "createdAt" DESC');
-      return result.rows.map(mapDbVariant);
+      const result = await pgQuery('SELECT v.*, p."name" AS "productName" FROM "ProductVariant" v JOIN "Product" p ON p."id" = v."productId" ORDER BY v."createdAt" DESC');
+      return result.rows.map((row) => ({ ...mapDbVariant(row), productName: row.productName, product: { id: row.productId, name: row.productName } }));
     }
-    return Array.from(db.productVariants.values());
+    return Array.from(db.productVariants.values()).map((variant) => {
+      const product = db.products.get(variant.productId);
+      return {
+        ...variant,
+        productName: product?.name || 'Unknown product',
+        product: product ? { id: product.id, name: product.name } : null,
+      };
+    });
   }
 
   public static async createProduct(
@@ -405,7 +431,7 @@ export class ProductRepository {
         }
         for (let i = 0; i < images.length; i++) {
           const image = images[i];
-          await client.query('INSERT INTO "ProductImage" ("id","productId","imageUrl","altText","sortOrder","isPrimary","createdAt") VALUES ($1,$2,$3,$4,$5,$6,$7)', [`img_${crypto.randomUUID()}`,id,image.imageUrl,image.altText || `${productData.name} - Sholkveda`,image.sortOrder ?? i,image.isPrimary ?? (i===0),now]);
+          await client.query('INSERT INTO "ProductImage" ("id","productId","imageUrl","altText","sortOrder","isPrimary","createdAt") VALUES ($1,$2,$3,$4,$5,$6,$7)', [`img_${crypto.randomUUID()}`,id,image.imageUrl,image.altText || `${productData.name} - Shlokveda`,image.sortOrder ?? i,image.isPrimary ?? (i===0),now]);
         }
       });
       const created = await this.findProductById(id);
@@ -455,7 +481,7 @@ export class ProductRepository {
         id: imgId,
         productId: id,
         imageUrl: img.imageUrl,
-        altText: img.altText || `${newProduct.name} - Sholkveda`,
+        altText: img.altText || `${newProduct.name} - Shlokveda`,
         sortOrder: img.sortOrder ?? i,
         isPrimary: img.isPrimary ?? (i === 0),
         createdAt: now,
@@ -495,7 +521,7 @@ export class ProductRepository {
           await client.query('DELETE FROM "ProductImage" WHERE "productId" = $1', [id]);
           for (let i=0;i<images.length;i++) {
             const image=images[i];
-            await client.query('INSERT INTO "ProductImage" ("id","productId","imageUrl","altText","sortOrder","isPrimary","createdAt") VALUES ($1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP)', [`img_${crypto.randomUUID()}`,id,image.imageUrl,image.altText || `${updates.name || existing.name} - Sholkveda`,image.sortOrder ?? i,image.isPrimary ?? (i===0)]);
+            await client.query('INSERT INTO "ProductImage" ("id","productId","imageUrl","altText","sortOrder","isPrimary","createdAt") VALUES ($1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP)', [`img_${crypto.randomUUID()}`,id,image.imageUrl,image.altText || `${updates.name || existing.name} - Shlokveda`,image.sortOrder ?? i,image.isPrimary ?? (i===0)]);
           }
         }
       });
@@ -505,21 +531,34 @@ export class ProductRepository {
     if (!existing) return null;
 
     const now = new Date().toISOString();
+    // Allow-list the mutable product fields (mirrors the Postgres path) —
+    // arbitrary keys like `id` in the request body must never be merged in.
+    const allowedKeys = ['categoryId','name','slug','skuPrefix','shortDescription','fullDescription','ingredients','benefits','usageInstructions','precautions','ayurvedicFormulation','ayushLicenseNo','fssaiLicenseNo','isFeatured','isBestseller','isNewArrival','isActive','metaTitle','metaDescription','metaKeywords'] as const;
+    const safeUpdates: Partial<Product> = {};
+    for (const key of allowedKeys) {
+      if ((updates as any)[key] !== undefined) (safeUpdates as any)[key] = (updates as any)[key];
+    }
     const updatedProd: Product = {
       ...existing,
-      ...updates,
+      ...safeUpdates,
+      id: existing.id,
+      createdAt: existing.createdAt,
       updatedAt: now,
     };
     db.products.set(id, updatedProd);
 
-    // Update variants if supplied
+    // Update variants if supplied. Preserve each variant's identity (matched
+    // by id, falling back to SKU) and its live reservation, so editing a
+    // product doesn't orphan shoppers' carts or drop reserved stock.
     if (variants && variants.length > 0) {
+      const previousVariants = Array.from(db.productVariants.values()).filter((v) => v.productId === id);
       for (const [vKey, v] of db.productVariants.entries()) {
         if (v.productId === id) db.productVariants.delete(vKey);
       }
       for (let i = 0; i < variants.length; i++) {
         const v = variants[i];
-        const vId = v.id || `var_${id}_${i + 1}`;
+        const previous = previousVariants.find((pv) => pv.id === v.id) || previousVariants.find((pv) => pv.sku === v.sku);
+        const vId = v.id || previous?.id || `var_${id}_${i + 1}`;
         db.productVariants.set(vId, {
           id: vId,
           productId: id,
@@ -527,14 +566,14 @@ export class ProductRepository {
           sizeLabel: v.sizeLabel,
           mrp: v.mrp,
           sellingPrice: v.sellingPrice,
-          costPrice: v.costPrice ?? 0,
-          stockQuantity: v.stockQuantity ?? 0,
-          reservedQuantity: v.reservedQuantity ?? 0,
-          lowStockThreshold: v.lowStockThreshold ?? 5,
-          weightInGrams: v.weightInGrams ?? 0,
+          costPrice: v.costPrice ?? previous?.costPrice ?? 0,
+          stockQuantity: v.stockQuantity ?? previous?.stockQuantity ?? 0,
+          reservedQuantity: previous?.reservedQuantity ?? 0,
+          lowStockThreshold: v.lowStockThreshold ?? previous?.lowStockThreshold ?? 5,
+          weightInGrams: v.weightInGrams ?? previous?.weightInGrams ?? 0,
           isDefault: v.isDefault ?? false,
           isActive: v.isActive ?? true,
-          createdAt: now,
+          createdAt: previous?.createdAt || now,
           updatedAt: now,
         });
       }
@@ -552,7 +591,7 @@ export class ProductRepository {
           id: imgId,
           productId: id,
           imageUrl: img.imageUrl,
-          altText: img.altText || `${updatedProd.name} - Sholkveda`,
+          altText: img.altText || `${updatedProd.name} - Shlokveda`,
           sortOrder: img.sortOrder ?? i,
           isPrimary: img.isPrimary ?? (i === 0),
           createdAt: now,
@@ -568,13 +607,12 @@ export class ProductRepository {
       const result = await pgQuery('UPDATE "Product" SET "isActive" = FALSE, "updatedAt" = CURRENT_TIMESTAMP WHERE "id" = $1', [id]);
       return (result.rowCount || 0) > 0;
     }
-    for (const [vKey, v] of db.productVariants.entries()) {
-      if (v.productId === id) db.productVariants.delete(vKey);
-    }
-    for (const [imgKey, img] of db.productImages.entries()) {
-      if (img.productId === id) db.productImages.delete(imgKey);
-    }
-    return db.products.delete(id);
+    // Soft delete (matches Postgres): keeps order history resolvable and
+    // lets admins restore the product; hard-deleting broke both.
+    const product = db.products.get(id);
+    if (!product) return false;
+    db.products.set(id, { ...product, isActive: false, updatedAt: new Date().toISOString() });
+    return true;
   }
 
   private static populateProduct(product: Product): Product {
@@ -594,7 +632,9 @@ export class ProductRepository {
       category,
       variants,
       images,
-      reviews,
+      // Only rating aggregates are exposed on products. Full review objects
+      // (which include reviewer userIds) are served — sanitised — by the
+      // reviews API alone.
       ratingCount,
       ratingAverage: ratingCount > 0 ? ratingAverage : 0,
     };

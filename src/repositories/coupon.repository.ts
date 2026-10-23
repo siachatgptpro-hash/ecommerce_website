@@ -1,5 +1,5 @@
 // ==============================================================================
-// COUPON & DISCOUNT REPOSITORY — SHOLKVEDA
+// COUPON & DISCOUNT REPOSITORY — SHLOKVEDA
 // ==============================================================================
 
 import { db } from '@/lib/db';
@@ -69,6 +69,23 @@ export class CouponRepository {
         const row=r.rows[0];return{id:row.id,couponId:row.couponId,userId:row.userId,orderId:row.orderId,createdAt:iso(row.createdAt)};
       });
     }
+    // In-memory mode must enforce the same rules as Postgres: idempotent per
+    // (coupon, user, order), global usage limit, and per-user limit.
+    const existing = Array.from(db.couponUsages.values()).find(
+      (u) => u.couponId === couponId && u.userId === userId && u.orderId === orderId
+    );
+    if (existing) return { ...existing };
+
+    const coupon = db.coupons.get(couponId);
+    if (!coupon) throw new ValidationError('The applied coupon no longer exists.');
+    if (coupon.usageLimit !== null && coupon.usageLimit !== undefined && coupon.usedCount >= coupon.usageLimit) {
+      throw new ValidationError('This coupon has reached its usage limit.');
+    }
+    const userCount = await this.getUserUsageCount(couponId, userId);
+    if (userCount >= coupon.perUserLimit) {
+      throw new ValidationError('You have already used this coupon the maximum number of times.');
+    }
+
     const usageId = `usg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const usage: CouponUsage = {
       id: usageId,
@@ -79,20 +96,50 @@ export class CouponRepository {
     };
     db.couponUsages.set(usageId, usage);
 
-    const coupon = db.coupons.get(couponId);
-    if (coupon) {
-      db.coupons.set(couponId, {
-        ...coupon,
-        usedCount: coupon.usedCount + 1,
-        updatedAt: new Date().toISOString(),
-      });
-    }
+    db.coupons.set(couponId, {
+      ...coupon,
+      usedCount: coupon.usedCount + 1,
+      updatedAt: new Date().toISOString(),
+    });
 
     return { ...usage };
   }
 
+  /**
+   * Releases coupon usage recorded for an order (used when a paid order is
+   * cancelled, so the customer gets their coupon back). Idempotent.
+   */
+  public static async releaseUsage(couponId: string, orderId: string, guestUsage = false): Promise<void> {
+    if (isPostgresConfigured()) {
+      await withPostgresTransaction(async (client) => {
+        const deleted = await client.query('DELETE FROM "CouponUsage" WHERE "couponId"=$1 AND "orderId"=$2', [couponId, orderId]);
+        const released = Math.max(deleted.rowCount || 0, guestUsage ? 1 : 0);
+        if (released > 0) {
+          await client.query('UPDATE "Coupon" SET "usedCount"=GREATEST("usedCount"-$2,0),"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=$1', [couponId, released]);
+        }
+      });
+      return;
+    }
+    let released = 0;
+    for (const usage of Array.from(db.couponUsages.values())) {
+      if (usage.couponId === couponId && usage.orderId === orderId) {
+        db.couponUsages.delete(usage.id);
+        released++;
+      }
+    }
+    released = Math.max(released, guestUsage ? 1 : 0);
+    const coupon = db.coupons.get(couponId);
+    if (coupon && released > 0) {
+      db.coupons.set(couponId, {
+        ...coupon,
+        usedCount: Math.max(0, coupon.usedCount - released),
+        updatedAt: new Date().toISOString(),
+      });
+    }
+  }
+
   public static async recordGuestUsage(couponId:string):Promise<void>{
-    if(!isPostgresConfigured()){const coupon=db.coupons.get(couponId);if(coupon)db.coupons.set(couponId,{...coupon,usedCount:coupon.usedCount+1,updatedAt:new Date().toISOString()});return;}
+    if(!isPostgresConfigured()){const coupon=db.coupons.get(couponId);if(!coupon)throw new ValidationError('The applied coupon no longer exists.');if(coupon.usageLimit!==null&&coupon.usageLimit!==undefined&&coupon.usedCount>=coupon.usageLimit)throw new ValidationError('This coupon has reached its usage limit.');db.coupons.set(couponId,{...coupon,usedCount:coupon.usedCount+1,updatedAt:new Date().toISOString()});return;}
     await withPostgresTransaction(async(client)=>{
       const r=await client.query('UPDATE "Coupon" SET "usedCount"="usedCount"+1,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=$1 AND ("usageLimit" IS NULL OR "usedCount"<"usageLimit") RETURNING "id"',[couponId]);
       if(!r.rows[0])throw new ValidationError('This coupon has reached its usage limit.');

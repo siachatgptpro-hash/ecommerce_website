@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminPermission } from '@/lib/admin-auth';
+import { ReviewModerationSchema } from '@/schemas';
 import { CMSRepository } from '@/repositories/cms.repository';
 import { PermissionKey } from '@/types';
 import { handleApiError } from '@/lib/errors';
@@ -11,11 +12,12 @@ export async function PUT(
   try {
     await requireAdminPermission(req, PermissionKey.MANAGE_REVIEWS);
     const json = await req.json();
+    const payload = ReviewModerationSchema.parse(json);
 
     const review = await CMSRepository.moderateReview(
       params.id,
-      json.isApproved,
-      json.adminReply
+      payload.isApproved,
+      payload.adminReply
     );
 
     return NextResponse.json({

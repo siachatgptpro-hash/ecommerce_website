@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminPermission } from '@/lib/admin-auth';
 import { InventoryRepository } from '@/repositories/inventory.repository';
+import { InventoryAdjustSchema } from '@/schemas';
 import { PermissionKey, InventoryChangeReason } from '@/types';
 import { handleApiError } from '@/lib/errors';
 
@@ -8,7 +9,9 @@ export async function POST(req: NextRequest) {
   try {
     const admin = await requireAdminPermission(req, PermissionKey.MANAGE_INVENTORY);
     const json = await req.json();
-    const { variantId, quantityChange, reason } = json;
+    // Strict validation: a non-numeric quantityChange previously corrupted
+    // stock balances (e.g. "abc" turned stock 25 into the string "25abc").
+    const { variantId, quantityChange, reason } = InventoryAdjustSchema.parse(json);
 
     const changeReason =
       reason === 'DAMAGE'

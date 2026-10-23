@@ -27,7 +27,7 @@ async function runBackendTests() {
     }
   };
 
-  console.log('\nSholkveda in-memory backend checks');
+  console.log('\nShlokveda in-memory backend checks');
 
   const variantCount = BROCHURE_PRODUCTS.reduce((sum, product) => sum + product.variants.length, 0);
   let invalidRegistrationStatus = 0;

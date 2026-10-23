@@ -1,5 +1,5 @@
 // ==============================================================================
-// DOMAIN TYPES & ENUMS — SHOLKVEDA AYURVEDIC E-COMMERCE
+// DOMAIN TYPES & ENUMS — SHLOKVEDA AYURVEDIC E-COMMERCE
 // ==============================================================================
 
 export enum SystemRole {
@@ -382,6 +382,8 @@ export interface Banner {
   mobileImgUrl?: string | null;
   linkUrl?: string | null;
   buttonText?: string | null;
+  secondaryCtaText?: string | null;
+  secondaryCtaLink?: string | null;
   sortOrder: number;
   isActive: boolean;
   createdAt: string;
@@ -452,6 +454,14 @@ export interface BlogPost {
   coverImage?: string | null;
 }
 
+export type PolicyLayout = 'prose' | 'list' | 'grid' | 'cards' | 'accordion';
+
+export interface PolicySection {
+  icon?: string;
+  heading: string;
+  body: string;
+}
+
 export interface StaticPage {
   id: string;
   slug: string;
@@ -459,6 +469,10 @@ export interface StaticPage {
   content: string;
   metaTitle?: string | null;
   metaDescription?: string | null;
+  /** Storefront layout for /policies/<slug> (Admin -> CMS). Null = prose. */
+  layout?: PolicyLayout | string | null;
+  /** Structured icon sections (Admin -> CMS). `content` stays as the plain-text mirror. */
+  sections?: PolicySection[] | null;
   updatedAt: string;
 }
 
@@ -487,6 +501,8 @@ export interface BusinessSettings {
   enableCod: boolean;
   announcementText?: string;
   logoUrl?: string;
+  /** Admin-selected replacement for the built-in About/catalogue showcase scene. Empty = built-in default. */
+  aboutShowcaseImageUrl?: string;
   privacyPolicy?: string;
   termsPolicy?: string;
   shippingPolicy?: string;
@@ -526,10 +542,18 @@ export interface CartCalculationResult {
   discountSavings: number;
   couponCode?: string;
   couponDiscount: number;
+  /** Set when a coupon code was supplied but could not be applied (expired, limit reached, …). */
+  couponError?: string;
   shippingFee: number;
   isFreeShipping: boolean;
   freeShippingThreshold: number;
   amountNeededForFreeShipping: number;
   estimatedGst: number;
   finalPayableAmount: number;
+}
+
+export interface NewsletterSubscriber {
+  id: string;
+  email: string;
+  createdAt: string;
 }

@@ -1,5 +1,5 @@
 // ==============================================================================
-// PRISMA SCHEMA — SHOLKVEDA AYURVEDIC E-COMMERCE PLATFORM
+// PRISMA SCHEMA — SHLOKVEDA AYURVEDIC E-COMMERCE PLATFORM
 // Compatible with Neon PostgreSQL (Production) and Hostinger MySQL (Future Target)
 // ==============================================================================
 
@@ -442,6 +442,7 @@ model Shipment {
   orderId        String         @unique
   carrierName    String
   trackingNumber String
+  trackingUrl    String?
   status         ShipmentStatus @default(LABEL_CREATED)
   dispatchedAt   DateTime?
   deliveredAt    DateTime?
@@ -529,14 +530,16 @@ model Review {
 // ------------------------------------------------------------------------------
 
 model Banner {
-  id           String   @id @default(uuid())
-  title        String
-  subtitle     String?
-  imageUrl     String
-  mobileImgUrl String?
-  linkUrl      String?
-  buttonText   String?
-  sortOrder    Int      @default(0)
+  id               String   @id @default(uuid())
+  title            String
+  subtitle         String?
+  imageUrl         String
+  mobileImgUrl     String?
+  linkUrl          String?
+  buttonText       String?
+  secondaryCtaText String?
+  secondaryCtaLink String?
+  sortOrder        Int      @default(0)
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -582,7 +585,7 @@ model BlogPost {
   summary         String?
   content         String
   featuredImg     String?
-  authorName      String           @default("Sholkveda Ayurvedic Expert")
+  authorName      String           @default("Shlokveda Ayurvedic Expert")
   readTimeMinutes Int              @default(5)
   isPublished     Boolean          @default(false)
   publishedAt     DateTime?
@@ -622,6 +625,8 @@ model StaticPage {
   content         String
   metaTitle       String?
   metaDescription String?
+  layout          String?
+  sections        Json?
   updatedAt       DateTime @updatedAt
 }
 
@@ -668,4 +673,10 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([action])
   @@index([createdAt])
+}
+
+model NewsletterSubscriber {
+  id        String   @id
+  email     String   @unique
+  createdAt DateTime @default(now())
 }

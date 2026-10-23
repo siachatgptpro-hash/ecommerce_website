@@ -1,5 +1,5 @@
 // ==============================================================================
-// PRISMA SEED ARCHITECTURE — SHOLKVEDA
+// PRISMA SEED ARCHITECTURE — SHLOKVEDA
 // Seeds Official Business Info (Hathras), Super Admin, Ayurvedic Catalog & CMS
 // ==============================================================================
 
@@ -9,7 +9,7 @@ import { ProductRepository } from '../src/repositories/product.repository';
 import { UserRepository } from '../src/repositories/user.repository';
 
 async function main() {
-  console.log('Seeding SHOLKVEDA Database...');
+  console.log('Seeding SHLOKVEDA Database...');
 
   // Ensure singleton DB is seeded
   db.seedInitialData();

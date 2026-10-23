@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { requireAdminPage } from '@/lib/admin-page-auth';
 import { analyticsService } from '@/services/analytics.service';
 import { orderRepository } from '@/repositories/order.repository';
 import { inventoryRepository } from '@/repositories/inventory.repository';
@@ -20,6 +21,10 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0; // Dynamic real-time dashboard
 
 export default async function AdminDashboardPage() {
+  // Server-side authorization — must run before any data is loaded so nothing
+  // leaks into the RSC payload for unauthenticated/non-admin visitors.
+  await requireAdminPage();
+
   const [metrics, ordersData, lowStockItems] = await Promise.all([
     analyticsService.getDashboardMetrics(),
     orderRepository.findMany({ limit: 6 }),
@@ -171,7 +176,7 @@ export default async function AdminDashboardPage() {
                             : 'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        {ord.paymentStatus === 'PAID' && ord.status === 'PENDING' ? 'AWAITING APPROVAL' : ord.status === 'CONFIRMED' ? 'APPROVED' : ord.status === 'SHIPPED' ? 'SHIFTED' : ord.status}
+                        {ord.paymentStatus === 'PAID' && ord.status === 'PENDING' ? 'AWAITING APPROVAL' : ord.status === 'CONFIRMED' ? 'APPROVED' : ord.status === 'SHIPPED' ? 'SHIPPED' : ord.status}
                       </span>
                     </td>
                     <td className="py-3 px-2 font-bold text-gray-900">₹{ord.totalAmount}</td>
@@ -220,7 +225,7 @@ export default async function AdminDashboardPage() {
                 >
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-gray-900 truncate">
-                      {item.product?.name}
+                      {item.productName || item.product?.name || 'Unknown product'}
                     </p>
                     <p className="text-[10px] text-gray-500">
                       SKU: {item.sku} ({item.sizeLabel})

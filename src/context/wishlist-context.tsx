@@ -18,7 +18,11 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     try {
       const saved = localStorage.getItem('shlokveda_wishlist');
       if (saved) {
-        setWishlist(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        // Never trust stored JSON blindly — only accept a list of string IDs.
+        if (Array.isArray(parsed)) {
+          setWishlist(parsed.filter((id): id is string => typeof id === 'string'));
+        }
       }
     } catch {
       localStorage.removeItem('shlokveda_wishlist');
@@ -26,14 +30,14 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toggleWishlist = (productId: string) => {
-    let updated;
-    if (wishlist.includes(productId)) {
-      updated = wishlist.filter((id) => id !== productId);
-    } else {
-      updated = [...wishlist, productId];
-    }
-    setWishlist(updated);
-    localStorage.setItem('shlokveda_wishlist', JSON.stringify(updated));
+    // Functional update: rapid toggles must not act on a stale snapshot.
+    setWishlist((previous) => {
+      const updated = previous.includes(productId)
+        ? previous.filter((id) => id !== productId)
+        : [...previous, productId];
+      localStorage.setItem('shlokveda_wishlist', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const isInWishlist = (productId: string) => wishlist.includes(productId);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProductRepository } from '@/repositories/product.repository';
 import { handleApiError } from '@/lib/errors';
+import { toPublicProduct } from '@/lib/public-dto';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data,
+      data: { ...data, products: data.products.map(toPublicProduct) },
     });
   } catch (error) {
     const err = handleApiError(error);

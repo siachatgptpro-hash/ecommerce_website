@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ReviewCreateSchema } from '@/schemas';
 import { CMSRepository } from '@/repositories/cms.repository';
 import { OrderRepository } from '@/repositories/order.repository';
+import { ProductRepository } from '@/repositories/product.repository';
 import { AuthService } from '@/services/auth.service';
-import { AuthenticationError, handleApiError } from '@/lib/errors';
+import { AuthenticationError, ConflictError, NotFoundError, handleApiError } from '@/lib/errors';
+import { toPublicReview } from '@/lib/public-dto';
 import sanitizeHtml from 'sanitize-html';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +18,8 @@ export async function GET(req: NextRequest) {
     const reviews = await CMSRepository.listReviews(productId, true);
     return NextResponse.json({
       success: true,
-      data: reviews,
+      // Never expose reviewer userIds or email addresses publicly.
+      data: reviews.map(toPublicReview),
     });
   } catch (error) {
     const err = handleApiError(error);
@@ -37,9 +40,32 @@ export async function POST(req: NextRequest) {
     const json = await req.json();
     const payload = ReviewCreateSchema.parse(json);
 
+    const product = await ProductRepository.findProductById(payload.productId);
+    if (!product) {
+      throw new NotFoundError('Product');
+    }
+
     const isVerified = await OrderRepository.hasUserPurchasedProduct(user.id, payload.productId);
     const cleanComment = sanitizeHtml(payload.comment, { allowedTags: [], allowedAttributes: {} });
     const cleanTitle = payload.title ? sanitizeHtml(payload.title, { allowedTags: [], allowedAttributes: {} }) : null;
+
+    // One review per customer per product: a repeat submission UPDATES the
+    // existing review (back through moderation) instead of erroring.
+    const existingReviews = await CMSRepository.listReviews(payload.productId, false);
+    const mine = existingReviews.find((review) => review.userId === user.id);
+    if (mine) {
+      const updated = await CMSRepository.updateReviewByUser(mine.id, {
+        rating: payload.rating,
+        title: cleanTitle,
+        comment: cleanComment,
+        isVerified,
+      });
+      return NextResponse.json({
+        success: true,
+        message: 'Your review has been updated and will appear after moderation.',
+        data: updated ? toPublicReview(updated) : null,
+      });
+    }
 
     const review = await CMSRepository.createReview({
       productId: payload.productId,
@@ -55,7 +81,7 @@ export async function POST(req: NextRequest) {
       {
         success: true,
         message: 'Thank you! Your review has been submitted and will appear after moderation.',
-        data: review,
+        data: toPublicReview(review),
       },
       { status: 201 }
     );

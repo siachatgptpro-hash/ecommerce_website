@@ -1,5 +1,5 @@
 // ==============================================================================
-// USER & ADDRESS REPOSITORY — SHOLKVEDA
+// USER & ADDRESS REPOSITORY — SHLOKVEDA
 // ==============================================================================
 
 import { db } from '@/lib/db';
@@ -67,7 +67,14 @@ export class UserRepository {
 
   public static async findByEmailOrPhone(query: string): Promise<User | null> {
     const clean = query.trim();
-    return (await this.findByEmail(clean)) || (await this.findByPhone(clean));
+    const byEmail = await this.findByEmail(clean);
+    if (byEmail) return byEmail;
+    // Accept Indian mobile numbers written with +91 / 0 prefixes or spaces,
+    // matching the 10-digit format enforced at registration.
+    let digits = clean.replace(/\D/g, '');
+    if (digits.length === 12 && digits.startsWith('91')) digits = digits.slice(2);
+    if (digits.length === 11 && digits.startsWith('0')) digits = digits.slice(1);
+    return this.findByPhone(digits.length === 10 ? digits : clean);
   }
 
   public static async create(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
@@ -135,9 +142,18 @@ export class UserRepository {
     }
     const user = db.users.get(id);
     if (!user) return null;
+    // Allow-list mutable fields (mirrors the Postgres path) and never let an
+    // update overwrite identity columns.
+    const allowedKeys = ['email', 'phone', 'passwordHash', 'fullName', 'isActive', 'isVerified', 'roles', 'permissions'] as const;
+    const safeUpdates: Partial<User> = {};
+    for (const key of allowedKeys) {
+      if ((updates as any)[key] !== undefined) (safeUpdates as any)[key] = (updates as any)[key];
+    }
     const updated: User = {
       ...user,
-      ...updates,
+      ...safeUpdates,
+      id: user.id,
+      createdAt: user.createdAt,
       updatedAt: new Date().toISOString(),
     };
     db.users.set(id, updated);

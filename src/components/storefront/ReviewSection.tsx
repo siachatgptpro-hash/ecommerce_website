@@ -88,23 +88,30 @@ export function ReviewSection({ productId, productName }: ReviewSectionProps) {
   return (
     <div className="space-y-8">
       {/* Header Summary */}
-      <div className="bg-[#FAF7F2] p-6 sm:p-8 rounded-3xl border border-[#F3EFE6] flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="flex flex-col items-center justify-between gap-6 rounded-3xl border border-[#EFE7D8] bg-white p-6 shadow-[0_20px_44px_-28px_rgba(27,67,50,0.4)] sm:p-8 md:flex-row">
         <div className="flex items-center gap-6">
-          <div className="text-center">
-            {avgRating ? (
-              <>
-                <span className="text-5xl font-serif font-black text-[#1B4332]">{avgRating}</span>
-                <div className="flex text-[#C5A880] justify-center mt-1">
-                  {[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < Math.round(Number(avgRating)) ? 'fill-current text-[#C5A880]' : 'text-gray-300'}`} />)}
-                </div>
-              </>
-            ) : <span className="text-sm font-bold text-gray-700">No rating yet</span>}
-            <p className="text-xs text-gray-500 mt-1">{reviews.length} customer {reviews.length === 1 ? 'review' : 'reviews'}</p>
+          <div className={avgRating ? 'text-center' : 'flex items-center gap-4 text-left'}>
+            {!avgRating && (
+              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[#F6EBD2] text-[#A67C2E] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_0_18px_rgba(197,168,128,0.35)]" aria-hidden="true">
+                <Star className="h-6 w-6" strokeWidth={1.5} />
+              </span>
+            )}
+            <div>
+              {avgRating ? (
+                <>
+                  <span className="text-5xl font-serif font-black text-[#1B4332]">{avgRating}</span>
+                  <div className="flex text-[#C5A880] justify-center mt-1">
+                    {[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < Math.round(Number(avgRating)) ? 'fill-current text-[#C5A880]' : 'text-gray-300'}`} />)}
+                  </div>
+                </>
+              ) : <span className="text-base font-bold text-gray-800">No rating yet</span>}
+              <p className="mt-1 text-xs text-gray-500">{reviews.length} customer {reviews.length === 1 ? 'review' : 'reviews'}</p>
+            </div>
           </div>
 
-          <div className="hidden sm:block h-16 w-px bg-gray-200" />
+          <div className="hidden h-16 w-px bg-[#EFE7D8] sm:block" />
 
-          <div className="space-y-1 text-xs text-gray-600">
+          <div className="space-y-1.5 text-xs text-gray-600">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               <span>Reviews appear after moderation</span>
@@ -121,11 +128,11 @@ export function ReviewSection({ productId, productName }: ReviewSectionProps) {
         </div>
 
         {user ? (
-          <button onClick={() => setShowForm(!showForm)} className="px-6 py-3 rounded-xl bg-[#1B4332] text-white text-xs font-bold hover:bg-[#2D6A4F] transition-all shadow-md shrink-0">
+          <button onClick={() => setShowForm(!showForm)} className="shrink-0 rounded-xl bg-[#1B4332] px-6 py-3 text-xs font-bold text-white shadow-md transition-all hover:bg-[#2D6A4F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A880] focus-visible:ring-offset-2">
             {showForm ? 'Cancel Review' : 'Write a Review'}
           </button>
         ) : (
-          <Link href="/login" className="px-6 py-3 rounded-xl bg-[#1B4332] text-white text-xs font-bold hover:bg-[#2D6A4F] transition-all shadow-md shrink-0">Sign in to review</Link>
+          <Link href="/login" className="shrink-0 rounded-xl bg-[#1B4332] px-6 py-3 text-xs font-bold text-white shadow-md transition-all hover:bg-[#2D6A4F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A880] focus-visible:ring-offset-2">Sign in to review</Link>
         )}
       </div>
 
@@ -231,8 +238,8 @@ export function ReviewSection({ productId, productName }: ReviewSectionProps) {
         {loading ? (
           <div className="py-12 text-center text-gray-400 text-xs">Loading reviews...</div>
         ) : reviews.length === 0 ? (
-          <div className="p-8 text-center bg-[#FAF7F2] rounded-2xl border border-[#F3EFE6] space-y-2">
-            <MessageSquare className="w-8 h-8 text-gray-400 mx-auto" />
+          <div className="space-y-2 rounded-2xl border border-[#EFE7D8] bg-[#FAF7F2] p-8 text-center">
+            <MessageSquare className="mx-auto h-8 w-8 text-[#A67C2E]/60" />
             <p className="text-sm font-bold text-gray-700">No reviews yet for this formulation.</p>
             <p className="text-xs text-gray-500">Be the first to share an experience after purchasing this product.</p>
           </div>

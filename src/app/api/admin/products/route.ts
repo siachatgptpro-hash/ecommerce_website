@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    authenticateAdmin(req, PermissionKey.MANAGE_PRODUCTS);
+    await authenticateAdmin(req, PermissionKey.MANAGE_PRODUCTS);
     // Admin product management must include soft-deleted rows so they can be restored.
     const data = await ProductRepository.listProducts({ limit: 100, includeInactive: true, sortBy: 'newest' });
     return NextResponse.json({ success: true, data });
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const admin = authenticateAdmin(req, PermissionKey.MANAGE_PRODUCTS);
+    const admin = await authenticateAdmin(req, PermissionKey.MANAGE_PRODUCTS);
     const json = await req.json();
     const payload = ProductMutationSchema.parse(json);
 

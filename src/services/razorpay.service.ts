@@ -1,5 +1,5 @@
 // ==============================================================================
-// RAZORPAY PAYMENT GATEWAY SERVICE — SHOLKVEDA
+// RAZORPAY PAYMENT GATEWAY SERVICE — SHLOKVEDA
 // Production Razorpay Engine with Cryptographic Verification & Idempotency
 // ==============================================================================
 
@@ -53,7 +53,7 @@ export class RazorpayService {
         currency: 'INR',
         receipt: receiptOrderNumber,
         notes: {
-          business: 'SHOLKVEDA',
+          business: 'SHLOKVEDA',
           origin: 'Hathras, U.P.',
           ...notes,
         },
@@ -102,10 +102,12 @@ export class RazorpayService {
     webhookSignature: string,
     webhookSecret?: string
   ): Promise<boolean> {
-    const secret = webhookSecret || (await SettingsRepository.get('RAZORPAY_WEBHOOK_SECRET')) || process.env.RAZORPAY_WEBHOOK_SECRET;
+    const secret = webhookSecret || (await SettingsRepository.get('RAZORPAY_WEBHOOK_SECRET')) || process.env.Razorpay_WEBHOOK_SECRET || process.env.RAZORPAY_WEBHOOK_SECRET;
     if (!secret) throw new PaymentError('Razorpay webhook secret is not configured.');
     const expectedSignature = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
-    return expectedSignature === webhookSignature;
+    const expected = Buffer.from(expectedSignature);
+    const received = Buffer.from(webhookSignature);
+    return received.length === expected.length && crypto.timingSafeEqual(expected, received);
   }
 
   /**
@@ -123,7 +125,7 @@ export class RazorpayService {
       const refund = await client.payments.refund(razorpayPaymentId, {
         amount: amountInPaise,
         notes: {
-          refunded_by: 'SHOLKVEDA Admin',
+          refunded_by: 'SHLOKVEDA Admin',
           ...notes,
         },
       });

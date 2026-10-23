@@ -1,5 +1,5 @@
 // ==============================================================================
-// AUTHENTICATION & RBAC SERVICE — SHOLKVEDA
+// AUTHENTICATION & RBAC SERVICE — SHLOKVEDA
 // ==============================================================================
 
 import { UserRepository } from '@/repositories/user.repository';
@@ -10,8 +10,21 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
 const globalForAuth = globalThis as typeof globalThis & { shlokvedaRuntimeAuthSecret?: string };
+
+// In development a per-process secret is convenient, but in production it
+// would silently differ between server instances (random logouts / 401s on
+// serverless). Production MUST configure a stable AUTH_SECRET. The check is
+// lazy (on first token use) so builds don't fail where env vars are only
+// injected at runtime.
+const USING_EPHEMERAL_SECRET = !process.env.AUTH_SECRET;
 const JWT_SECRET = process.env.AUTH_SECRET || (globalForAuth.shlokvedaRuntimeAuthSecret ??= crypto.randomBytes(32).toString('hex'));
 const TOKEN_EXPIRY = '7d';
+
+function assertProductionSecret(): void {
+  if (USING_EPHEMERAL_SECRET && process.env.NODE_ENV === 'production') {
+    throw new Error('AUTH_SECRET environment variable is required in production. Set a long random value in your deployment settings.');
+  }
+}
 
 export interface TokenPayload {
   userId: string;
@@ -43,16 +56,26 @@ export class AuthService {
     const salt = bcrypt.genSaltSync(10);
     const passwordHash = bcrypt.hashSync(data.password, salt);
 
-    const user = await UserRepository.create({
-      fullName: data.fullName,
-      email: data.email.toLowerCase(),
-      phone: data.phone || null,
-      passwordHash,
-      isActive: true,
-      isVerified: false,
-      roles: [SystemRole.CUSTOMER],
-      permissions: [],
-    });
+    let user;
+    try {
+      user = await UserRepository.create({
+        fullName: data.fullName,
+        email: data.email.toLowerCase(),
+        phone: data.phone || null,
+        passwordHash,
+        isActive: true,
+        isVerified: false,
+        roles: [SystemRole.CUSTOMER],
+        permissions: [],
+      });
+    } catch (error: any) {
+      // Lost a race against a parallel registration with the same email/phone:
+      // report a clean conflict instead of a raw database 500.
+      if (error?.code === '23505') {
+        throw new ConflictError('An account with this email address or mobile number already exists');
+      }
+      throw error;
+    }
 
     const token = this.generateToken(user);
     const { passwordHash: _, ...safeUser } = user;
@@ -83,6 +106,7 @@ export class AuthService {
   }
 
   public static generateToken(user: User): string {
+    assertProductionSecret();
     const payload: TokenPayload = {
       userId: user.id,
       email: user.email,
@@ -90,12 +114,13 @@ export class AuthService {
       roles: user.roles || [SystemRole.CUSTOMER],
       permissions: user.permissions || [],
     };
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_EXPIRY, algorithm: 'HS256' });
   }
 
   public static verifyToken(token: string): TokenPayload {
+    assertProductionSecret();
     try {
-      return jwt.verify(token, JWT_SECRET) as TokenPayload;
+      return jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as TokenPayload;
     } catch {
       throw new AuthenticationError('Invalid or expired authentication session. Please log in.');
     }
