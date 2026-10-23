@@ -23,6 +23,7 @@ export interface CategoryDrawerItem {
   id?: string;
   name: string;
   slug: string;
+  displayOrder?: number;
 }
 
 interface CategoryDrawerProps {
@@ -153,7 +154,8 @@ export function CategoryDrawer({ open, onClose, categories }: CategoryDrawerProp
     const ai = CATEGORY_ORDER.indexOf(a.slug);
     const bi = CATEGORY_ORDER.indexOf(b.slug);
     if (ai !== -1 || bi !== -1) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-    return a.name.localeCompare(b.name);
+    const byOrder = (a.displayOrder ?? 0) - (b.displayOrder ?? 0);
+    return byOrder !== 0 ? byOrder : a.name.localeCompare(b.name);
   });
 
   const rowLinkClasses =

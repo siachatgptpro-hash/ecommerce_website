@@ -14,6 +14,7 @@ import {
   ShoppingCart,
   Users,
   TicketPercent,
+  LayoutGrid,
   MessageSquare,
   Image as ImageIcon,
   Settings,
@@ -40,6 +41,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { label: 'Products & SKUs', href: '/admin/products', icon: Package },
+    { label: 'Categories', href: '/admin/categories', icon: LayoutGrid },
     { label: 'Inventory Ledger', href: '/admin/inventory', icon: Boxes },
     { label: 'Orders & Fulfillment', href: '/admin/orders', icon: ShoppingCart },
     { label: 'Customer Directory', href: '/admin/customers', icon: Users },

@@ -251,6 +251,40 @@ if (target) {
     `name ${viewAfter?.name} variants ${(viewAfter?.variants || []).length}/${variantsBefore}`);
 }
 
+// ---------------------------------------------------------------- category lifecycle
+console.log('\n[Category admin wiring]');
+const catSlug = `audit-cat-${Date.now()}`;
+const catCreate = await call('POST', '/api/admin/categories', { jar: admin, body: { name: 'Audit Category', slug: catSlug, description: 'Created by wiring audit', displayOrder: 99, isActive: true } });
+const auditCat = data(catCreate);
+check('K1 admin creates category', catCreate.status === 201 && auditCat?.slug === catSlug, `status ${catCreate.status}`);
+const dupCat = await call('POST', '/api/admin/categories', { jar: admin, body: { name: 'Audit Category Copy', slug: catSlug } });
+check('K2 duplicate slug rejected', dupCat.status === 409, `status ${dupCat.status}`);
+const custCatCreate = await call('POST', '/api/admin/categories', { jar: cust, body: { name: 'Hacked', slug: 'hacked-cat' } });
+check('K3 customer cannot create category', [401, 403].includes(custCatCreate.status), `status ${custCatCreate.status}`);
+if (auditCat) {
+  const adminCats = data(await call('GET', '/api/admin/categories', { jar: admin }));
+  const listed = (adminCats?.categories || []).find((c) => c.id === auditCat.id);
+  check('K4 admin list carries productCount', listed && typeof listed.productCount === 'number', `productCount ${listed?.productCount}`);
+  const pubCats = data(await call('GET', '/api/catalog/categories'));
+  check('K5 new category public', (pubCats || []).some((c) => c.slug === catSlug));
+  const catPage = await call('GET', `/category/${catSlug}`);
+  check('K6 storefront category page 200', catPage.status === 200, `status ${catPage.status}`);
+  const renameCat = await call('PUT', `/api/admin/categories/${auditCat.id}`, { jar: admin, body: { name: 'Audit Category Renamed' } });
+  check('K7 rename via PUT', renameCat.json?.success && data(renameCat)?.name === 'Audit Category Renamed', `status ${renameCat.status}`);
+  if (target) {
+    const viewBefore = data(await call('GET', `/api/admin/products/${target.id}`, { jar: admin }));
+    const originalCategoryId = viewBefore?.categoryId;
+    await call('PUT', `/api/admin/products/${target.id}`, { jar: admin, body: { categoryId: auditCat.id } });
+    const blockedDelete = await call('DELETE', `/api/admin/categories/${auditCat.id}`, { jar: admin });
+    check('K8 delete blocked while products assigned', blockedDelete.status === 409, `status ${blockedDelete.status}`);
+    await call('PUT', `/api/admin/products/${target.id}`, { jar: admin, body: { categoryId: originalCategoryId } });
+    const deleteCat = await call('DELETE', `/api/admin/categories/${auditCat.id}`, { jar: admin });
+    check('K9 delete succeeds once empty', deleteCat.json?.success === true, `status ${deleteCat.status}`);
+    const pubCatsAfter = data(await call('GET', '/api/catalog/categories'));
+    check('K10 deleted category gone publicly', !(pubCatsAfter || []).some((c) => c.slug === catSlug));
+  }
+}
+
 // ---------------------------------------------------------------- order lifecycle + review moderation
 console.log('\n[Order lifecycle & review moderation]');
 // The store is online-payment-only unless an admin enables COD; turn it on

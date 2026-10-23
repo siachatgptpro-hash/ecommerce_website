@@ -235,6 +235,18 @@ export class ProductRepository {
     return db.categories.delete(id);
   }
 
+  public static async countProductsByCategory(categoryId: string): Promise<number> {
+    if (isPostgresConfigured()) {
+      const result = await pgQuery('SELECT COUNT(*)::int AS count FROM "Product" WHERE "categoryId" = $1', [categoryId]);
+      return result.rows[0]?.count ?? 0;
+    }
+    let count = 0;
+    for (const product of db.products.values()) {
+      if (product.categoryId === categoryId) count += 1;
+    }
+    return count;
+  }
+
   // ----------------------------------------------------------------------------
   // PRODUCTS & VARIANTS
   // ----------------------------------------------------------------------------
