@@ -284,7 +284,7 @@ export function Header() {
         </form>
 
         {/* 3. NAVIGATION MENU (Desktop) */}
-        <nav className="hidden md:flex items-center gap-6 lg:gap-7 py-3 border-t border-[#F3EFE6] text-[13px] font-medium text-gray-700 overflow-x-auto whitespace-nowrap scrollbar-hide">
+        <nav className="hidden md:flex items-center justify-center gap-6 lg:gap-7 py-3 border-t border-[#F3EFE6] text-[13px] font-medium text-gray-700 overflow-x-auto whitespace-nowrap scrollbar-hide">
           <button
             type="button"
             onClick={() => setIsCategoryMenuOpen((open) => !open)}
