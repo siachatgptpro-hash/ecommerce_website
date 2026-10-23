@@ -58,7 +58,9 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="group relative flex flex-col justify-between overflow-hidden rounded-[1.25rem] border border-[#EFE7D8] bg-white shadow-[0_6px_20px_-8px_rgba(27,67,50,0.12)] transition-all duration-300 hover:border-[#C5A880]/60 hover:shadow-[0_20px_40px_-16px_rgba(27,67,50,0.28)] motion-safe:hover:-translate-y-1">
       {/* MEDIA CONTAINER */}
-      <div className="relative aspect-square w-full overflow-hidden bg-[radial-gradient(circle_at_50%_35%,#FFFDF8_0%,#F6F0E2_75%,#F1E7D2_100%)]">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[radial-gradient(circle_at_50%_45%,#FFFFFF_0%,#FFFDF8_42%,#F3ECD9_78%,#E2EDCE_100%)]">
+        <Leaf aria-hidden="true" className="absolute -left-2 -top-2 h-16 w-16 rotate-[20deg] text-[#1B4332]/10" />
+        <Leaf aria-hidden="true" className="absolute -bottom-3 -right-2 h-20 w-20 -scale-x-100 rotate-[15deg] text-[#1B4332]/10" />
         {/* Discount Badge */}
         {discountPercent > 0 && (
           <div className="absolute top-3 left-3 z-10 bg-[#C62828] text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm">
@@ -87,7 +89,7 @@ export function ProductCard({ product }: ProductCardProps) {
               src={primaryImage}
               alt={primaryImageAlt}
               fill
-              className="object-contain p-4 sm:p-5 transition-transform duration-300 motion-safe:group-hover:scale-105"
+              className="object-contain p-4 mix-blend-multiply transition-transform duration-300 motion-safe:group-hover:scale-105 sm:p-5"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             />
           ) : (
@@ -127,9 +129,9 @@ export function ProductCard({ product }: ProductCardProps) {
           {/* Star Rating — rendered only when real approved reviews exist */}
           {(product.ratingCount ?? 0) > 0 ? (
             <div className="flex items-center space-x-1.5 mt-1.5" aria-label={`${product.ratingAverage ?? 0} out of 5 from ${product.ratingCount ?? 0} reviews`}>
-              <div className="flex items-center text-[#C5A880]" aria-hidden="true">
+              <div className="flex items-center text-[#F59E0B]" aria-hidden="true">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className={`w-3.5 h-3.5 ${i < Math.floor(product.ratingAverage ?? 0) ? 'fill-current text-[#C5A880]' : 'text-gray-300'}`} />
+                  <Star key={i} className={`w-3.5 h-3.5 ${i < Math.floor(product.ratingAverage ?? 0) ? 'fill-[#F59E0B] text-[#F59E0B]' : 'text-gray-300'}`} />
                 ))}
               </div>
               <span className="text-[11px] font-bold text-gray-700">{(product.ratingAverage ?? 0).toFixed(1)}</span>
@@ -169,7 +171,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
           <div>
             <div className="flex items-baseline space-x-1.5">
-              <span className="text-lg font-extrabold text-[#1B4332] sm:text-xl">₹{sellingPrice}</span>
+              <span className="text-lg font-extrabold text-[#0F281E] sm:text-xl">₹{sellingPrice}</span>
               {mrp > sellingPrice && (
                 <span className="text-xs text-gray-400 line-through">₹{mrp}</span>
               )}
@@ -181,7 +183,7 @@ export function ProductCard({ product }: ProductCardProps) {
             type="button"
             onClick={handleAddToCart}
             disabled={isOutOfStock || isAdding}
-            className={`flex shrink-0 items-center space-x-1.5 rounded-full px-4 py-2.5 text-xs font-bold shadow-sm transition-all ${
+            className={`flex shrink-0 items-center space-x-1.5 rounded-xl px-4 py-2.5 text-xs font-bold shadow-sm sm:px-5 transition-all ${
               isOutOfStock
                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 : justAdded

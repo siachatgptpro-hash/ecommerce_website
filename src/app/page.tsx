@@ -20,7 +20,7 @@ import {
   CheckCircle2,
   BookOpen,
   Headphones,
-  Sparkles,
+  Soup,
   Sprout,
 } from 'lucide-react';
 
@@ -139,15 +139,18 @@ export default async function HomePage() {
       <CategoryShowcase categories={featuredCategories} />
 
       {/* CATALOGUE HIGHLIGHTS */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8" aria-labelledby="catalogue-highlights-heading">
+      <section className="relative overflow-hidden" aria-labelledby="catalogue-highlights-heading">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[url('/banners/highlights-botanical-bg.webp')] bg-cover bg-center" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[#FAF7F2]/70" />
+        <div className="relative mx-auto max-w-7xl space-y-8 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#9A6B3F]">
+            <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#1B4332]">
               <Leaf className="h-4 w-4 text-[#1B4332]" aria-hidden="true" />
               From Our Ayurvedic Catalogue
             </span>
             <h2 id="catalogue-highlights-heading" className="mt-2 font-serif text-3xl font-bold text-[#0F281E] sm:text-4xl">
-              Catalogue <span className="italic text-[#B08968]">Highlights</span>
+              Catalogue <span className="text-[#A67C2E]">Highlights</span>
             </h2>
             <p className="mt-2 text-sm text-gray-500 sm:text-base">
               Discover Ayurvedic products for your everyday wellness routine.
@@ -157,13 +160,13 @@ export default async function HomePage() {
           <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
             <ul className="hidden items-center gap-7 md:flex" aria-label="Catalogue assurances">
               {[
-                { icon: Leaf, title: 'Authentic Formulations', text: 'Rooted in classical Ayurveda' },
-                { icon: ShieldCheck, title: 'Quality Checked', text: 'Verified pack information' },
-                { icon: Sparkles, title: 'Wide Range', text: 'For your daily wellness needs' },
-              ].map(({ icon: Icon, title, text }) => (
+                { icon: Leaf, filled: true, title: 'Authentic Formulations', text: 'Rooted in classical Ayurveda' },
+                { icon: ShieldCheck, filled: false, title: 'Quality Checked', text: 'Verified pack information' },
+                { icon: Soup, filled: false, title: 'Wide Range', text: 'For your daily wellness needs' },
+              ].map(({ icon: Icon, filled, title, text }) => (
                 <li key={title} className="flex items-center gap-2.5">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-[#1B4332]/20 bg-white text-[#1B4332]">
-                    <Icon className="h-5 w-5" aria-hidden="true" />
+                    <Icon className={filled ? 'h-5 w-5 fill-[#1B4332]' : 'h-5 w-5'} strokeWidth={filled ? 1.5 : 2.2} aria-hidden="true" />
                   </span>
                   <span>
                     <span className="block text-[13px] font-bold leading-tight text-gray-900">{title}</span>
@@ -186,6 +189,7 @@ export default async function HomePage() {
           {featuredProducts.products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
+        </div>
         </div>
       </section>
 
