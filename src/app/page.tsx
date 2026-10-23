@@ -151,32 +151,32 @@ export default async function HomePage() {
         <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 origin-top-right bg-[url('/banners/highlights-botanical-bg.webp')] bg-[size:230%_auto] bg-[position:100%_0%] bg-no-repeat opacity-70 [mask-image:radial-gradient(ellipse_85%_85%_at_90%_10%,black_40%,transparent_72%)] motion-safe:animate-[leaf-sway_10s_ease-in-out_infinite_alternate] sm:h-56 sm:w-56" style={{ animationDelay: '0.7s' }} />
         <FallingLeaves preset="catalogue" contained />
         <div className="relative mx-auto max-w-7xl space-y-8 px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <div className="flex flex-col gap-7 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <Reveal>
             <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#1B4332]">
               <Leaf className="h-4 w-4 text-[#1B4332]" aria-hidden="true" />
               From Our Ayurvedic Catalogue
             </span>
-            <h2 id="catalogue-highlights-heading" className="mt-3 font-serif text-[40px] font-bold leading-[1.14] text-[#0F281E] sm:text-6xl">
+            <h2 id="catalogue-highlights-heading" className="mt-3 font-serif text-[40px] font-bold leading-[1.14] text-[#0F281E] sm:text-6xl sm:leading-[1.14]">
               Catalogue
               <span className="block bg-[linear-gradient(180deg,#D9B45B,#A67C2E)] bg-clip-text text-transparent">Highlights</span>
             </h2>
-            <p className="mt-5 max-w-sm text-sm leading-relaxed text-gray-600 sm:mt-6 sm:text-base">
+            <p className="mt-5 max-w-[19rem] text-sm leading-relaxed text-gray-600 sm:mt-6 sm:text-base">
               Discover Ayurvedic products for your everyday wellness routine.
             </p>
           </Reveal>
 
           <Reveal delay={120} className="flex flex-col items-start gap-6 lg:items-center lg:pt-3">
-            <ul className="hidden flex-wrap items-center justify-center gap-x-6 gap-y-3 md:flex xl:gap-x-7" aria-label="Catalogue assurances">
+            <ul className="hidden flex-wrap items-center justify-center gap-x-4 gap-y-3 md:flex xl:gap-x-7" aria-label="Catalogue assurances">
               {[
                 { icon: Leaf, filled: true, title: 'Authentic Formulations', text: 'Rooted in classical Ayurveda' },
                 { icon: ShieldCheck, filled: false, title: 'Quality Checked', text: 'Verified pack information' },
                 { icon: Soup, filled: false, title: 'Wide Range', text: 'For your daily wellness needs' },
               ].map(({ icon: Icon, filled, title, text }, index) => (
-                <li key={title} className="flex shrink-0 items-center gap-2.5">
-                  <span className="relative grid h-12 w-12 shrink-0 place-items-center">
+                <li key={title} className="flex shrink-0 items-center gap-2">
+                  <span className="relative grid h-11 w-11 shrink-0 place-items-center">
                     <span aria-hidden="true" className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(197,168,128,0.55),transparent_70%)] motion-safe:animate-[banner-breathe_5.5s_ease-in-out_infinite]" style={{ animationDelay: `${index * 0.8}s` }} />
-                    <span className="relative grid h-11 w-11 place-items-center rounded-full border border-[#D9BE8C]/80 bg-[#FBF3E2] shadow-[0_0_16px_rgba(197,168,128,0.45)]">
+                    <span className="relative grid h-10 w-10 place-items-center rounded-full border border-[#D9BE8C]/80 bg-[#FBF3E2] shadow-[0_0_16px_rgba(197,168,128,0.45)]">
                       <Icon className={filled ? 'h-5 w-5 fill-[#1B4332] text-[#1B4332]' : 'h-5 w-5 text-[#A67C2E]'} strokeWidth={filled ? 1.5 : 1.9} aria-hidden="true" />
                     </span>
                   </span>

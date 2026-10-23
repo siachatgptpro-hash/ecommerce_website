@@ -45,7 +45,7 @@ export function ProductInfoHero() {
 
           <h2
             id="product-information-heading"
-            className="mt-5 font-serif text-4xl font-bold leading-[1.12] text-[#0F281E] sm:text-5xl"
+            className="mt-5 font-serif text-4xl font-bold leading-[1.12] text-[#0F281E] sm:text-5xl sm:leading-[1.12]"
           >
             Product details,
             <br />

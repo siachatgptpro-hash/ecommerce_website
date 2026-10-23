@@ -29,7 +29,7 @@ export default async function WishlistPage() {
                 <Heart className="h-4 w-4 text-[#A67C2E]" aria-hidden="true" />
                 Saved in this browser
               </p>
-              <h1 className="mt-3 font-serif text-4xl font-bold leading-[1.05] text-[#0F281E] sm:text-5xl lg:text-6xl">
+              <h1 className="mt-3 font-serif text-4xl font-bold leading-[1.12] text-[#0F281E] sm:text-5xl sm:leading-[1.12] lg:text-6xl lg:leading-[1.12]">
                 Your{' '}
                 <span className="bg-[linear-gradient(180deg,#D9B45B,#A67C2E)] bg-clip-text text-transparent">
                   wishlist

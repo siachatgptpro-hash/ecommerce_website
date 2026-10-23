@@ -181,7 +181,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               )}
             </div>
 
-            <h1 className="font-serif text-3xl font-bold leading-[1.1] text-[#0F281E] sm:text-4xl lg:text-[44px]">
+            <h1 className="font-serif text-3xl font-bold leading-[1.14] text-[#0F281E] sm:text-4xl sm:leading-[1.14] lg:text-[44px] lg:leading-[1.14]">
               {product.name}
             </h1>
 
