@@ -56,17 +56,19 @@ export function CategoryShowcase({ categories }: { categories: CategoryCardView[
       aria-labelledby="shop-by-category-heading"
       className="relative scroll-mt-28 overflow-hidden bg-[linear-gradient(180deg,#FBF7EC_0%,#F5EEDF_55%,#FBF7EC_100%)]"
     >
-      {/* Botanical photographic backdrop (decorative only) */}
+      {/* Full-height botanical side framing, as in the design reference (decorative only).
+          A single stretched wide photo loses its leafy edges to bg-cover cropping on tall
+          sections, so the framing is two edge strips that fade into the section base. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[url('/banners/category-botanical-bg.webp')] bg-cover bg-center"
+        className="pointer-events-none absolute inset-y-0 left-0 hidden w-64 bg-[url('/banners/botanical-side-strip.webp')] bg-cover bg-left lg:block xl:w-80 [-webkit-mask-image:linear-gradient(to_right,black_62%,transparent_98%)] [mask-image:linear-gradient(to_right,black_62%,transparent_98%)]"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(251,247,236,0.32)_0%,rgba(251,247,236,0.1)_45%,rgba(251,247,236,0.38)_100%)]"
+        className="pointer-events-none absolute inset-y-0 right-0 hidden w-64 -scale-x-100 bg-[url('/banners/botanical-side-strip.webp')] bg-cover bg-left lg:block xl:w-80 [-webkit-mask-image:linear-gradient(to_right,black_62%,transparent_98%)] [mask-image:linear-gradient(to_right,black_62%,transparent_98%)]"
       />
 
-      <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-14 lg:px-8">
+      <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-14 lg:px-8">
         {/* Catalogue assurances strip */}
         <ul className="grid grid-cols-1 gap-5 rounded-[2.5rem] border border-[#EFE6D4] bg-white/75 px-6 py-5 shadow-sm backdrop-blur-sm sm:grid-cols-2 lg:grid-cols-4 lg:gap-0 lg:divide-x lg:divide-[#EFE6D4]">
           {CATALOGUE_ASSURANCES.map(({ icon: Icon, filled, title, text }) => (
