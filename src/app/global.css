@@ -169,3 +169,15 @@ textarea {
     opacity: 1;
   }
 }
+
+/* Gentle automatic sway for decorative corner foliage. Transform only;
+   call sites set the transform origin at the attached page corner and
+   use motion-safe: so reduced-motion preferences still win. */
+@keyframes leaf-sway {
+  from {
+    transform: rotate(-1.4deg) translate3d(0, 0, 0);
+  }
+  to {
+    transform: rotate(1.4deg) translate3d(4px, 3px, 0);
+  }
+}

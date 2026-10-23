@@ -102,15 +102,38 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
 
   return (
     <div className="relative overflow-hidden bg-[#FAF7F2]">
-      {/* Restrained botanical backdrop: vivid at the top edges, washed to
-          ivory before the product grid so cards stay perfectly readable. */}
+      {/* Reference-style botanical frame: photographic foliage belongs at
+          the corners and extreme edges only, while the catalogue itself
+          stays on clean ivory. Each accent is a corner crop of the same
+          botanical photo, radially masked so it melts into the page. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[url('/banners/highlights-botanical-bg.webp')] bg-cover bg-[position:50%_0%]"
+        className="pointer-events-none absolute -left-10 -top-10 h-72 w-72 origin-top-left bg-[url('/banners/highlights-botanical-bg.webp')] bg-[size:175%_auto] bg-[position:0%_0%] bg-no-repeat opacity-90 [mask-image:radial-gradient(ellipse_88%_88%_at_8%_8%,black_42%,transparent_74%)] motion-safe:animate-[leaf-sway_8s_ease-in-out_infinite_alternate] sm:h-96 sm:w-96 xl:h-[27rem] xl:w-[27rem]"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(250,247,242,0.42),rgba(250,247,242,0.78)_26%,rgba(250,247,242,0.94)_44%,#FAF7F2_62%)]"
+        className="pointer-events-none absolute -right-10 -top-10 h-72 w-72 origin-top-right bg-[url('/banners/highlights-botanical-bg.webp')] bg-[size:175%_auto] bg-[position:100%_0%] bg-no-repeat opacity-90 [mask-image:radial-gradient(ellipse_88%_88%_at_92%_8%,black_42%,transparent_74%)] motion-safe:animate-[leaf-sway_9.5s_ease-in-out_infinite_alternate] sm:h-96 sm:w-96 xl:h-[27rem] xl:w-[27rem]"
+        style={{ animationDelay: '0.6s' }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-20 top-[42%] hidden h-60 w-60 origin-left bg-[url('/banners/highlights-botanical-bg.webp')] bg-[size:240%_auto] bg-[position:0%_55%] bg-no-repeat opacity-[0.55] [mask-image:radial-gradient(ellipse_78%_78%_at_12%_50%,black_35%,transparent_72%)] motion-safe:animate-[leaf-sway_9s_ease-in-out_infinite_alternate] lg:block"
+        style={{ animationDelay: '1.4s' }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-20 top-[55%] hidden h-60 w-60 origin-right bg-[url('/banners/highlights-botanical-bg.webp')] bg-[size:240%_auto] bg-[position:100%_45%] bg-no-repeat opacity-[0.55] [mask-image:radial-gradient(ellipse_78%_78%_at_88%_50%,black_35%,transparent_72%)] motion-safe:animate-[leaf-sway_10s_ease-in-out_infinite_alternate] lg:block"
+        style={{ animationDelay: '0.3s' }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-10 -left-10 h-72 w-72 origin-bottom-left bg-[url('/banners/highlights-botanical-bg.webp')] bg-[size:175%_auto] bg-[position:0%_100%] bg-no-repeat opacity-90 [mask-image:radial-gradient(ellipse_88%_88%_at_8%_92%,black_42%,transparent_74%)] motion-safe:animate-[leaf-sway_8.6s_ease-in-out_infinite_alternate] sm:h-96 sm:w-96 xl:h-[27rem] xl:w-[27rem]"
+        style={{ animationDelay: '1.1s' }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-10 -right-10 h-72 w-72 origin-bottom-right bg-[url('/banners/highlights-botanical-bg.webp')] bg-[size:175%_auto] bg-[position:100%_100%] bg-no-repeat opacity-90 [mask-image:radial-gradient(ellipse_88%_88%_at_92%_92%,black_42%,transparent_74%)] motion-safe:animate-[leaf-sway_10s_ease-in-out_infinite_alternate] sm:h-96 sm:w-96 xl:h-[27rem] xl:w-[27rem]"
+        style={{ animationDelay: '0.9s' }}
       />
       <div
         aria-hidden="true"
