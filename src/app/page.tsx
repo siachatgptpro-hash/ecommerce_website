@@ -139,17 +139,10 @@ export default async function HomePage() {
       <CategoryShowcase categories={featuredCategories} />
 
       {/* CATALOGUE HIGHLIGHTS */}
-      <section className="relative overflow-hidden bg-[linear-gradient(180deg,#FBF7EC_0%,#F7F0E0_55%,#FBF7EC_100%)]" aria-labelledby="catalogue-highlights-heading">
-        {/* Full-height botanical side framing, as in the design reference (decorative only) */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-0 hidden w-64 bg-[url('/banners/botanical-side-strip.webp')] bg-cover bg-left lg:block xl:w-80 [-webkit-mask-image:linear-gradient(to_right,black_62%,transparent_98%)] [mask-image:linear-gradient(to_right,black_62%,transparent_98%)]"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-0 hidden w-64 -scale-x-100 bg-[url('/banners/botanical-side-strip.webp')] bg-cover bg-left lg:block xl:w-80 [-webkit-mask-image:linear-gradient(to_right,black_62%,transparent_98%)] [mask-image:linear-gradient(to_right,black_62%,transparent_98%)]"
-        />
-        <div className="relative mx-auto max-w-6xl space-y-8 px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+      <section className="relative overflow-hidden" aria-labelledby="catalogue-highlights-heading">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[url('/banners/highlights-botanical-bg.webp')] bg-cover bg-center" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(250,247,242,0.12)_0%,rgba(250,247,242,0.04)_45%,rgba(250,247,242,0.16)_100%)]" />
+        <div className="relative mx-auto max-w-7xl space-y-8 px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#1B4332]">
