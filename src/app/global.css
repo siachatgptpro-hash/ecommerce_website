@@ -19,12 +19,12 @@ html {
   /* Sticky-header offset for every in-page anchor: announcement bar +
      main header row on mobile; the desktop nav row joins from md up.
      Per-section scroll-mt utilities now only add breathing room. */
-  scroll-padding-top: 8rem;
+  scroll-padding-top: 12rem;
 }
 
 @media (min-width: 768px) {
   html {
-    scroll-padding-top: 11rem;
+    scroll-padding-top: 13.5rem;
   }
 }
 
