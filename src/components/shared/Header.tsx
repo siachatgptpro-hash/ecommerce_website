@@ -205,7 +205,7 @@ export function Header() {
               <span className="relative">
                 <ShoppingBag className="h-5 w-5" aria-hidden="true" />
                 {itemCount > 0 && (
-                  <span className="absolute -right-2 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#1B4332] text-[10px] font-bold text-white animate-pulse">
+                  <span key={itemCount} className="absolute -right-2 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#1B4332] text-[10px] font-bold text-white motion-safe:animate-[pop_.3s_ease-out]">
                     {itemCount}
                   </span>
                 )}
