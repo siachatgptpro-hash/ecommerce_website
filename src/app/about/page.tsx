@@ -1,10 +1,26 @@
 import { BROCHURE_PRODUCTS, PDF_CATALOG_ENTRY_COUNT } from '@/lib/brochure-data';
 import { CatalogueHero } from '@/components/about/CatalogueHero';
 import { CatalogueShowcase } from '@/components/about/CatalogueShowcase';
+import { settingsRepository } from '@/repositories/settings.repository';
+
+// The showcase image is admin-editable (Admin → Settings), so this page
+// renders dynamically to reflect changes immediately.
+export const dynamic = 'force-dynamic';
 
 const variantCount = BROCHURE_PRODUCTS.reduce((total, product) => total + product.variants.length, 0);
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  // Optional store-selected showcase image. Only same-site paths and
+  // absolute http(s) URLs are honoured; anything else falls back to the
+  // built-in staged pack scene so a bad value can never break the page.
+  let customShowcaseImage: string | undefined;
+  try {
+    const settings = await settingsRepository.getBusinessSettings();
+    const candidate = (settings.aboutShowcaseImageUrl || '').trim();
+    if (/^\/|https?:\/\//i.test(candidate)) customShowcaseImage = candidate;
+  } catch {
+    // Settings unavailable — the built-in default scene is used.
+  }
   return (
     <>
       <CatalogueHero
@@ -15,7 +31,8 @@ export default function AboutPage() {
       <CatalogueShowcase
         productHref="/product/triphala-ras"
         imageSrc="/products/pdf-p5-i3.webp"
-        imageAlt="Triphala Ras package image from the supplied product brochure"
+        imageAlt={customShowcaseImage ? 'Catalogue showcase image selected by the store' : 'Triphala Ras package image from the supplied product brochure'}
+        customImageSrc={customShowcaseImage}
       />
     </>
   );

@@ -26,6 +26,8 @@ export default function AdminSettingsPage() {
   const [enableCod, setEnableCod] = useState(true);
   const [logoUrl, setLogoUrl] = useState('/logo.png');
   const [logoUploading, setLogoUploading] = useState(false);
+  const [aboutShowcaseImageUrl, setAboutShowcaseImageUrl] = useState('');
+  const [showcaseUploading, setShowcaseUploading] = useState(false);
   const [announcementText, setAnnouncementText] = useState(
     'Authentic Ayurvedic Products | Free shipping on orders of ₹499 & above | Tradition for a Healthier Tomorrow'
   );
@@ -61,6 +63,7 @@ export default function AdminSettingsPage() {
           setShippingPolicy(s.shippingPolicy || '');
           setRefundPolicy(s.refundPolicy || '');
           setLogoUrl(s.logoUrl || '/logo.png');
+          setAboutShowcaseImageUrl(s.aboutShowcaseImageUrl || '');
         }
       } catch (err) {
         console.error('Error fetching settings:', err);
@@ -83,6 +86,20 @@ export default function AdminSettingsPage() {
       if (!response.ok || !result.success) throw new Error(result.error?.message || 'Logo upload failed');
       setLogoUrl(result.data.url); setMsg({ type: 'success', text: 'Logo uploaded. Save settings to publish it.' });
     } catch (error: any) { setMsg({ type: 'error', text: error.message || 'Logo upload failed.' }); } finally { setLogoUploading(false); }
+  };
+
+  const handleShowcaseUpload = async (file?: File) => {
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      setMsg({ type: 'error', text: 'Showcase image must be a JPG, PNG, or WEBP image up to 5 MB.' }); return;
+    }
+    setShowcaseUploading(true);
+    try {
+      const body = new FormData(); body.append('file', file);
+      const response = await fetch('/api/admin/uploads', { method: 'POST', body }); const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error?.message || 'Showcase image upload failed');
+      setAboutShowcaseImageUrl(result.data.url); setMsg({ type: 'success', text: 'Showcase image uploaded. Save settings to publish it.' });
+    } catch (error: any) { setMsg({ type: 'error', text: error.message || 'Showcase image upload failed.' }); } finally { setShowcaseUploading(false); }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -114,6 +131,8 @@ export default function AdminSettingsPage() {
           shippingPolicy: shippingPolicy.trim() || undefined,
           refundPolicy: refundPolicy.trim() || undefined,
           logoUrl,
+          // Always send (even empty) so clearing the field removes the custom image.
+          aboutShowcaseImageUrl: aboutShowcaseImageUrl.trim(),
         }),
       });
 
@@ -180,6 +199,45 @@ export default function AdminSettingsPage() {
               <UploadCloud className="h-4 w-4" /> {logoUploading ? 'Uploading...' : 'Choose Logo'}
               <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={logoUploading} onChange={(e) => { if (e.target.files?.[0]) handleLogoUpload(e.target.files[0]); }} />
             </label>
+          </div>
+        </div>
+        {/* ABOUT PAGE SHOWCASE IMAGE */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-[#F3EFE6] shadow-sm">
+          <h2 className="font-serif text-lg font-bold text-gray-900">About Page Showcase Image</h2>
+          <p className="text-xs text-gray-500 mt-1">This is the large image shown beside &ldquo;How this catalogue is put together&rdquo; on the About page. Upload your own image (a wide 4:3 landscape image works best), or paste an image URL. Leave it empty to use the built-in Triphala Ras scene.</p>
+          <div className="mt-4 flex flex-wrap items-start gap-5">
+            <div className="relative aspect-[4/3] w-72 max-w-full overflow-hidden rounded-xl border bg-[#FAF7F2]">
+              {aboutShowcaseImageUrl.trim() ? (
+                <img src={aboutShowcaseImageUrl.trim()} alt="Custom About page showcase" className="h-full w-full object-cover" />
+              ) : (
+                <>
+                  <img src="/stages/stage-showcase.webp" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
+                  <img src="/products/pdf-p5-i3.webp" alt="Built-in showcase: Triphala Ras pack on the catalogue stage" className="absolute inset-0 h-full w-full object-contain p-4 mix-blend-multiply" />
+                </>
+              )}
+            </div>
+            <div className="min-w-64 flex-1 space-y-3">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#1B4332] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#2D6A4F]">
+                <UploadCloud className="h-4 w-4" /> {showcaseUploading ? 'Uploading...' : 'Choose Image'}
+                <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={showcaseUploading} onChange={(e) => { if (e.target.files?.[0]) handleShowcaseUpload(e.target.files[0]); }} />
+              </label>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Or paste image URL</label>
+                <input
+                  type="text"
+                  value={aboutShowcaseImageUrl}
+                  onChange={(e) => setAboutShowcaseImageUrl(e.target.value)}
+                  placeholder="https://... or /stages/stage-showcase.webp"
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#1B4332]"
+                />
+              </div>
+              {aboutShowcaseImageUrl.trim() && (
+                <button type="button" onClick={() => setAboutShowcaseImageUrl('')} className="text-xs font-bold text-red-600 underline underline-offset-2 hover:text-red-700">
+                  Remove custom image (use built-in scene)
+                </button>
+              )}
+              <p className="text-[11px] text-gray-400">Changes appear on the About page after you click Save Settings.</p>
+            </div>
           </div>
         </div>
         {/* BUSINESS LEGAL ENTITY */}

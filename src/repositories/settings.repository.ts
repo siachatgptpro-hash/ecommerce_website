@@ -54,6 +54,7 @@ export class SettingsRepository {
       enableCod: (all['ENABLE_COD'] ?? all['COD_ENABLED']) === 'true',
       announcementText: value('ANNOUNCEMENT_TEXT', 'Authentic Ayurvedic Products | Free shipping on orders of ₹499 & above | Tradition for a Healthier Tomorrow'),
       logoUrl: value('LOGO_URL', '/logo.png'),
+      aboutShowcaseImageUrl: value('ABOUT_SHOWCASE_IMAGE_URL', ''),
       privacyPolicy: value('POLICY_PRIVACY', 'Checkout may collect your name, email address, phone number and delivery address. Registration also collects account details.\n\nOnline payment processing is available only when a valid payment gateway is configured. This storefront does not store card or UPI credentials.'),
       termsPolicy: value('POLICY_TERMS', 'Product names, pack options and printed MRPs are transcribed from the supplied brochure. The checkout recalculates prices and availability from the current server catalogue before placing an order.\n\nCatalogue content is informational, may not include every package detail and is not medical advice. Read the product label and consult a qualified healthcare professional where appropriate.'),
       shippingPolicy: value('POLICY_SHIPPING', 'The current checkout applies a ₹{{baseShippingFee}} delivery fee below ₹{{freeShippingThreshold}} and waives that fee at or above the configured threshold. The final amount is calculated from the current cart and displayed before order submission.\n\nDelivery coverage and timelines have not been configured. Please confirm serviceability and delivery estimates before placing an order.'),
@@ -78,6 +79,7 @@ export class SettingsRepository {
     if (data.enableCod !== undefined) map['ENABLE_COD'] = String(data.enableCod);
     if (data.announcementText !== undefined) map['ANNOUNCEMENT_TEXT'] = data.announcementText;
     if (data.logoUrl !== undefined) map['LOGO_URL'] = data.logoUrl;
+    if (data.aboutShowcaseImageUrl !== undefined) map['ABOUT_SHOWCASE_IMAGE_URL'] = data.aboutShowcaseImageUrl;
     if (data.privacyPolicy !== undefined) map['POLICY_PRIVACY'] = data.privacyPolicy;
     if (data.termsPolicy !== undefined) map['POLICY_TERMS'] = data.termsPolicy;
     if (data.shippingPolicy !== undefined) map['POLICY_SHIPPING'] = data.shippingPolicy;

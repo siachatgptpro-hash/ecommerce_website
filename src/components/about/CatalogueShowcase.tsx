@@ -36,10 +36,15 @@ export function CatalogueShowcase({
   productHref,
   imageSrc,
   imageAlt,
+  customImageSrc,
 }: {
   productHref: string;
   imageSrc: string;
   imageAlt: string;
+  /** Admin-selected showcase image (Admin → Settings). When set it is shown
+   * as a single full scene; when empty the built-in staged pack composite
+   * below is used. */
+  customImageSrc?: string;
 }) {
   return (
     <section aria-labelledby="catalogue-methodology-heading" className="bg-[#FAF7F2] pb-16 pt-4 sm:pb-24">
@@ -49,6 +54,16 @@ export function CatalogueShowcase({
           aria-label="View the Triphala Ras product page"
           className="group relative block aspect-[4/3] overflow-hidden rounded-[2rem] border border-[#EFE6D4] shadow-[0_30px_60px_-25px_rgba(27,67,50,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B4332] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAF7F2]"
         >
+          {customImageSrc ? (
+            <Image
+              src={customImageSrc}
+              alt={imageAlt}
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
+            />
+          ) : (
+            <>
           <Image
             src="/stages/stage-showcase.webp"
             alt=""
@@ -70,6 +85,8 @@ export function CatalogueShowcase({
             className="object-contain p-6 mix-blend-multiply transition-transform duration-500 motion-safe:group-hover:scale-[1.03] sm:p-10"
             style={{ objectPosition: '50% 64%' }}
           />
+            </>
+          )}
         </Link>
 
         <div>

@@ -489,6 +489,8 @@ export interface BusinessSettings {
   enableCod: boolean;
   announcementText?: string;
   logoUrl?: string;
+  /** Admin-selected replacement for the built-in About/catalogue showcase scene. Empty = built-in default. */
+  aboutShowcaseImageUrl?: string;
   privacyPolicy?: string;
   termsPolicy?: string;
   shippingPolicy?: string;
