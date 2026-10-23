@@ -6,21 +6,25 @@ import type { CategoryCardView } from '@/lib/homepage-categories';
 const CATALOGUE_ASSURANCES = [
   {
     icon: Leaf,
+    filled: true,
     title: 'A Clear Product Catalogue',
     text: 'Easy to explore with detailed product information.',
   },
   {
     icon: Tag,
+    filled: true,
     title: 'Transparent Pricing',
     text: 'Printed MRP and selling price shown clearly.',
   },
   {
     icon: ShieldCheck,
+    filled: false,
     title: 'Original Pack Images',
     text: 'Authentic product packaging on every listing.',
   },
   {
     icon: Package,
+    filled: false,
     title: 'Careful Product Information',
     text: 'Always read the label and consult a qualified professional.',
   },
@@ -52,31 +56,23 @@ export function CategoryShowcase({ categories }: { categories: CategoryCardView[
       aria-labelledby="shop-by-category-heading"
       className="relative scroll-mt-28 overflow-hidden bg-[linear-gradient(180deg,#FBF7EC_0%,#F5EEDF_55%,#FBF7EC_100%)]"
     >
-      {/* Soft botanical atmosphere (decorative only) */}
+      {/* Botanical photographic backdrop (decorative only) */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -left-32 top-24 h-80 w-80 rounded-full bg-[#2D6A4F]/10 blur-3xl"
+        className="pointer-events-none absolute inset-0 bg-[url('/banners/category-botanical-bg.webp')] bg-cover bg-center"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-32 bottom-16 h-80 w-80 rounded-full bg-[#C5A880]/20 blur-3xl"
-      />
-      <Leaf
-        aria-hidden="true"
-        className="pointer-events-none absolute -left-8 bottom-10 hidden h-48 w-48 rotate-[24deg] text-[#1B4332]/[0.05] lg:block"
-      />
-      <Leaf
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-8 top-40 hidden h-48 w-48 -scale-x-100 rotate-[24deg] text-[#1B4332]/[0.05] lg:block"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(251,247,236,0.88)_0%,rgba(251,247,236,0.68)_45%,rgba(251,247,236,0.9)_100%)]"
       />
 
       <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-14 lg:px-8">
         {/* Catalogue assurances strip */}
-        <ul className="grid grid-cols-1 gap-5 rounded-[2rem] border border-[#EFE6D4] bg-white/70 px-6 py-5 shadow-sm backdrop-blur-sm sm:grid-cols-2 lg:grid-cols-4 lg:gap-0 lg:divide-x lg:divide-[#EFE6D4]">
-          {CATALOGUE_ASSURANCES.map(({ icon: Icon, title, text }) => (
+        <ul className="grid grid-cols-1 gap-5 rounded-[2.5rem] border border-[#EFE6D4] bg-white/75 px-6 py-5 shadow-sm backdrop-blur-sm sm:grid-cols-2 lg:grid-cols-4 lg:gap-0 lg:divide-x lg:divide-[#EFE6D4]">
+          {CATALOGUE_ASSURANCES.map(({ icon: Icon, filled, title, text }) => (
             <li key={title} className="flex items-center gap-3.5 lg:px-6 lg:first:pl-0 lg:last:pr-0">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#1B4332]/25 text-[#1B4332]">
-                <Icon className="h-5 w-5" aria-hidden="true" />
+                <Icon className={filled ? 'h-5 w-5 fill-[#1B4332]' : 'h-5 w-5'} strokeWidth={filled ? 1.5 : 2.2} aria-hidden="true" />
               </span>
               <span>
                 <span className="block text-sm font-bold leading-tight text-gray-900">{title}</span>
@@ -99,7 +95,7 @@ export function CategoryShowcase({ categories }: { categories: CategoryCardView[
             id="shop-by-category-heading"
             className="mt-3 font-serif text-3xl font-bold text-[#0F281E] sm:text-4xl lg:text-[2.75rem] lg:leading-tight"
           >
-            Shop by <span className="italic text-[#B08968]">Ayurvedic</span> Category
+            Shop by <span className="text-[#A67C2E]">Ayurvedic</span> Category
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-[#5B6B60] sm:text-base">
             Discover Ayurvedic products and traditional herbal formulations for your
@@ -115,16 +111,18 @@ export function CategoryShowcase({ categories }: { categories: CategoryCardView[
             return (
               <article
                 key={category.id}
-                className="group relative flex flex-col overflow-hidden rounded-[1.75rem] border border-[#EFE6D4] bg-white shadow-[0_10px_30px_-12px_rgba(27,67,50,0.15)] transition-all duration-300 focus-within:ring-2 focus-within:ring-[#1B4332] focus-within:ring-offset-2 hover:border-[#C5A880]/60 hover:shadow-[0_24px_45px_-15px_rgba(27,67,50,0.3)] motion-safe:hover:-translate-y-1.5"
+                className="group relative flex flex-col overflow-hidden rounded-[1.75rem] border border-[#EFE6D4] bg-[#FFFCF5] shadow-[0_10px_30px_-12px_rgba(27,67,50,0.15)] transition-all duration-300 focus-within:ring-2 focus-within:ring-[#1B4332] focus-within:ring-offset-2 hover:border-[#C5A880]/60 hover:shadow-[0_24px_45px_-15px_rgba(27,67,50,0.3)] motion-safe:hover:-translate-y-1.5"
               >
-                <div className="relative aspect-[4/3] bg-[radial-gradient(circle_at_50%_30%,#FFFDF8_0%,#F5EEDF_70%,#EFE3CB_100%)]">
+                <div className="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(circle_at_50%_45%,#FFFFFF_0%,#FFFDF8_42%,#F3ECD9_78%,#E2EDCE_100%)]">
+                  <Leaf aria-hidden="true" className="absolute -left-3 -top-3 h-20 w-20 rotate-[20deg] text-[#1B4332]/10" />
+                  <Leaf aria-hidden="true" className="absolute -bottom-4 -right-3 h-24 w-24 -scale-x-100 rotate-[15deg] text-[#1B4332]/10" />
                   {category.imageUrl ? (
                     <Image
                       src={category.imageUrl}
                       alt={category.imageAlt}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      className="object-contain p-5 transition-transform duration-500 motion-safe:group-hover:scale-105"
+                      className="object-contain p-4 mix-blend-multiply transition-transform duration-500 motion-safe:group-hover:scale-105"
                     />
                   ) : (
                     <span className="flex h-full w-full items-center justify-center" aria-hidden="true">

@@ -1,5 +1,5 @@
 import type { Category } from '@/types';
-import { Droplets, Flower2, Leaf, Pill, type LucideIcon } from 'lucide-react';
+import { Droplet, Flower2, Leaf, Pill, type LucideIcon } from 'lucide-react';
 
 /**
  * Homepage "Shop by Ayurvedic Category" — data shaping.
@@ -34,7 +34,7 @@ const CATEGORY_PRESENTATION: Record<string, CategoryPresentation> = {
   },
   'arks-drops': {
     blurb: 'Discover traditional herbal extracts and liquid preparations.',
-    icon: Droplets,
+    icon: Droplet,
     fallbackImage: '/products/pdf-p6-i3.webp',
     imageAlt: 'Ayurvedic ark and herbal drops bottle from the SHLOKVEDA catalogue',
   },
