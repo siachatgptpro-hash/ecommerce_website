@@ -98,7 +98,7 @@ class DatabaseStore {
       { key: 'POSTAL_CODE', value: '204101', isPublic: true, description: 'Postal PIN code' },
       { key: 'PHONE', value: '7017840020', isPublic: true, description: 'Primary customer support phone' },
       { key: 'GSTIN', value: '09ANCPV6879P1ZP', isPublic: true, description: 'Registered GSTIN / UIN' },
-      { key: 'EMAIL', value: '', isPublic: true, description: 'Official email' },
+      { key: 'EMAIL', value: 'contact@shlokveda.com', isPublic: true, description: 'Official email' },
       { key: 'FREE_SHIPPING_THRESHOLD', value: '499', isPublic: true, description: 'Free shipping minimum order value (INR)' },
       { key: 'BASE_SHIPPING_FEE', value: '50', isPublic: true, description: 'Standard delivery charge below threshold' },
       { key: 'ENABLE_COD', value: 'false', isPublic: true, description: 'Allow Cash on Delivery' },
