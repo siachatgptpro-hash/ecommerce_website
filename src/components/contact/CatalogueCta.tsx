@@ -46,7 +46,7 @@ export function CatalogueCta() {
           />
           <h2
             id="contact-catalogue-heading"
-            className="mt-4 font-serif text-3xl font-bold text-white sm:text-4xl"
+            className="mt-4 font-serif text-[1.7rem] font-bold text-white sm:text-[2rem]"
           >
             Looking for{' '}
             <span className="bg-[linear-gradient(180deg,#E9CF8F,#C5A880)] bg-clip-text text-transparent">

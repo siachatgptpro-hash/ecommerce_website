@@ -115,3 +115,15 @@ textarea {
     transform: translateY(0);
   }
 }
+
+/* Hide scrollbars on horizontally scrolling nav rails (the header nav
+   already uses this class; defining it makes the intended behaviour
+   real instead of showing the chunky native scrollbar). */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

@@ -23,14 +23,20 @@ export default async function ContactPage() {
 
   return (
     <main className="relative overflow-hidden bg-[#FAF7F2]">
-      {/* Botanical photographic backdrop + ivory wash + ambient gold drift */}
+      {/* Cinematic botanical tabletop scene (foliage-framed, empty ivory
+          centre) + a centre-weighted ivory wash so the scene stays vivid
+          at the edges while all text and cards remain clearly readable. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[url('/banners/highlights-botanical-bg.webp')] bg-cover bg-center"
+        className="pointer-events-none absolute inset-0 bg-[url('/banners/contact-botanical-bg.webp')] bg-cover bg-[position:50%_32%]"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(250,247,242,0.62),rgba(250,247,242,0.78)_45%,#FAF7F2_88%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_62%_52%_at_50%_36%,rgba(250,247,242,0.84),rgba(250,247,242,0.38)_58%,rgba(250,247,242,0.1)_78%,transparent)]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(250,247,242,0.24),transparent_34%,transparent_72%,#FAF7F2_99%)]"
       />
       <div
         aria-hidden="true"

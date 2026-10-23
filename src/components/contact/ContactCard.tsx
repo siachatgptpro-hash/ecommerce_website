@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Leaf, type LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { ContactGlowIcon } from './ContactGlowIcon';
 
 /**
@@ -26,16 +26,16 @@ export function ContactCard({
       style={{ animationDelay: `${delay}s` }}
     >
       <article className="group relative h-full overflow-hidden rounded-[1.75rem] border border-[#E3D5B5] bg-white/85 p-7 shadow-[0_20px_44px_-22px_rgba(27,67,50,0.4)] backdrop-blur transition-all duration-500 hover:border-[#C5A880] hover:shadow-[0_28px_54px_-22px_rgba(197,168,128,0.65)] motion-safe:hover:-translate-y-1 sm:p-8">
-        {/* Botanical corner motif, kept behind the content */}
-        <Leaf
+        {/* Photographic botanical corner sprays (same scene as the page
+            backdrop), softly masked so they fade into the ivory card and
+            never sit under the text at readable strength. */}
+        <div
           aria-hidden="true"
-          className="pointer-events-none absolute -bottom-5 -right-4 h-32 w-32 rotate-[24deg] text-[#1B4332]/[0.05]"
-          strokeWidth={0.8}
+          className="pointer-events-none absolute -right-6 -top-8 h-36 w-44 bg-[url('/banners/contact-botanical-bg.webp')] bg-cover bg-[position:88%_8%] opacity-[0.13] [mask-image:radial-gradient(ellipse_70%_70%_at_78%_22%,black_30%,transparent_72%)]"
         />
-        <Leaf
+        <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-2 top-5 h-14 w-14 -rotate-[30deg] text-[#B08968]/10"
-          strokeWidth={1}
+          className="pointer-events-none absolute -bottom-8 -right-6 h-40 w-48 bg-[url('/banners/contact-botanical-bg.webp')] bg-cover bg-[position:90%_30%] opacity-[0.16] [mask-image:radial-gradient(ellipse_72%_72%_at_80%_80%,black_28%,transparent_72%)]"
         />
         <div className="relative">
           <ContactGlowIcon icon={icon} delay={delay} />
