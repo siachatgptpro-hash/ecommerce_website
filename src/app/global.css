@@ -101,3 +101,17 @@ textarea {
     transform: translate3d(2%, 1.5%, 0) scale(1.06);
   }
 }
+
+/* One-shot entrance for hero/card content: opacity + transform only.
+   Call sites use motion-safe: so it never runs under reduced motion
+   (the global reduced-motion block above is a second safeguard). */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
