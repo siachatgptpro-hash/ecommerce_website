@@ -279,6 +279,18 @@ textarea {
   }
 }
 
+/* Announcement ticker: the track holds two identical halves, so sliding
+   -50% loops seamlessly. Each half repeats the line twice so it always
+   covers the viewport width. */
+@keyframes marquee-x {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 /* Cart drawer entrance: one smooth slide from the right edge. */
 @keyframes cart-slide-in {
   from {

@@ -21,7 +21,6 @@ import {
   LayoutGrid,
   Package,
   CircleHelp,
-  Gift,
 } from 'lucide-react';
 import { Category } from '@/types';
 import { CategoryDrawer } from '@/components/shared/CategoryDrawer';
@@ -92,11 +91,31 @@ export function Header() {
     <header className="sticky top-0 z-40 bg-[#FAF7F2] border-b border-[#F3EFE6] shadow-sm">
       {/* 1. ANNOUNCEMENT BAR */}
       <div className="bg-[#0F281E] text-[11px] text-[#F3EFE6] sm:text-xs" role="status" aria-label="Store announcement">
-        <div className="mx-auto flex max-w-7xl items-center justify-center gap-4 px-4 py-2 sm:px-6 md:justify-between lg:px-8">
-          <p className="flex min-w-0 items-center gap-2">
-            <Leaf className="h-3.5 w-3.5 shrink-0 text-[#C5A880]" aria-hidden="true" />
-            <span className="truncate font-medium tracking-wide">{announcementText}</span>
-          </p>
+        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-2 sm:px-6 lg:px-8">
+          {/* Static copy for assistive tech; the moving ticker below is decorative. */}
+          <span className="sr-only">{announcementText}</span>
+          <div
+            aria-hidden="true"
+            className="group relative min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]"
+          >
+            <div className="flex w-max motion-safe:animate-[marquee-x_34s_linear_infinite] motion-safe:group-hover:[animation-play-state:paused]">
+              {[0, 1].map((half) => (
+                <div key={half} className={`flex shrink-0 ${half ? 'motion-reduce:hidden' : ''}`}>
+                  {[0, 1].map((rep) => (
+                    <span
+                      key={rep}
+                      className={`flex shrink-0 items-center gap-2 whitespace-nowrap pr-12 font-medium tracking-wide ${
+                        rep ? 'motion-reduce:hidden' : ''
+                      }`}
+                    >
+                      <Leaf className="h-3.5 w-3.5 shrink-0 text-[#C5A880]" />
+                      {announcementText}
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
           <nav className="hidden shrink-0 items-center gap-5 font-medium md:flex" aria-label="Quick links">
             <Link href="/account" className="flex items-center gap-1.5 transition-colors hover:text-[#C5A880]">
               <Package className="h-3.5 w-3.5" aria-hidden="true" />
@@ -105,10 +124,6 @@ export function Header() {
             <Link href="/contact" className="flex items-center gap-1.5 transition-colors hover:text-[#C5A880]">
               <CircleHelp className="h-3.5 w-3.5" aria-hidden="true" />
               Help
-            </Link>
-            <Link href="/shop" className="flex items-center gap-1.5 transition-colors hover:text-[#C5A880]">
-              <Gift className="h-3.5 w-3.5" aria-hidden="true" />
-              Offers
             </Link>
           </nav>
         </div>
