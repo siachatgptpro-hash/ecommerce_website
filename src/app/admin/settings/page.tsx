@@ -25,7 +25,7 @@ export default function AdminSettingsPage() {
   const [baseShippingFee, setBaseShippingFee] = useState(50);
   const [taxIncluded, setTaxIncluded] = useState(true);
   const [enableCod, setEnableCod] = useState(true);
-  const [logoUrl, setLogoUrl] = useState('/logo.png');
+  const [logoUrl, setLogoUrl] = useState('/logo-emblem.png');
   const [logoUploading, setLogoUploading] = useState(false);
   const [cropFile, setCropFile] = useState<File | null>(null);
   const [aboutShowcaseImageUrl, setAboutShowcaseImageUrl] = useState('');
@@ -64,7 +64,7 @@ export default function AdminSettingsPage() {
           setTermsPolicy(s.termsPolicy || '');
           setShippingPolicy(s.shippingPolicy || '');
           setRefundPolicy(s.refundPolicy || '');
-          setLogoUrl(s.logoUrl || '/logo.png');
+          setLogoUrl(s.logoUrl || '/logo-emblem.png');
           setAboutShowcaseImageUrl(s.aboutShowcaseImageUrl || '');
         }
       } catch (err) {
@@ -226,7 +226,7 @@ export default function AdminSettingsPage() {
                   type="text"
                   value={logoUrl}
                   onChange={(e) => setLogoUrl(e.target.value)}
-                  placeholder="/logo.png or https://…"
+                  placeholder="/logo-emblem.png or https://…"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#1B4332] focus:border-[#1B4332]"
                 />
               </div>

@@ -183,7 +183,7 @@ const publicSettings = await call('GET', '/api/settings');
 const pubText = JSON.stringify(publicSettings.json || {});
 check('S5 public settings leak no secrets', !/secret|password|key_id|keyid|api[_-]?key|token/i.test(pubText), pubText.slice(0, 160));
 
-const logoBefore = bizBefore?.logoUrl || '/logo.png';
+const logoBefore = bizBefore?.logoUrl || '/logo-emblem.png';
 const logoSet = await call('PUT', '/api/admin/settings', { jar: admin, body: { logoUrl: 'https://example.com/audit-logo.png' } });
 const pubAfterLogo = await call('GET', '/api/settings');
 check('S6 logo URL saved + public (header/footer source)', logoSet.json?.success && JSON.stringify(pubAfterLogo.json || {}).includes('audit-logo.png'), `status ${logoSet.status}`);

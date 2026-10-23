@@ -12,7 +12,7 @@ import { Lock, Mail, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
-  const [logoUrl, setLogoUrl] = useState('/logo.png');
+  const [logoUrl, setLogoUrl] = useState('/logo-emblem.png');
   const [storeName, setStoreName] = useState('SHLOKVEDA');
   const [nextPath, setNextPath] = useState('/account');
 

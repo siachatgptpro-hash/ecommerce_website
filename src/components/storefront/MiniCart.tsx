@@ -31,7 +31,7 @@ export function MiniCart() {
 
   const [inputCoupon, setInputCoupon] = useState('');
   const [gstin, setGstin] = useState('09ANCPV6879P1ZP');
-  const [logoUrl, setLogoUrl] = useState('/logo.png');
+  const [logoUrl, setLogoUrl] = useState('/logo-emblem.png');
   const [couponFeedback, setCouponFeedback] = useState<{ msg: string; isError: boolean } | null>(null);
   const [isApplying, setIsApplying] = useState(false);
 

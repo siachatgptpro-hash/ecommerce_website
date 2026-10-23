@@ -66,7 +66,7 @@ export function Footer() {
   const [settings, setSettings] = useState({
     storeName: 'Shlokveda', gstin: '09ANCPV6879P1ZP', phone: '7017840020',
     addressLine1: 'B.H Oil Meal Road, Next to Bank of Maharashtra', addressLine2: 'Dobra Bal Colony',
-    city: 'Hathras', state: 'Uttar Pradesh', postalCode: '204101', email: '', logoUrl: '/logo.png',
+    city: 'Hathras', state: 'Uttar Pradesh', postalCode: '204101', email: '', logoUrl: '/logo-emblem.png',
     facebookUrl: '', instagramUrl: '', youtubeUrl: '',
   });
   const [categories, setCategories] = useState<FooterCategory[]>(FALLBACK_CATEGORIES);
@@ -125,7 +125,7 @@ export function Footer() {
                 alt={`${settings.storeName} logo`}
                 loading="lazy"
                 decoding="async"
-                className="h-24 w-auto max-w-64 shrink-0 object-contain sm:h-28"
+                className="h-20 w-auto max-w-56 shrink-0 object-contain sm:h-24"
               />
               <span>
                 <span className="block font-serif text-[26px] font-bold leading-none tracking-tight text-white">

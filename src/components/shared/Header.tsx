@@ -39,7 +39,7 @@ export function Header() {
   // wrong offer (the configured free-shipping threshold is ₹499 by default).
   const [announcementText, setAnnouncementText] = useState('Authentic Ayurvedic Products | Free shipping on orders of ₹499 & above | Tradition for a Healthier Tomorrow');
   const [storeName, setStoreName] = useState('SHLOKVEDA');
-  const [logoUrl, setLogoUrl] = useState('/logo.png');
+  const [logoUrl, setLogoUrl] = useState('/logo-emblem.png');
 
   useEffect(() => {
     // Shared one-per-session fetches (Footer/MiniCart reuse the same ones).
@@ -130,7 +130,7 @@ export function Header() {
 
       {/* 2. MAIN HEADER */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-24 gap-4 sm:h-28 lg:h-32">
+        <div className="flex items-center justify-between h-20 gap-4 sm:h-24 lg:h-28">
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -150,7 +150,7 @@ export function Header() {
               alt=""
               fetchPriority="high"
               decoding="async"
-              className="h-[4.25rem] w-auto max-w-44 shrink-0 object-contain sm:h-24 sm:max-w-64 lg:h-[6.5rem]"
+              className="h-16 w-auto max-w-44 shrink-0 object-contain sm:h-20 sm:max-w-60 lg:h-24"
             />
             <span className="flex flex-col">
               <span className="font-serif text-lg font-extrabold leading-none tracking-tight text-[#1B4332] sm:text-2xl">

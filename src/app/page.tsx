@@ -93,7 +93,7 @@ export default async function HomePage() {
     '@type': 'Organization',
     name: settings.storeName || 'SHLOKVEDA',
     url: siteUrl || '/',
-    logo: `${siteUrl}/logo.png`,
+    logo: `${siteUrl}/logo-emblem.png`,
   };
   const websiteJsonLd = {
     '@context': 'https://schema.org',

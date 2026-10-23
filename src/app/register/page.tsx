@@ -12,7 +12,7 @@ import { Lock, Mail, User, Phone, ArrowRight, AlertCircle } from 'lucide-react';
 export default function RegisterPage() {
   const router = useRouter();
   const { register } = useAuth();
-  const [logoUrl, setLogoUrl] = useState('/logo.png');
+  const [logoUrl, setLogoUrl] = useState('/logo-emblem.png');
   const [storeName, setStoreName] = useState('SHLOKVEDA');
   const [nextPath, setNextPath] = useState('/account');
 
