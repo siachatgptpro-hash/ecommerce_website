@@ -250,6 +250,35 @@ textarea {
   }
 }
 
+/* Category drawer (left): slide in/out + overlay fade-out. Transform and
+   opacity only; call sites gate every use behind motion-safe:. */
+@keyframes drawer-slide-in {
+  from {
+    transform: translateX(-103%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes drawer-slide-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-103%);
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 /* Cart drawer entrance: one smooth slide from the right edge. */
 @keyframes cart-slide-in {
   from {

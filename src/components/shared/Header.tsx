@@ -25,6 +25,7 @@ import {
   Gift,
 } from 'lucide-react';
 import { Category } from '@/types';
+import { CategoryDrawer } from '@/components/shared/CategoryDrawer';
 
 export function Header() {
   const router = useRouter();
@@ -290,10 +291,15 @@ export function Header() {
             onClick={() => setIsCategoryMenuOpen((open) => !open)}
             className="flex items-center gap-2 font-bold text-[#1B4332] transition-colors hover:text-[#2D6A4F]"
             aria-expanded={isCategoryMenuOpen}
+            aria-haspopup="dialog"
+            aria-controls="category-drawer"
           >
             <LayoutGrid className="w-4 h-4" aria-hidden="true" />
             <span>Shop by Category</span>
-            <ChevronDown className="w-3.5 h-3.5 text-[#B08968]" aria-hidden="true" />
+            <ChevronDown
+              className={`w-3.5 h-3.5 text-[#B08968] transition-transform duration-[var(--dur-ui)] ease-luxe ${isCategoryMenuOpen ? 'rotate-180' : ''}`}
+              aria-hidden="true"
+            />
           </button>
           {categories.map((cat) => (
             <Link
@@ -322,49 +328,33 @@ export function Header() {
           </Link>
         </nav>
 
-        {isCategoryMenuOpen && (
-          <>
-            <button
-              type="button"
-              aria-label="Close category menu"
-              onClick={() => setIsCategoryMenuOpen(false)}
-              className="fixed inset-0 top-0 z-40 bg-black/60 cursor-default"
-            />
-            <aside className="absolute left-0 top-full z-50 max-h-[calc(100vh-8rem)] w-[min(22rem,calc(100vw-1rem))] overflow-y-auto rounded-b-2xl border border-[#F3EFE6] bg-white shadow-2xl">
-              <div className="flex items-center gap-2 bg-[#1B4332] px-5 py-4 text-sm font-bold text-white">
-                <LayoutGrid className="h-4 w-4 text-[#C5A880]" aria-hidden="true" />
-                All Categories
-              </div>
-              <div className="divide-y divide-[#F3EFE6]">
-                {(categories.length ? categories : [
-                  { id: 'syrups-juices', name: 'Syrups & Juices', slug: 'syrups-juices' },
-                  { id: 'arks-drops', name: 'Arks & Drops', slug: 'arks-drops' },
-                  { id: 'herbal-oils', name: 'Herbal Oils', slug: 'herbal-oils' },
-                  { id: 'herbal-capsules', name: 'Herbal Capsules', slug: 'herbal-capsules' },
-                  { id: 'tablets', name: 'Tablets', slug: 'tablets' },
-                  { id: 'daily-wellness', name: 'Daily Wellness', slug: 'daily-wellness' },
-                  { id: 'immunity-rasayana', name: 'Immunity & Rasayana', slug: 'immunity-rasayana' },
-                  { id: 'personal-care', name: 'Personal Care', slug: 'personal-care' },
-                ]).map((category) => (
-                  <Link
-                    key={category.id}
-                    href={`/category/${category.slug}`}
-                    onClick={() => setIsCategoryMenuOpen(false)}
-                    className="flex items-center justify-between px-4 py-3 text-sm text-gray-700 hover:bg-[#FAF7F2] hover:text-[#1B4332] transition-colors"
-                  >
-                    <span>{category.name}</span><span className="text-gray-400 text-lg">›</span>
-                  </Link>
-                ))}
-              </div>
-            </aside>
-          </>
-        )}
+        <CategoryDrawer
+          open={isCategoryMenuOpen}
+          onClose={() => setIsCategoryMenuOpen(false)}
+          categories={categories}
+        />
       </div>
 
       {/* 4. MOBILE SLIDING DRAWER MENU */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-[#F3EFE6] px-4 pt-3 pb-6 space-y-4 shadow-lg max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain">
           <div className="flex flex-col space-y-2.5 text-sm font-medium text-gray-700">
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                setIsCategoryMenuOpen(true);
+              }}
+              aria-haspopup="dialog"
+              aria-controls="category-drawer"
+              className="flex items-center gap-3 rounded-2xl bg-[#EEF3E4] px-3.5 py-3 text-left font-bold text-[#1B4332] transition-colors hover:bg-[#E4EDD3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B4332]"
+            >
+              <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/80 text-[#1B4332]">
+                <LayoutGrid className="h-[18px] w-[18px]" />
+              </span>
+              <span className="flex-1">Shop by Category</span>
+              <ChevronDown className="h-4 w-4 -rotate-90 text-[#B08968]" aria-hidden="true" />
+            </button>
             <Link
               href="/shop"
               onClick={() => setIsMobileMenuOpen(false)}
