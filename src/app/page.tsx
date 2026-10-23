@@ -141,7 +141,7 @@ export default async function HomePage() {
       {/* CATALOGUE HIGHLIGHTS */}
       <section className="relative overflow-hidden" aria-labelledby="catalogue-highlights-heading">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[url('/banners/highlights-botanical-bg.webp')] bg-cover bg-center" />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[#FAF7F2]/70" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[#FAF7F2]/45" />
         <div className="relative mx-auto max-w-7xl space-y-8 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>

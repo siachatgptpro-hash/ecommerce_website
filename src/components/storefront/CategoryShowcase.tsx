@@ -63,7 +63,7 @@ export function CategoryShowcase({ categories }: { categories: CategoryCardView[
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(251,247,236,0.88)_0%,rgba(251,247,236,0.68)_45%,rgba(251,247,236,0.9)_100%)]"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(251,247,236,0.32)_0%,rgba(251,247,236,0.1)_45%,rgba(251,247,236,0.38)_100%)]"
       />
 
       <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-14 lg:px-8">
