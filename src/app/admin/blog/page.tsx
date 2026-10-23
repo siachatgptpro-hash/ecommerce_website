@@ -12,6 +12,8 @@ import {
   CheckCircle2,
   FileText,
   AlertCircle,
+  UploadCloud,
+  X,
 } from 'lucide-react';
 
 function slugify(value: string) {
@@ -54,6 +56,7 @@ export default function AdminBlogPage() {
   const [summary, setSummary] = useState('');
   const [content, setContent] = useState('');
   const [featuredImg, setFeaturedImg] = useState('');
+  const [imageUploading, setImageUploading] = useState(false);
   const [authorName, setAuthorName] = useState('Shlokveda Ayurvedic Expert');
   const [readTimeMinutes, setReadTimeMinutes] = useState(5);
   const [isPublished, setIsPublished] = useState(false);
@@ -87,6 +90,7 @@ export default function AdminBlogPage() {
     setSummary('');
     setContent('');
     setFeaturedImg('');
+    setImageUploading(false);
     setAuthorName('Shlokveda Ayurvedic Expert');
     setReadTimeMinutes(5);
     setIsPublished(false);
@@ -105,6 +109,7 @@ export default function AdminBlogPage() {
     setSummary(post.summary || '');
     setContent(post.content);
     setFeaturedImg(post.featuredImg || '');
+    setImageUploading(false);
     setAuthorName(post.authorName || 'Shlokveda Ayurvedic Expert');
     setReadTimeMinutes(post.readTimeMinutes || 5);
     setIsPublished(post.isPublished);
@@ -126,8 +131,31 @@ export default function AdminBlogPage() {
     if (!readTimeTouched.current) setReadTimeMinutes(estimateReadTime(value));
   };
 
+  const handleFeaturedImageUpload = async (file?: File) => {
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      setErrorMsg('Featured photo must be a JPG, PNG, or WEBP image up to 5 MB.');
+      return;
+    }
+    setImageUploading(true);
+    setErrorMsg('');
+    try {
+      const body = new FormData();
+      body.append('file', file);
+      const response = await fetch('/api/admin/uploads', { method: 'POST', body });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error?.message || 'Photo upload failed');
+      setFeaturedImg(result.data.url);
+    } catch (error: any) {
+      setErrorMsg(error.message || 'Photo upload failed.');
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (imageUploading) return setErrorMsg('Please wait for the photo upload to finish.');
     if (title.trim().length < 3) return setErrorMsg('Title must be at least 3 characters.');
     if (!slug.trim()) return setErrorMsg('Slug is required.');
     if (content.trim().length < 20) return setErrorMsg('Content must be at least 20 characters.');
@@ -432,15 +460,77 @@ export default function AdminBlogPage() {
               </div>
 
               <div>
-                <label htmlFor="blog-image" className={labelClasses}>Featured Image URL</label>
-                <input
-                  id="blog-image"
-                  type="text"
-                  value={featuredImg}
-                  onChange={(e) => setFeaturedImg(e.target.value)}
-                  placeholder="/banners/your-image.webp or https://…"
-                  className={inputClasses}
-                />
+                <span id="blog-image-label" className={labelClasses}>Featured Photo</span>
+                <div className="rounded-2xl border border-[#E3DCCB] bg-[#FAF7F2] p-3" aria-labelledby="blog-image-label">
+                  {featuredImg ? (
+                    <div className="flex flex-wrap items-center gap-4">
+                      <div className="h-28 w-44 max-w-full overflow-hidden rounded-xl border border-white bg-white shadow-sm">
+                        <img src={featuredImg} alt="Blog featured" className="h-full w-full object-cover" />
+                      </div>
+                      <div className="min-w-52 flex-1 space-y-3">
+                        <p className="flex items-center gap-1.5 text-xs font-bold text-[#1B4332]">
+                          <CheckCircle2 className="h-4 w-4" /> Photo ready
+                        </p>
+                        <p className="text-[11px] leading-relaxed text-gray-500">
+                          This photo will show on the blog card and article page. Uploads are saved in Neon.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <label className={`inline-flex items-center gap-2 rounded-xl bg-[#1B4332] px-3.5 py-2 text-xs font-bold text-white transition-colors hover:bg-[#2D6A4F] ${imageUploading ? 'pointer-events-none opacity-60' : 'cursor-pointer'}`}>
+                            <UploadCloud className="h-4 w-4" />
+                            {imageUploading ? 'Uploading…' : 'Change Photo'}
+                            <input
+                              id="blog-image-upload-change"
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              className="sr-only"
+                              disabled={imageUploading}
+                              onChange={(e) => {
+                                const chosen = e.target.files?.[0];
+                                e.target.value = '';
+                                if (chosen) handleFeaturedImageUpload(chosen);
+                              }}
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setFeaturedImg('')}
+                            disabled={imageUploading}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-bold text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-60"
+                          >
+                            <X className="h-4 w-4" /> Remove
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <label
+                        htmlFor="blog-image-upload"
+                        className={`flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#C9BFA8] bg-white px-4 py-7 text-center transition-colors hover:border-[#1B4332] hover:bg-[#F7F3EA] ${imageUploading ? 'pointer-events-none opacity-60' : 'cursor-pointer'}`}
+                      >
+                        <UploadCloud className="h-7 w-7 text-[#1B4332]" />
+                        <span className="text-sm font-bold text-gray-900">{imageUploading ? 'Uploading photo…' : 'Upload Photo'}</span>
+                        <span className="text-[11px] text-gray-500">Choose a JPG, PNG, or WEBP image (max 5 MB). It will be saved in Neon.</span>
+                      </label>
+                      <input
+                        id="blog-image-upload"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="sr-only"
+                        disabled={imageUploading}
+                        onChange={(e) => {
+                          const chosen = e.target.files?.[0];
+                          e.target.value = '';
+                          if (chosen) handleFeaturedImageUpload(chosen);
+                        }}
+                      />
+                    </>
+                  )}
+                  {imageUploading && (
+                    <p className="mt-2 text-[11px] font-semibold text-[#1B4332]" role="status">Uploading photo, please wait…</p>
+                  )}
+                </div>
+                <p className="mt-1 text-[11px] text-gray-400">Optional. Without a photo, the blog uses the default botanical image.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -489,10 +579,10 @@ export default function AdminBlogPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || imageUploading}
                   className="flex-1 px-5 py-2.5 rounded-xl bg-[#1B4332] text-white font-bold text-xs hover:bg-[#2D6A4F] transition-all disabled:opacity-60"
                 >
-                  {submitting ? 'Saving…' : editingId ? 'Save Changes' : isPublished ? 'Publish Post' : 'Save Draft'}
+                  {imageUploading ? 'Uploading Photo…' : submitting ? 'Saving…' : editingId ? 'Save Changes' : isPublished ? 'Publish Post' : 'Save Draft'}
                 </button>
               </div>
             </form>

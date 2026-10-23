@@ -9,7 +9,7 @@
  *  - Business Settings changes reach the storefront (shipping-fee placeholder)
  *  - banner CRUD, coupon lifecycle, product activate/deactivate (no clobber),
  *    inventory adjust, order lifecycle, review moderation, user deactivation
- *  - uploads fail gracefully without Blob config; audit log records actions
+ *  - uploads are stored in the database and served back; audit log records actions
  *  - login rate limiting (per-identifier)
  *
  * Usage: node scripts/audit-admin-wiring.mjs [baseUrl]
@@ -407,7 +407,17 @@ const pngB64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8A
 const pngForm = new FormData();
 pngForm.append('file', new Blob([Buffer.from(pngB64, 'base64')], { type: 'image/png' }), 'audit.png');
 const pngUpload = await call('POST', '/api/admin/uploads', { jar: admin, body: pngForm, raw: true });
-check('F2 real PNG passes type detection (503 sandbox / 200 prod)', [200, 503].includes(pngUpload.status), `status ${pngUpload.status}`);
+const uploadedUrl = pngUpload.json?.data?.url || '';
+check('F2 real PNG stored and returns a local upload URL', pngUpload.status === 200 && /^\/api\/uploads\/[0-9a-f-]{36}$/i.test(uploadedUrl), `status ${pngUpload.status} url ${uploadedUrl}`);
+let servedOk = false;
+let servedType = '';
+if (uploadedUrl) {
+  const served = await fetch(BASE + uploadedUrl);
+  servedType = served.headers.get('content-type') || '';
+  const servedBytes = Buffer.from(await served.arrayBuffer());
+  servedOk = served.status === 200 && servedType.includes('image/png') && servedBytes.equals(Buffer.from(pngB64, 'base64'));
+}
+check('F2b uploaded PNG is served back byte-for-byte', servedOk, `content-type ${servedType}`);
 const custUpload = await call('POST', '/api/admin/uploads', { jar: cust, body: pngForm, raw: true });
 check('F3 customer upload denied with real 401/403', [401, 403].includes(custUpload.status), `status ${custUpload.status}`);
 const logs = data(await call('GET', '/api/admin/audit-logs?limit=50', { jar: admin }));

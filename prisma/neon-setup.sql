@@ -819,6 +819,20 @@ CREATE TABLE IF NOT EXISTS "NewsletterSubscriber" (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS "NewsletterSubscriber_email_key" ON "NewsletterSubscriber" ("email");
 
+-- Admin-uploaded images stored in Neon (POST /api/admin/uploads writes
+-- JPG/PNG/WEBP bytes here; GET /api/uploads/<id> serves them back).
+-- Identical to prisma/migrations/20261024_add_uploaded_files.sql.
+CREATE TABLE IF NOT EXISTS "UploadedFile" (
+  "id" TEXT PRIMARY KEY,
+  "filename" TEXT NOT NULL,
+  "contentType" TEXT NOT NULL,
+  "size" INTEGER NOT NULL,
+  "data" BYTEA NOT NULL,
+  "uploadedById" TEXT REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS "UploadedFile_createdAt_idx" ON "UploadedFile" ("createdAt");
+
 -- Policy static pages: all six store policy pages + the product
 -- information notice, with structured icon sections (editable in
 -- Admin -> CMS; auto-listed in the footer Trust & Policies column).

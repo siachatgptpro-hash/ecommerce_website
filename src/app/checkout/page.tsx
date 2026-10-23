@@ -86,11 +86,11 @@ export default function CheckoutPage() {
     if (!fullName.trim()) errors.fullName = 'Enter your full name.';
     else if (fullName.trim().length < 2) errors.fullName = 'Name must contain at least 2 characters.';
     if (!/^[6-9]\d{9}$/.test(normalizedPhone)) errors.phone = 'Enter a valid 10-digit Indian mobile number (starting with 6–9).';
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email.trim())) errors.email = 'Enter a valid email address.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errors.email = 'Enter a valid email address.';
     if (!addressLine1.trim()) errors.addressLine1 = 'Enter your house number and street address.';
     if (!city.trim()) errors.city = 'Enter your city or district.';
     if (!state.trim()) errors.state = 'Select your state.';
-    if (!/^\\d{6}$/.test(normalizedPin)) errors.postalCode = 'Enter a valid 6-digit PIN code.';
+    if (!/^\d{6}$/.test(normalizedPin)) errors.postalCode = 'Enter a valid 6-digit PIN code.';
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };

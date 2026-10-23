@@ -32,7 +32,10 @@ Pick ONE path (never both on the same database):
   `20261023_add_newsletter_subscribers.sql`,
   `20261023_add_static_page_sections.sql` (structured policy pages; until it
   runs, policy pages keep reading the Admin -> Settings texts and CMS page
-  saves store plain text only).
+  saves store plain text only),
+  `20261024_add_uploaded_files.sql` (admin-uploaded images stored in Neon;
+  the upload endpoint also creates this table if it is missing, so deploying
+  the code before this migration does not break uploads).
 - The fresh-database script already contains all of the above — never run
   both paths on the same database.
 - ⚠️ The catalogue seed sets **stockQuantity = 0** (unverified stock). After
@@ -74,7 +77,6 @@ Notes:
 | `RAZORPAY_KEY_SECRET` | for online payments | All-caps spelling |
 | `RAZORPAY_WEBHOOK_SECRET` | ✅ for payments | Must exactly match the secret in the Razorpay webhook (step 5). The legacy `Razorpay_WEBHOOK_SECRET` spelling is also accepted |
 | `CRON_SECRET` | ✅ | Protects `/api/cron/expire-orders`; Vercel Cron sends it automatically. Without it the cron route returns 503 |
-| `BLOB_READ_WRITE_TOKEN` | for admin image uploads | Vercel → Storage → Create Blob store → connect to this project; the token is added for you. Without it, uploads return 503 (everything else works) |
 | `NEXT_PUBLIC_SITE_URL` | ✅ | `https://your-domain` — canonical URLs, sitemap (empty without it), share previews. Set it before the first build; after attaching a custom domain, update it and redeploy |
 
 Notes:
@@ -83,6 +85,12 @@ Notes:
 - `ADMIN_EMAIL` / `ADMIN_PASSWORD` are only needed locally for step 2
   (bootstrap). They are not runtime credentials; the admin login lives in
   the database after bootstrapping.
+- Admin image uploads need **no extra storage service or token**: validated
+  JPG/PNG/WEBP bytes are stored in Neon (`UploadedFile.data`) and served
+  from `/api/uploads/<id>`. Do not create/connect a Vercel Blob store.
+  (Any very old image URLs previously saved from a Blob store remain
+  external URLs until the image is uploaded again; catalogue images shipped
+  in `public/` are unaffected.)
 
 Then **Deploy**.
 
@@ -114,4 +122,7 @@ Razorpay Dashboard → Settings → Webhooks → Add:
 
 ## Notes
 - Images are served unoptimized by config — fine for launch; revisit if bandwidth bills grow.
-- Remaining `npm audit` items require major upgrades (Next 16 / Tailwind 4 / @vercel/blob 2); everything patchable in-range is patched (next 14.2.35).
+- Admin-uploaded images count toward Neon database storage (max 5 MB each
+  by default). Prefer compressed JPG/WEBP product/banner images instead of
+  large originals.
+- Remaining `npm audit` items require major upgrades (Next 16 / Tailwind 4); everything patchable in-range is patched (next 14.2.35).

@@ -60,6 +60,7 @@ model User {
   couponUsages CouponUsage[]
   roles        UserRole[]
   auditLogs    AuditLog[]
+  uploadedFiles UploadedFile[]
   @@index([email])
   @@index([phone])
 }
@@ -679,4 +680,18 @@ model NewsletterSubscriber {
   id        String   @id
   email     String   @unique
   createdAt DateTime @default(now())
+}
+
+model UploadedFile {
+  id           String   @id
+  filename     String
+  contentType  String
+  size         Int
+  data         Bytes
+  uploadedById String?
+  createdAt    DateTime @default(now())
+
+  uploadedBy User? @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
 }

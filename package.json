@@ -24,7 +24,6 @@
     "@prisma/prisma-fmt-wasm": "^4.17.0-16.27eb2449f178cd9fe1a4b892d732cc4795f75085",
     "@prisma/prisma-schema-wasm": "^8.1.0-2.59be4fda12412a79eeb9c2ae727b6aa723593323",
     "@prisma/query-engine-wasm": "^6.20.0-5.46b83975fec203f6665832b932ab3dc58be23eab",
-    "@vercel/blob": "^2.8.2",
     "@vertexa/prisma-engines": "^7.9.1",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",

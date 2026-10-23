@@ -18,6 +18,15 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 
+function slugifyProductName(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, " ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 interface ProductFormProps {
   initialProduct?: Product | null;
   categories: { id: string; name: string }[];
@@ -28,7 +37,6 @@ export function ProductForm({ initialProduct, categories }: ProductFormProps) {
   const isEditing = !!initialProduct;
 
   const [name, setName] = useState(initialProduct?.name || "");
-  const [slug, setSlug] = useState(initialProduct?.slug || "");
   const [categoryId, setCategoryId] = useState(
     initialProduct?.categoryId || categories[0]?.id || "",
   );
@@ -56,7 +64,7 @@ export function ProductForm({ initialProduct, categories }: ProductFormProps) {
     initialProduct ? initialProduct.isActive : true,
   );
 
-  // Images are URL records after an authenticated object-storage upload. Existing URLs remain supported.
+  // Images are URL records after an authenticated Neon-backed upload. Existing URLs remain supported.
   type FormImage = { imageUrl: string; altText: string; isPrimary: boolean; sortOrder: number; filename?: string; status?: 'complete' | 'uploading' | 'error' };
   const [images, setImages] = useState<FormImage[]>((initialProduct?.images || []).map((image, index) => ({ imageUrl: image.imageUrl, altText: image.altText || '', isPrimary: image.isPrimary || index === 0, sortOrder: image.sortOrder ?? index, status: 'complete' })));
   const [dragActive, setDragActive] = useState(false); const [uploading, setUploading] = useState(false); const maxImageBytes = 5 * 1024 * 1024; const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -107,18 +115,8 @@ export function ProductForm({ initialProduct, categories }: ProductFormProps) {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  // Auto slugify
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setName(val);
-    if (!isEditing) {
-      setSlug(
-        val
-          .toLowerCase()
-          .replace(/[^\w\s-]/g, "")
-          .replace(/\s+/g, "-"),
-      );
-    }
+    setName(e.target.value);
   };
 
   const handleAddVariant = () => {
@@ -157,15 +155,17 @@ export function ProductForm({ initialProduct, categories }: ProductFormProps) {
     setSuccessMsg("");
 
     if (!name.trim()) return setErrorMsg("Product name is required.");
-    if (!slug.trim()) return setErrorMsg("Product slug is required.");
+    const productSlug = initialProduct?.slug || slugifyProductName(name);
+    if (productSlug.length < 2) return setErrorMsg("Product name must contain at least two letters or numbers.");
     const imagesList = images.filter((image) => image.imageUrl && image.status !== 'uploading').map((image, index) => ({ imageUrl: image.imageUrl, altText: image.altText.trim() || `${name.trim()} product image`, isPrimary: image.isPrimary || (index === 0 && !images.some((item) => item.isPrimary)), sortOrder: index }));
     if (uploading) return setErrorMsg('Please wait for all images to finish uploading.');
     if (!isEditing && imagesList.length === 0) return setErrorMsg('Please upload at least one product image.');
 
     const payload = {
       name: name.trim(),
-      skuPrefix: (variants[0]?.sku || slug).split('-')[0].toUpperCase().slice(0, 30),
-      slug: slug.trim(),
+      skuPrefix: (variants[0]?.sku || productSlug).split('-')[0].toUpperCase().slice(0, 30),
+      // Edit saves omit slug so an existing product's public link never changes.
+      ...(initialProduct ? {} : { slug: productSlug }),
       categoryId,
       ayurvedicFormulation,
       shortDescription: description.trim().slice(0, 500),
@@ -289,21 +289,7 @@ export function ProductForm({ initialProduct, categories }: ProductFormProps) {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
-                  URL Slug *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                  placeholder="classical-ashwagandha-churna"
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#1B4332]"
-                />
-              </div>
-
-              <div>
+              <div className="sm:col-span-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
                   Ayurvedic Category *
                 </label>

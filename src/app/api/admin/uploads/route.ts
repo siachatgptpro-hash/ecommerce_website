@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { put } from "@vercel/blob";
 import { fileTypeFromBuffer } from "file-type";
 import { authenticateAdmin } from "@/lib/admin-auth";
 import { AppError, handleApiError } from "@/lib/errors";
+import { UploadRepository } from "@/repositories/upload.repository";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export async function POST(req: NextRequest) {
   try {
-    await authenticateAdmin(req);
+    const admin = await authenticateAdmin(req);
     const form = await req.formData();
     const file = form.get("file");
     if (!(file instanceof File))
@@ -44,28 +44,24 @@ export async function POST(req: NextRequest) {
         },
         { status: 415 },
       );
-    if (!process.env.BLOB_READ_WRITE_TOKEN)
-      return NextResponse.json(
-        {
-          success: false,
-          error: { message: "Image storage is not configured." },
-        },
-        { status: 503 },
-      );
+
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").slice(-100);
-    const blob = await put(
-      `products/${crypto.randomUUID()}-${safeName}`,
-      buffer,
-      { access: "public", contentType: detected.mime, addRandomSuffix: false },
-    );
+    const stored = await UploadRepository.create({
+      filename: safeName || "image",
+      contentType: detected.mime,
+      data: buffer,
+      uploadedById: admin.userId,
+    });
+
     return NextResponse.json({
       success: true,
       data: {
-        url: blob.url,
-        storageKey: blob.pathname,
+        url: `/api/uploads/${stored.id}`,
+        storageKey: stored.id,
+        storage: "neon",
         filename: file.name,
-        size: file.size,
-        contentType: detected.mime,
+        size: stored.size,
+        contentType: stored.contentType,
       },
     });
   } catch (error) {
