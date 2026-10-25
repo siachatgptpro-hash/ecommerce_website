@@ -171,3 +171,52 @@ Full re-verification after these fixes: `test:backend` 19/19, `test:qa`
 14/14, `test:security` pass, `retest-customers` 49/49,
 `probe-5-customers` 81/81, `audit-admin-wiring` 77/77, clean production
 build, production security headers verified against `next start`.
+
+---
+
+## Addendum — 2026-10-25: admin changes not reaching the storefront + admin orders mobile overflow
+
+Owner-reported after the PR #3 deployment (category added in Admin missing
+from the "Shop by Category" drawer, new CMS banner missing from the hero,
+orders desk buttons overflowing on mobile):
+
+- **Drawer categories were frozen at build time** — `GET
+  /api/catalog/categories` was the only public route handler missing
+  `export const dynamic = 'force-dynamic'`, so Next.js prerendered its
+  response during `next build` (route shown as `○ Static`). The shop page
+  queries the repository directly (dynamic), which is why new categories
+  showed in Browse Catalogue but never in the drawer. Route is now
+  `force-dynamic` + `revalidate = 0` + `Cache-Control: no-store`
+  (build now lists it as `ƒ Dynamic`).
+- **Session-long client cache hid late changes too** —
+  `getCatalogueCategories()` shared one promise for the whole SPA session,
+  so an admin who added a category and clicked "View Public Store" in the
+  same tab kept the first-load list. Added `refreshCatalogueCategories()`,
+  `cache: 'no-store'` on the fetch, and the Header now revalidates
+  whenever the category drawer or mobile menu opens.
+- **New CMS banners waited on the ISR timer (or longer)** — the homepage
+  is 60-second ISR and no admin save ever purged it, so a freshly added
+  5th banner did not appear on the next visit (and the first post-window
+  visit still serves stale while regenerating). Banner create/update/
+  delete now call `revalidatePath('/')`. Same treatment applied to the
+  rest of the family: categories (homepage showcase), products (homepage
+  + `/product/<slug>`, including the old slug on rename), blog posts
+  (`/blog` + `/blog/<slug>` old/new), and business settings.
+- **Order Fulfillment & Dispatch Desk overflowed on phones** — the seven
+  status filter pills sat in a non-wrapping flex row (~560px) that pushed
+  the page sideways, and the orders table had no minimum width so its 7
+  columns crushed (dates stacked word-by-word). Filters now wrap with
+  `aria-pressed`; the table keeps `min-w-[760px]` inside its scroll
+  wrapper with nowrap reference/date/total cells; search input and
+  pagination are squeeze-safe. The same minimum-width treatment was
+  applied to the other 8 admin tables (dashboard, products, inventory,
+  customers, coupons, blog, categories, audit logs).
+
+Verification: new three-fix E2E as admin (create/rename/delete category
+reflected in the drawer API instantly; create/delete banner reflected in
+the homepage hero) 15/15; `test:backend` 23/23, `test:qa` 22/22
+(includes 5 new regression guards for the above), `test:security` pass,
+scoped-session retest 26/26, `npx tsc --noEmit`, production build 38/38
+with the categories route confirmed `ƒ Dynamic`. Verified in local
+in-memory mode; live Neon/Vercel behaviour still needs owner re-test
+after deploy (sandbox has no live credentials).

@@ -63,8 +63,8 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white p-6 rounded-3xl border border-[#F3EFE6] shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
+      <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#F3EFE6] shadow-sm flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div className="min-w-0">
           <h1 className="font-serif text-2xl font-bold text-gray-900">
             Order Fulfillment & Dispatch Desk
           </h1>
@@ -73,12 +73,15 @@ export default function AdminOrdersPage() {
           </p>
         </div>
 
-        <div className="flex gap-2">
+        {/* Status filters wrap onto multiple rows on small screens instead
+            of overflowing the card (7 pills are ~560px wide in one row). */}
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter orders by status">
           {['ALL', 'PENDING', 'CONFIRMED', 'PACKED', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((st) => (
             <button
               key={st}
               onClick={() => { setPage(1); setStatusFilter(st); }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              aria-pressed={statusFilter === st}
+              className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 statusFilter === st
                   ? 'bg-[#1B4332] text-white'
                   : 'bg-[#FAF7F2] text-gray-700 hover:bg-gray-200'
@@ -92,13 +95,13 @@ export default function AdminOrdersPage() {
 
       {/* Search Toolbar */}
       <div className="bg-white p-4 rounded-2xl border border-[#F3EFE6] flex items-center gap-3">
-        <Search className="w-5 h-5 text-gray-400" />
+        <Search className="w-5 h-5 shrink-0 text-gray-400" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by order # (e.g. AE-2026-0001), customer name, or destination city..."
-          className="w-full text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
+          className="min-w-0 flex-1 text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
         />
       </div>
 
@@ -113,7 +116,9 @@ export default function AdminOrdersPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            {/* Minimum width keeps all 7 columns readable on phones —
+                the wrapper scrolls sideways instead of crushing cells. */}
+            <table className="w-full min-w-[760px] text-left text-xs">
               <thead>
                 <tr className="border-b border-gray-100 bg-[#FAF7F2] text-gray-500 font-bold uppercase tracking-wider">
                   <th className="py-3 px-4">Order Reference</th>
@@ -128,7 +133,7 @@ export default function AdminOrdersPage() {
               <tbody className="divide-y divide-gray-100">
                 {filteredOrders.map((ord) => (
                   <tr key={ord.id} className="hover:bg-gray-50/80 transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-[#1B4332]">
+                    <td className="py-3 px-4 font-mono font-bold text-[#1B4332] whitespace-nowrap">
                       #{ord.orderNumber}
                     </td>
                     <td className="py-3 px-4">
@@ -139,7 +144,7 @@ export default function AdminOrdersPage() {
                         {ord.shippingAddress.city}, {ord.shippingAddress.state}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-gray-500">
+                    <td className="py-3 px-4 text-gray-500 whitespace-nowrap">
                       {new Date(ord.createdAt).toLocaleDateString('en-IN', {
                         month: 'short',
                         day: 'numeric',
@@ -171,7 +176,7 @@ export default function AdminOrdersPage() {
                         {ord.paymentStatus === 'PAID' && ord.status === 'PENDING' ? 'AWAITING APPROVAL' : ord.status === 'CONFIRMED' ? 'APPROVED' : ord.status === 'SHIPPED' ? 'SHIPPED' : ord.status}
                       </span>
                     </td>
-                    <td className="py-3 px-4 font-bold text-[#1B4332]">₹{ord.totalAmount}</td>
+                    <td className="py-3 px-4 font-bold text-[#1B4332] whitespace-nowrap">₹{ord.totalAmount}</td>
                     <td className="py-3 px-4 text-right">
                       <Link
                         href={`/admin/orders/${ord.id}`}
@@ -190,7 +195,7 @@ export default function AdminOrdersPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-2 pt-4">
+          <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-xs text-gray-500">
               Page {page} of {totalPages} · {totalOrders} orders
             </span>
@@ -198,14 +203,14 @@ export default function AdminOrdersPage() {
               <button
                 onClick={() => changePage(Math.max(1, page - 1))}
                 disabled={page <= 1 || loading}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#FAF7F2] text-gray-700 hover:bg-gray-200 disabled:opacity-40"
+                className="whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold bg-[#FAF7F2] text-gray-700 hover:bg-gray-200 disabled:opacity-40"
               >
                 ← Previous
               </button>
               <button
                 onClick={() => changePage(Math.min(totalPages, page + 1))}
                 disabled={page >= totalPages || loading}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#FAF7F2] text-gray-700 hover:bg-gray-200 disabled:opacity-40"
+                className="whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold bg-[#FAF7F2] text-gray-700 hover:bg-gray-200 disabled:opacity-40"
               >
                 Next →
               </button>

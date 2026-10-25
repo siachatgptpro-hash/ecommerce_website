@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAdminPermission } from '@/lib/admin-auth';
 import { BannerWriteSchema } from '@/schemas';
 import { CMSRepository } from '@/repositories/cms.repository';
@@ -24,6 +25,7 @@ export async function PUT(
       sortOrder: input.sortOrder ?? 0,
       isActive: input.isActive !== undefined ? input.isActive : true,
     });
+    if (banner) revalidatePath('/');
     return NextResponse.json({ success: Boolean(banner), data: banner });
   } catch (error) {
     const err = handleApiError(error);
@@ -38,6 +40,7 @@ export async function DELETE(
   try {
     await requireAdminPermission(req, PermissionKey.MANAGE_CMS);
     const success = await CMSRepository.deleteBanner(params.id);
+    if (success) revalidatePath('/');
 
     return NextResponse.json({
       success,

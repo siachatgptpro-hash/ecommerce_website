@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAdminPermission } from '@/lib/admin-auth';
 import { BannerWriteSchema } from '@/schemas';
 import { CMSRepository } from '@/repositories/cms.repository';
@@ -42,6 +43,10 @@ export async function POST(req: NextRequest) {
       ctaText: input.ctaText,
       ctaLink: input.ctaLink,
     });
+
+    // The homepage hero is ISR-cached; purge it now so the new banner
+    // is visible on the very next visit instead of after the timer.
+    revalidatePath('/');
 
     return NextResponse.json({
       success: true,

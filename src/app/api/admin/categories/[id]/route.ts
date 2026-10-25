@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAdminPermission } from '@/lib/admin-auth';
 import { CategorySchema } from '@/schemas';
 import { ProductRepository } from '@/repositories/product.repository';
@@ -84,6 +85,8 @@ export async function PUT(
       { name: category.name, slug: category.slug, isActive: category.isActive, displayOrder: category.displayOrder }
     );
 
+    revalidatePath('/');
+
     return NextResponse.json({ success: true, data: category });
   } catch (error) {
     const err = handleApiError(error);
@@ -120,6 +123,8 @@ export async function DELETE(
       { name: previous.name, slug: previous.slug },
       null
     );
+
+    if (success) revalidatePath('/');
 
     return NextResponse.json({ success, data: { id: params.id } });
   } catch (error) {

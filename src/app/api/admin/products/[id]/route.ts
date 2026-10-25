@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { requireAdminPermission } from '@/lib/admin-auth';
 import { ProductImageInputSchema, ProductVariantInputSchema } from '@/schemas';
@@ -67,6 +68,13 @@ export async function PUT(
       product ? { variants: product.variants, isActive: product.isActive } : json
     );
 
+    // Refresh ISR-cached storefront pages that render this product.
+    revalidatePath('/');
+    if (product?.slug) revalidatePath(`/product/${product.slug}`);
+    if (previousProduct?.slug && previousProduct.slug !== product?.slug) {
+      revalidatePath(`/product/${previousProduct.slug}`);
+    }
+
     return NextResponse.json({ success: true, data: product });
   } catch (error) {
     const err = handleApiError(error);
@@ -90,6 +98,7 @@ export async function DELETE(
         admin.userId,
         admin.email
       );
+      revalidatePath('/');
     }
 
     return NextResponse.json({ success, data: { id: params.id } });

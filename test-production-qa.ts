@@ -64,6 +64,44 @@ async function runPreviewQA() {
   record('mobile page content has bottom clearance for fixed navigation', /pb-20 md:pb-0/.test(fs.readFileSync('src/components/shared/Providers.tsx', 'utf8')));
   record('wishlist is reachable on desktop and mobile and displays saved brochure products', /href="\/wishlist"/.test(header) && /href="\/wishlist"/.test(mobileNav) && /wishlist\.includes\(product\.id\)/.test(wishlistClient) && /WishlistClient/.test(wishlistPage));
 
+  // Regression guards for "admin changes never reach the storefront":
+  // the drawer categories API must stay dynamic (never prerendered),
+  // admin mutations must purge ISR-cached pages, and the Header must
+  // revalidate categories whenever the drawer opens.
+  const categoriesApi = fs.readFileSync('src/app/api/catalog/categories/route.ts', 'utf8');
+  record('drawer categories API is force-dynamic and no-store', /export const dynamic = 'force-dynamic'/.test(categoriesApi) && /'Cache-Control': 'no-store'/.test(categoriesApi));
+  record('header refreshes categories when the drawer opens', /refreshCatalogueCategories\(\)/.test(header));
+  const mutationRoutes = [
+    'src/app/api/admin/cms/banners/route.ts',
+    'src/app/api/admin/cms/banners/[id]/route.ts',
+    'src/app/api/admin/categories/route.ts',
+    'src/app/api/admin/categories/[id]/route.ts',
+    'src/app/api/admin/products/route.ts',
+    'src/app/api/admin/products/[id]/route.ts',
+    'src/app/api/admin/blog/route.ts',
+    'src/app/api/admin/blog/[id]/route.ts',
+    'src/app/api/admin/settings/route.ts',
+  ];
+  record('admin banner/category/product/blog/settings saves purge ISR pages', mutationRoutes.every((file) => /revalidatePath\(/.test(fs.readFileSync(file, 'utf8'))));
+
+  // Regression guards for the admin orders desk on phones: the status
+  // filter pills must wrap (not overflow) and the table must scroll
+  // sideways at a readable minimum width instead of crushing columns.
+  const adminOrdersPage = fs.readFileSync('src/app/admin/orders/page.tsx', 'utf8');
+  record('admin orders status filters wrap on mobile', /flex flex-wrap gap-2/.test(adminOrdersPage) && /whitespace-nowrap/.test(adminOrdersPage));
+  const adminTablePages = [
+    'src/app/admin/orders/page.tsx',
+    'src/app/admin/page.tsx',
+    'src/app/admin/products/page.tsx',
+    'src/app/admin/inventory/page.tsx',
+    'src/app/admin/customers/page.tsx',
+    'src/app/admin/coupons/page.tsx',
+    'src/app/admin/blog/page.tsx',
+    'src/app/admin/categories/page.tsx',
+    'src/app/admin/audit-logs/page.tsx',
+  ];
+  record('admin tables keep a readable minimum width on mobile', adminTablePages.every((file) => /<table className="w-full min-w-\[\d+px\]/.test(fs.readFileSync(file, 'utf8'))));
+
   for (const check of checks) console.log(`  ${check.ok ? '[PASS]' : '[FAIL]'} ${check.label}`);
   const failed = checks.filter((check) => !check.ok).length;
   console.log(`\nPreview QA: ${checks.length - failed} passed, ${failed} failed.`);
