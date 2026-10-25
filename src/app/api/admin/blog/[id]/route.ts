@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAdminPermission } from '@/lib/admin-auth';
 import { BlogPostSchema } from '@/schemas';
 import { CMSRepository } from '@/repositories/cms.repository';
@@ -78,6 +79,10 @@ export async function PUT(
       { title: post.title, slug: post.slug, isPublished: post.isPublished }
     );
 
+    revalidatePath('/blog');
+    revalidatePath(`/blog/${post.slug}`);
+    if (previous.slug !== post.slug) revalidatePath(`/blog/${previous.slug}`);
+
     return NextResponse.json({ success: true, data: post });
   } catch (error) {
     const err = handleApiError(error);
@@ -105,6 +110,11 @@ export async function DELETE(
       { title: previous.title, slug: previous.slug },
       null
     );
+
+    if (success) {
+      revalidatePath('/blog');
+      revalidatePath(`/blog/${previous.slug}`);
+    }
 
     return NextResponse.json({ success, data: { id: params.id } });
   } catch (error) {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { authenticateAdmin } from '@/lib/admin-auth';
 import { BlogPostSchema } from '@/schemas';
 import { CMSRepository } from '@/repositories/cms.repository';
@@ -55,6 +56,10 @@ export async function POST(req: NextRequest) {
       null,
       { title: post.title, slug: post.slug, isPublished: post.isPublished }
     );
+
+    // Public blog pages are ISR-cached — publish changes immediately.
+    revalidatePath('/blog');
+    revalidatePath(`/blog/${post.slug}`);
 
     return NextResponse.json({ success: true, data: post }, { status: 201 });
   } catch (error) {

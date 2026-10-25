@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { authenticateAdmin } from '@/lib/admin-auth';
 import { ProductMutationSchema } from '@/schemas';
 import { ProductRepository } from '@/repositories/product.repository';
@@ -42,6 +43,9 @@ export async function POST(req: NextRequest) {
       null,
       { name: newProduct.name, slug: newProduct.slug }
     );
+
+    // Homepage (featured products / counts) is ISR-cached.
+    revalidatePath('/');
 
     return NextResponse.json(
       {

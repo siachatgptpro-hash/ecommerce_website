@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { authenticateAdmin } from '@/lib/admin-auth';
 import { CategorySchema } from '@/schemas';
 import { ProductRepository } from '@/repositories/product.repository';
@@ -66,6 +67,9 @@ export async function POST(req: NextRequest) {
       null,
       { name: category.name, slug: category.slug, isActive: category.isActive }
     );
+
+    // Homepage category showcase is ISR-cached — refresh it immediately.
+    revalidatePath('/');
 
     return NextResponse.json({ success: true, data: category }, { status: 201 });
   } catch (error) {

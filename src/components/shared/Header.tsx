@@ -1,6 +1,6 @@
 'use client';
 
-import { getCatalogueCategories, getPublicSettings } from '@/lib/client-data';
+import { getCatalogueCategories, getPublicSettings, refreshCatalogueCategories } from '@/lib/client-data';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -54,6 +54,21 @@ export function Header() {
       if (list.length > 0) setCategories(list as any);
     });
   }, []);
+
+  // Categories are admin-managed and can change mid-session (e.g. the
+  // owner adds one in Admin, then opens the storefront in the same tab).
+  // Revalidate whenever a category surface opens so the drawer and the
+  // mobile menu always show the live list, not the first-load snapshot.
+  useEffect(() => {
+    if (!isCategoryMenuOpen && !isMobileMenuOpen) return;
+    let cancelled = false;
+    refreshCatalogueCategories().then((list) => {
+      if (!cancelled && list.length > 0) setCategories(list as any);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isCategoryMenuOpen, isMobileMenuOpen]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

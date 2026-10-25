@@ -25,8 +25,8 @@ let settingsPromise: Promise<PublicSettings | null> | null = null;
 let categoriesPromise: Promise<unknown[]> | null = null;
 let policyLinksPromise: Promise<unknown[]> | null = null;
 
-async function fetchJson(url: string): Promise<any> {
-  const res = await fetch(url);
+async function fetchJson(url: string, init?: RequestInit): Promise<any> {
+  const res = await fetch(url, init);
   return res.json();
 }
 
@@ -41,10 +41,25 @@ export function getPublicSettings(): Promise<PublicSettings | null> {
 
 export function getCatalogueCategories(): Promise<unknown[]> {
   if (!categoriesPromise) {
-    categoriesPromise = fetchJson('/api/catalog/categories')
+    categoriesPromise = fetchJson('/api/catalog/categories', { cache: 'no-store' })
       .then((json) => (json?.success && Array.isArray(json.data) ? json.data : []))
       .catch(() => []);
   }
+  return categoriesPromise;
+}
+
+/**
+ * Force a fresh category fetch, replacing the session-cached promise.
+ * The catalogue is admin-managed: after an admin adds/renames a category
+ * and jumps to the storefront in the same browser session, the shared
+ * promise above would otherwise keep serving the pre-change list until
+ * a full page reload. Callers (the Header, when the category drawer or
+ * mobile menu opens) use this to revalidate at near-zero cost.
+ */
+export function refreshCatalogueCategories(): Promise<unknown[]> {
+  categoriesPromise = fetchJson('/api/catalog/categories', { cache: 'no-store' })
+    .then((json) => (json?.success && Array.isArray(json.data) ? json.data : []))
+    .catch(() => []);
   return categoriesPromise;
 }
 

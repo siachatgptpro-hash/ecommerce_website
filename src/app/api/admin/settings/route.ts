@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { authenticateAdmin } from '@/lib/admin-auth';
 import { SettingsRepository } from '@/repositories/settings.repository';
 import { AuditRepository } from '@/repositories/audit.repository';
@@ -37,6 +38,9 @@ export async function POST(req: NextRequest) {
       oldSettings,
       updatedSettings
     );
+
+    // Homepage renders the free-shipping threshold / store identity.
+    revalidatePath('/');
 
     return NextResponse.json({ success: true, data: updatedSettings });
   } catch (error) {
