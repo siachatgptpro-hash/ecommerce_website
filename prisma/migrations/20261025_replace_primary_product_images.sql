@@ -1,4 +1,4 @@
--- Replace the primary product photo for 72 catalogue products with the
+-- Replace the primary product photo for 82 catalogue products with the
 -- owner-supplied pack photos (added to the repo as /products/<slug>-pack.webp).
 --
 -- Run AFTER deploying the code that contains the new image files,
@@ -40,14 +40,23 @@ UPDATE "ProductImage" SET "imageUrl" = '/products/gokhru-capsule-pack.webp', "is
 UPDATE "ProductImage" SET "imageUrl" = '/products/gymnema-capsule-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_gymnema_capsule'; -- Gymnema Capsule
 UPDATE "ProductImage" SET "imageUrl" = '/products/gau-amrit-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_gau_amrit'; -- Gau Amrit
 UPDATE "ProductImage" SET "imageUrl" = '/products/h-b-booster-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_h_b_booster'; -- H.B. Booster
+UPDATE "ProductImage" SET "imageUrl" = '/products/heart-re-booster-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_heart_re_booster'; -- Heart Re Booster
+UPDATE "ProductImage" SET "imageUrl" = '/products/heart-re-booster-premium-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_heart_re_booster_premium'; -- Heart Re Booster Premium
 UPDATE "ProductImage" SET "imageUrl" = '/products/heart-fit-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_heart_fit'; -- Heart Fit
 UPDATE "ProductImage" SET "imageUrl" = '/products/ib-9-drop-immunity-drops-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_ib_9_drop_immunity_drops'; -- IB-9 Drop (Immunity Drops)
+UPDATE "ProductImage" SET "imageUrl" = '/products/joint-re-builder-syrup-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_joint_re_builder_syrup'; -- Joint Re-Builder Syrup
+UPDATE "ProductImage" SET "imageUrl" = '/products/joint-re-builder-tablet-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_joint_re_builder_tablet'; -- Joint Re-Builder Tablet
+UPDATE "ProductImage" SET "imageUrl" = '/products/joint-re-builder-syrup-premium-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_joint_re_builder_syrup_premium'; -- Joint Re-Builder Syrup Premium
 UPDATE "ProductImage" SET "imageUrl" = '/products/joint-tablet-premium-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_joint_tablet_premium'; -- Joint Tablet Premium
+UPDATE "ProductImage" SET "imageUrl" = '/products/joint-pain-oil-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_joint_pain_oil'; -- Joint Pain Oil
+UPDATE "ProductImage" SET "imageUrl" = '/products/joint-pain-liniment-oil-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_joint_pain_liniment_oil'; -- Joint Pain Liniment (Oil)
 UPDATE "ProductImage" SET "imageUrl" = '/products/kalonji-oil-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_kalonji_oil'; -- Kalonji Oil
 UPDATE "ProductImage" SET "imageUrl" = '/products/kidney-reactivator-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_kidney_reactivator'; -- Kidney Reactivator
 UPDATE "ProductImage" SET "imageUrl" = '/products/kwach-capsule-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_kwach_capsule'; -- Kwach Capsule
+UPDATE "ProductImage" SET "imageUrl" = '/products/lipid-care-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_lipid_care'; -- Lipid Care
 UPDATE "ProductImage" SET "imageUrl" = '/products/lungs-cleaner-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_lungs_cleaner'; -- Lungs Cleaner
 UPDATE "ProductImage" SET "imageUrl" = '/products/liv-ca-capsule-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_liv_ca_capsule'; -- Liv CA Capsule
+UPDATE "ProductImage" SET "imageUrl" = '/products/liver-reactivator-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_liver_reactivator'; -- Liver Reactivator
 UPDATE "ProductImage" SET "imageUrl" = '/products/memory-booster-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_memory_booster'; -- Memory Booster
 UPDATE "ProductImage" SET "imageUrl" = '/products/miracle-roots-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_miracle_roots'; -- Miracle Roots
 UPDATE "ProductImage" SET "imageUrl" = '/products/musheal-capsule-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_musheal_capsule'; -- Musheal Capsule
@@ -68,6 +77,7 @@ UPDATE "ProductImage" SET "imageUrl" = '/products/saunf-ark-pack.webp', "isPrima
 UPDATE "ProductImage" SET "imageUrl" = '/products/skin-ark-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_skin_ark'; -- Skin Ark
 UPDATE "ProductImage" SET "imageUrl" = '/products/skin-oil-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_skin_oil'; -- Skin Oil
 UPDATE "ProductImage" SET "imageUrl" = '/products/stone-away-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_stone_away'; -- Stone Away
+UPDATE "ProductImage" SET "imageUrl" = '/products/stri-sanjivani-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_stri_sanjivani'; -- Stri Sanjivani
 UPDATE "ProductImage" SET "imageUrl" = '/products/sarva-dhatu-pushti-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_sarva_dhatu_pushti'; -- Sarva Dhatu Pushti
 UPDATE "ProductImage" SET "imageUrl" = '/products/sea-buckthorn-capsule-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_sea_buckthorn_capsule'; -- Sea Buckthorn Capsule
 UPDATE "ProductImage" SET "imageUrl" = '/products/shatawari-capsule-pack.webp', "isPrimary" = TRUE WHERE "id" = 'pdfimg_shatawari_capsule'; -- Shatawari Capsule
@@ -95,12 +105,14 @@ UPDATE "Category" SET "imageUrl" = '/products/ajwain-ark-pack.webp', "updatedAt"
 WHERE "id" = 'cat_arks_drops' AND "imageUrl" = '/products/pdf-p3-i8.webp'; -- card used Ajwain Ark's photo
 UPDATE "Category" SET "imageUrl" = '/products/chyawanprash-kesar-yukta-pack.webp', "updatedAt" = CURRENT_TIMESTAMP
 WHERE "id" = 'cat_immunity_rasayana' AND "imageUrl" = '/products/pdf-p15-i3.webp'; -- card used Chyawanprash Kesar Yukta's photo
+UPDATE "Category" SET "imageUrl" = '/products/joint-re-builder-tablet-pack.webp', "updatedAt" = CURRENT_TIMESTAMP
+WHERE "id" = 'cat_vati_gutika' AND "imageUrl" = '/products/pdf-p6-i2.webp'; -- card used Joint Re-Builder Tablet's photo
 
 COMMIT;
 
--- Verification: expected 72 of 72 seeded primary images on new pack files.
+-- Verification: expected 82 of 82 seeded primary images on new pack files.
 SELECT
   COUNT(*)::int AS "checkedImages",
   COUNT(*) FILTER (WHERE "imageUrl" LIKE '%/products/%-pack.webp')::int AS "onNewPackPhoto"
 FROM "ProductImage"
-WHERE "id" IN ('pdfimg_aloe_vera_with_honey_amla_tulsi', 'pdfimg_aloe_vera_juice', 'pdfimg_amrit_ras', 'pdfimg_anti_diabetes', 'pdfimg_arjun_capsule', 'pdfimg_allicin_capsule', 'pdfimg_amla_ras', 'pdfimg_ashwagandha_capsule', 'pdfimg_ajwain_ark', 'pdfimg_bhumi_punarnava', 'pdfimg_bhumi_amla_capsule', 'pdfimg_cough_care', 'pdfimg_castor_oil', 'pdfimg_chyawanprash_kesar_yukta', 'pdfimg_curcumin_capsule', 'pdfimg_cumin_ark', 'pdfimg_dento_strong', 'pdfimg_detox_capsule', 'pdfimg_detox_syrup', 'pdfimg_dhamasa_capsule', 'pdfimg_eye_care', 'pdfimg_flax_seeds', 'pdfimg_flax_oil', 'pdfimg_fat_melter', 'pdfimg_gastro_sanjivani', 'pdfimg_grape_seed_extract', 'pdfimg_green_tea_tablet', 'pdfimg_gokhru_capsule', 'pdfimg_gymnema_capsule', 'pdfimg_gau_amrit', 'pdfimg_h_b_booster', 'pdfimg_heart_fit', 'pdfimg_ib_9_drop_immunity_drops', 'pdfimg_joint_tablet_premium', 'pdfimg_kalonji_oil', 'pdfimg_kidney_reactivator', 'pdfimg_kwach_capsule', 'pdfimg_lungs_cleaner', 'pdfimg_liv_ca_capsule', 'pdfimg_memory_booster', 'pdfimg_miracle_roots', 'pdfimg_musheal_capsule', 'pdfimg_migraine_care', 'pdfimg_neem_oil', 'pdfimg_neuro_care', 'pdfimg_noni', 'pdfimg_neem_capsule', 'pdfimg_pc_9_piles_care', 'pdfimg_punarnava_capsule', 'pdfimg_purush_rasayan', 'pdfimg_panch_tulsi', 'pdfimg_power_tulsi', 'pdfimg_pr_drops', 'pdfimg_renal_fit_capsule', 'pdfimg_resurrection_capsule', 'pdfimg_saunf_ark', 'pdfimg_skin_ark', 'pdfimg_skin_oil', 'pdfimg_stone_away', 'pdfimg_sarva_dhatu_pushti', 'pdfimg_sea_buckthorn_capsule', 'pdfimg_shatawari_capsule', 'pdfimg_silymarine_milk_thistle_capsule', 'pdfimg_spirulina_capsule', 'pdfimg_stevia_drop', 'pdfimg_sugar_normal', 'pdfimg_thyro_booster', 'pdfimg_triphala_ras', 'pdfimg_19_berries', 'pdfimg_wheat_grass_with_moringa', 'pdfimg_wheat_grass', 'pdfimg_wonder_berries');
+WHERE "id" IN ('pdfimg_aloe_vera_with_honey_amla_tulsi', 'pdfimg_aloe_vera_juice', 'pdfimg_amrit_ras', 'pdfimg_anti_diabetes', 'pdfimg_arjun_capsule', 'pdfimg_allicin_capsule', 'pdfimg_amla_ras', 'pdfimg_ashwagandha_capsule', 'pdfimg_ajwain_ark', 'pdfimg_bhumi_punarnava', 'pdfimg_bhumi_amla_capsule', 'pdfimg_cough_care', 'pdfimg_castor_oil', 'pdfimg_chyawanprash_kesar_yukta', 'pdfimg_curcumin_capsule', 'pdfimg_cumin_ark', 'pdfimg_dento_strong', 'pdfimg_detox_capsule', 'pdfimg_detox_syrup', 'pdfimg_dhamasa_capsule', 'pdfimg_eye_care', 'pdfimg_flax_seeds', 'pdfimg_flax_oil', 'pdfimg_fat_melter', 'pdfimg_gastro_sanjivani', 'pdfimg_grape_seed_extract', 'pdfimg_green_tea_tablet', 'pdfimg_gokhru_capsule', 'pdfimg_gymnema_capsule', 'pdfimg_gau_amrit', 'pdfimg_h_b_booster', 'pdfimg_heart_re_booster', 'pdfimg_heart_re_booster_premium', 'pdfimg_heart_fit', 'pdfimg_ib_9_drop_immunity_drops', 'pdfimg_joint_re_builder_syrup', 'pdfimg_joint_re_builder_tablet', 'pdfimg_joint_re_builder_syrup_premium', 'pdfimg_joint_tablet_premium', 'pdfimg_joint_pain_oil', 'pdfimg_joint_pain_liniment_oil', 'pdfimg_kalonji_oil', 'pdfimg_kidney_reactivator', 'pdfimg_kwach_capsule', 'pdfimg_lipid_care', 'pdfimg_lungs_cleaner', 'pdfimg_liv_ca_capsule', 'pdfimg_liver_reactivator', 'pdfimg_memory_booster', 'pdfimg_miracle_roots', 'pdfimg_musheal_capsule', 'pdfimg_migraine_care', 'pdfimg_neem_oil', 'pdfimg_neuro_care', 'pdfimg_noni', 'pdfimg_neem_capsule', 'pdfimg_pc_9_piles_care', 'pdfimg_punarnava_capsule', 'pdfimg_purush_rasayan', 'pdfimg_panch_tulsi', 'pdfimg_power_tulsi', 'pdfimg_pr_drops', 'pdfimg_renal_fit_capsule', 'pdfimg_resurrection_capsule', 'pdfimg_saunf_ark', 'pdfimg_skin_ark', 'pdfimg_skin_oil', 'pdfimg_stone_away', 'pdfimg_stri_sanjivani', 'pdfimg_sarva_dhatu_pushti', 'pdfimg_sea_buckthorn_capsule', 'pdfimg_shatawari_capsule', 'pdfimg_silymarine_milk_thistle_capsule', 'pdfimg_spirulina_capsule', 'pdfimg_stevia_drop', 'pdfimg_sugar_normal', 'pdfimg_thyro_booster', 'pdfimg_triphala_ras', 'pdfimg_19_berries', 'pdfimg_wheat_grass_with_moringa', 'pdfimg_wheat_grass', 'pdfimg_wonder_berries');
