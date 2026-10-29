@@ -40,7 +40,7 @@ Pick ONE path (never both on the same database):
   balance of 100 units for every brochure pack variant, with matching
   inventory-ledger rows; its marker makes a duplicate run safe and prevents
   later sales/manual corrections from being reset),
-  `20261025_replace_primary_product_images.sql` (points 40 products'
+  `20261025_replace_primary_product_images.sql` (points 48 products'
   primary photos at the new owner-supplied pack images
   `/products/<slug>-pack.webp`; run it only AFTER the deployment that
   contains those image files is live).

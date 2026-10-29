@@ -505,14 +505,14 @@ CREATE INDEX "AuditLog_createdAt_idx" ON "AuditLog" ("createdAt");
 
 -- Source catalogue: 8 categories, 84 products, 101 pack variants, 84 image references
 INSERT INTO "Category" ("id", "name", "slug", "description", "imageUrl", "parentId", "displayOrder", "isActive", "metaTitle", "metaDescription", "createdAt", "updatedAt") VALUES
-  ('cat_syrups_juices', 'Syrups & Juices', 'syrups-juices', 'Syrup and juice products listed in the supplied catalogue.', '/products/pdf-p4-i9.webp', NULL, 1, TRUE, 'Syrups & Juices | Shlokveda Product Catalogue', 'Syrup and juice products listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('cat_syrups_juices', 'Syrups & Juices', 'syrups-juices', 'Syrup and juice products listed in the supplied catalogue.', '/products/aloe-vera-with-honey-amla-tulsi-pack.webp', NULL, 1, TRUE, 'Syrups & Juices | Shlokveda Product Catalogue', 'Syrup and juice products listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('cat_arks_drops', 'Arks & Drops', 'arks-drops', 'Ark and drop products listed in the supplied catalogue.', '/products/pdf-p3-i8.webp', NULL, 2, TRUE, 'Arks & Drops | Shlokveda Product Catalogue', 'Ark and drop products listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('cat_herbal_oils', 'Herbal Oils', 'herbal-oils', 'Herbal oils listed in the supplied catalogue.', '/products/castor-oil-pack.webp', NULL, 3, TRUE, 'Herbal Oils | Shlokveda Product Catalogue', 'Herbal oils listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('cat_capsules', 'Herbal Capsules', 'herbal-capsules', 'Herbal capsule products listed in the supplied catalogue.', '/products/arjun-capsule-pack.webp', NULL, 4, TRUE, 'Herbal Capsules | Shlokveda Product Catalogue', 'Herbal capsule products listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('cat_vati_gutika', 'Tablets', 'tablets', 'Tablet products listed in the supplied catalogue.', '/products/pdf-p6-i2.webp', NULL, 5, TRUE, 'Tablets | Shlokveda Product Catalogue', 'Tablet products listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('cat_daily_wellness', 'Daily Wellness', 'daily-wellness', 'Daily wellness products listed in the supplied catalogue.', '/products/pdf-p15-i1.webp', NULL, 6, TRUE, 'Daily Wellness | Shlokveda Product Catalogue', 'Daily wellness products listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('cat_immunity_rasayana', 'Immunity & Rasayana', 'immunity-rasayana', 'Immunity and rasayana products listed in the supplied catalogue.', '/products/pdf-p15-i3.webp', NULL, 7, TRUE, 'Immunity & Rasayana | Shlokveda Product Catalogue', 'Immunity and rasayana products listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('cat_personal_care', 'Personal Care', 'personal-care', 'Personal-care products listed in the supplied catalogue.', '/products/pdf-p15-i4.webp', NULL, 8, TRUE, 'Personal Care | Shlokveda Product Catalogue', 'Personal-care products listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+  ('cat_personal_care', 'Personal Care', 'personal-care', 'Personal-care products listed in the supplied catalogue.', '/products/dento-strong-pack.webp', NULL, 8, TRUE, 'Personal Care | Shlokveda Product Catalogue', 'Personal-care products listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO "Product" ("id", "categoryId", "name", "slug", "skuPrefix", "shortDescription", "fullDescription", "ingredients", "benefits", "usageInstructions", "precautions", "ayurvedicFormulation", "ayushLicenseNo", "fssaiLicenseNo", "isFeatured", "isBestseller", "isNewArrival", "isActive", "metaTitle", "metaDescription", "metaKeywords", "createdAt", "updatedAt") VALUES
   ('pdf_aloe_vera_with_honey_amla_tulsi', 'cat_syrups_juices', 'Aloe Vera with Honey, Amla & Tulsi', 'aloe-vera-with-honey-amla-tulsi', 'SV-001', 'Pack size: 1 L. Listed in the supplied brochure on page 4.', 'Aloe Vera with Honey, Amla & Tulsi is listed in the supplied product brochure on page 4. Pack size and printed MRP are transcribed from that source. See the original product label for complete product information.', 'Aloe vera, honey, amla and tulsi.', 'No additional therapeutic claims are made on this page. Please read the product label and consult a qualified healthcare professional.', 'Follow the directions printed on the product label or the advice of a qualified healthcare professional.', 'This product information is not medical advice. Consult a qualified healthcare professional before use, especially if pregnant, nursing, taking medication or managing a health condition.', 'SYRUP', NULL, NULL, TRUE, FALSE, FALSE, TRUE, 'Aloe Vera with Honey, Amla & Tulsi | Shlokveda Product Catalogue', 'Pack size: 1 L. Listed in the supplied brochure on page 4.', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
@@ -721,7 +721,7 @@ FROM "ProductVariant"
 WHERE "id" LIKE 'pdfv_%';
 
 INSERT INTO "ProductImage" ("id", "productId", "imageUrl", "altText", "sortOrder", "isPrimary", "createdAt") VALUES
-  ('pdfimg_aloe_vera_with_honey_amla_tulsi', 'pdf_aloe_vera_with_honey_amla_tulsi', '/products/pdf-p4-i9.webp', 'Aloe Vera with Honey, Amla & Tulsi - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
+  ('pdfimg_aloe_vera_with_honey_amla_tulsi', 'pdf_aloe_vera_with_honey_amla_tulsi', '/products/aloe-vera-with-honey-amla-tulsi-pack.webp', 'Aloe Vera with Honey, Amla & Tulsi - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_aloe_vera_juice', 'pdf_aloe_vera_juice', '/products/pdf-p4-i5.webp', 'Aloe Vera Juice - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_amrit_ras', 'pdf_amrit_ras', '/products/pdf-p6-i5.webp', 'Amrit Ras - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_anti_diabetes', 'pdf_anti_diabetes', '/products/pdf-p7-i4.webp', 'Anti Diabetes - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
@@ -738,17 +738,17 @@ INSERT INTO "ProductImage" ("id", "productId", "imageUrl", "altText", "sortOrder
   ('pdfimg_chyawanprash_kesar_yukta', 'pdf_chyawanprash_kesar_yukta', '/products/pdf-p15-i3.webp', 'Chyawanprash Kesar Yukta - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_curcumin_capsule', 'pdf_curcumin_capsule', '/products/curcumin-capsule-pack.webp', 'Curcumin Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_cumin_ark', 'pdf_cumin_ark', '/products/pdf-p3-i1.webp', 'Cumin Ark - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
-  ('pdfimg_dento_strong', 'pdf_dento_strong', '/products/pdf-p15-i4.webp', 'Dento Strong - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
+  ('pdfimg_dento_strong', 'pdf_dento_strong', '/products/dento-strong-pack.webp', 'Dento Strong - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_detox_capsule', 'pdf_detox_capsule', '/products/detox-capsule-pack.webp', 'Detox Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_detox_syrup', 'pdf_detox_syrup', '/products/detox-syrup-pack.webp', 'Detox Syrup - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_dhamasa_capsule', 'pdf_dhamasa_capsule', '/products/dhamasa-capsule-pack.webp', 'Dhamasa Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_eye_care', 'pdf_eye_care', '/products/eye-care-pack.webp', 'Eye Care - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
-  ('pdfimg_flax_seeds', 'pdf_flax_seeds', '/products/pdf-p15-i6.webp', 'Flax Seeds - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
+  ('pdfimg_flax_seeds', 'pdf_flax_seeds', '/products/flax-seeds-pack.webp', 'Flax Seeds - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_flax_oil', 'pdf_flax_oil', '/products/flax-oil-pack.webp', 'Flax Oil - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_fat_melter', 'pdf_fat_melter', '/products/fat-melter-pack.webp', 'Fat Melter - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_gastro_sanjivani', 'pdf_gastro_sanjivani', '/products/pdf-p5-i6.webp', 'Gastro Sanjivani - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_grape_seed_extract', 'pdf_grape_seed_extract', '/products/grape-seed-extract-pack.webp', 'Grape Seed Extract - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
-  ('pdfimg_green_tea_tablet', 'pdf_green_tea_tablet', '/products/pdf-p15-i4.webp', 'Green Tea Tablet - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
+  ('pdfimg_green_tea_tablet', 'pdf_green_tea_tablet', '/products/green-tea-tablet-pack.webp', 'Green Tea Tablet - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_gokhru_capsule', 'pdf_gokhru_capsule', '/products/gokhru-capsule-pack.webp', 'Gokhru Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_gymnema_capsule', 'pdf_gymnema_capsule', '/products/gymnema-capsule-pack.webp', 'Gymnema Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_gau_amrit', 'pdf_gau_amrit', '/products/gau-amrit-pack.webp', 'Gau Amrit - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
@@ -772,7 +772,7 @@ INSERT INTO "ProductImage" ("id", "productId", "imageUrl", "altText", "sortOrder
   ('pdfimg_liver_reactivator', 'pdf_liver_reactivator', '/products/pdf-p5-i1.webp', 'Liver Reactivator - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_memory_booster', 'pdf_memory_booster', '/products/pdf-p7-i3.webp', 'Memory Booster - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_miracle_roots', 'pdf_miracle_roots', '/products/pdf-p7-i1.webp', 'Miracle Roots - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
-  ('pdfimg_musheal_capsule', 'pdf_musheal_capsule', '/products/pdf-p14-i6.webp', 'Musheal Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
+  ('pdfimg_musheal_capsule', 'pdf_musheal_capsule', '/products/musheal-capsule-pack.webp', 'Musheal Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_migraine_care', 'pdf_migraine_care', '/products/migraine-care-pack.webp', 'Migraine Care - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_neem_oil', 'pdf_neem_oil', '/products/neem-oil-pack.webp', 'Neem Oil - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_neuro_care', 'pdf_neuro_care', '/products/neuro-care-pack.webp', 'Neuro Care - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
@@ -784,19 +784,19 @@ INSERT INTO "ProductImage" ("id", "productId", "imageUrl", "altText", "sortOrder
   ('pdfimg_panch_tulsi', 'pdf_panch_tulsi', '/products/pdf-p3-i3.webp', 'Panch Tulsi - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_power_tulsi', 'pdf_power_tulsi', '/products/pdf-p3-i7.webp', 'Power Tulsi - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_pr_drops', 'pdf_pr_drops', '/products/pdf-p3-i4.webp', 'PR Drops - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
-  ('pdfimg_renal_fit_capsule', 'pdf_renal_fit_capsule', '/products/pdf-p11-i6.webp', 'Renal Fit Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
+  ('pdfimg_renal_fit_capsule', 'pdf_renal_fit_capsule', '/products/renal-fit-capsule-pack.webp', 'Renal Fit Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_resurrection_capsule', 'pdf_resurrection_capsule', '/products/resurrection-capsule-pack.webp', 'Resurrection Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_saunf_ark', 'pdf_saunf_ark', '/products/pdf-p3-i2.webp', 'Saunf Ark - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_skin_ark', 'pdf_skin_ark', '/products/pdf-p4-i6.webp', 'Skin Ark - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_skin_oil', 'pdf_skin_oil', '/products/pdf-p4-i6.webp', 'Skin Oil - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_stone_away', 'pdf_stone_away', '/products/pdf-p6-i4.webp', 'Stone Away - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_stri_sanjivani', 'pdf_stri_sanjivani', '/products/pdf-p7-i5.webp', 'Stri Sanjivani - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
-  ('pdfimg_sarva_dhatu_pushti', 'pdf_sarva_dhatu_pushti', '/products/pdf-p15-i1.webp', 'Sarva Dhatu Pushti - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
+  ('pdfimg_sarva_dhatu_pushti', 'pdf_sarva_dhatu_pushti', '/products/sarva-dhatu-pushti-pack.webp', 'Sarva Dhatu Pushti - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_sea_buckthorn_capsule', 'pdf_sea_buckthorn_capsule', '/products/sea-buckthorn-capsule-pack.webp', 'Sea Buckthorn Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_shatawari_capsule', 'pdf_shatawari_capsule', '/products/shatawari-capsule-pack.webp', 'Shatawari Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_silymarine_milk_thistle_capsule', 'pdf_silymarine_milk_thistle_capsule', '/products/silymarine-milk-thistle-capsule-pack.webp', 'Silymarine Milk Thistle Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_spirulina_capsule', 'pdf_spirulina_capsule', '/products/spirulina-capsule-pack.webp', 'Spirulina Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
-  ('pdfimg_stevia_drop', 'pdf_stevia_drop', '/products/pdf-p3-i5.webp', 'Stevia Drop - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
+  ('pdfimg_stevia_drop', 'pdf_stevia_drop', '/products/stevia-drop-pack.webp', 'Stevia Drop - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_sugar_normal', 'pdf_sugar_normal', '/products/pdf-p7-i2.webp', 'Sugar Normal - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_thyro_booster', 'pdf_thyro_booster', '/products/pdf-p7-i6.webp', 'Thyro Booster - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_triphala_ras', 'pdf_triphala_ras', '/products/pdf-p5-i3.webp', 'Triphala Ras - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
