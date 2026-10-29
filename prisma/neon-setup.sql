@@ -510,7 +510,7 @@ INSERT INTO "Category" ("id", "name", "slug", "description", "imageUrl", "parent
   ('cat_herbal_oils', 'Herbal Oils', 'herbal-oils', 'Herbal oils listed in the supplied catalogue.', '/products/castor-oil-pack.webp', NULL, 3, TRUE, 'Herbal Oils | Shlokveda Product Catalogue', 'Herbal oils listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('cat_capsules', 'Herbal Capsules', 'herbal-capsules', 'Herbal capsule products listed in the supplied catalogue.', '/products/arjun-capsule-pack.webp', NULL, 4, TRUE, 'Herbal Capsules | Shlokveda Product Catalogue', 'Herbal capsule products listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('cat_vati_gutika', 'Tablets', 'tablets', 'Tablet products listed in the supplied catalogue.', '/products/joint-re-builder-tablet-pack.webp', NULL, 5, TRUE, 'Tablets | Shlokveda Product Catalogue', 'Tablet products listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('cat_daily_wellness', 'Daily Wellness', 'daily-wellness', 'Daily wellness products listed in the supplied catalogue.', '/products/pdf-p15-i1.webp', NULL, 6, TRUE, 'Daily Wellness | Shlokveda Product Catalogue', 'Daily wellness products listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('cat_daily_wellness', 'Daily Wellness', 'daily-wellness', 'Daily wellness products listed in the supplied catalogue.', '/products/a2-desi-ghee-pack.webp', NULL, 6, TRUE, 'Daily Wellness | Shlokveda Product Catalogue', 'Daily wellness products listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('cat_immunity_rasayana', 'Immunity & Rasayana', 'immunity-rasayana', 'Immunity and rasayana products listed in the supplied catalogue.', '/products/chyawanprash-kesar-yukta-pack.webp', NULL, 7, TRUE, 'Immunity & Rasayana | Shlokveda Product Catalogue', 'Immunity and rasayana products listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('cat_personal_care', 'Personal Care', 'personal-care', 'Personal-care products listed in the supplied catalogue.', '/products/dento-strong-pack.webp', NULL, 8, TRUE, 'Personal Care | Shlokveda Product Catalogue', 'Personal-care products listed in the supplied catalogue.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
@@ -726,7 +726,7 @@ INSERT INTO "ProductImage" ("id", "productId", "imageUrl", "altText", "sortOrder
   ('pdfimg_amrit_ras', 'pdf_amrit_ras', '/products/amrit-ras-pack.webp', 'Amrit Ras - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_anti_diabetes', 'pdf_anti_diabetes', '/products/anti-diabetes-pack.webp', 'Anti Diabetes - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_arjun_capsule', 'pdf_arjun_capsule', '/products/arjun-capsule-pack.webp', 'Arjun Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
-  ('pdfimg_a2_desi_ghee', 'pdf_a2_desi_ghee', '/products/pdf-p15-i1.webp', 'A2 Desi Ghee - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
+  ('pdfimg_a2_desi_ghee', 'pdf_a2_desi_ghee', '/products/a2-desi-ghee-pack.webp', 'A2 Desi Ghee - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_allicin_capsule', 'pdf_allicin_capsule', '/products/allicin-capsule-pack.webp', 'Allicin Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_amla_ras', 'pdf_amla_ras', '/products/amla-ras-pack.webp', 'Amla Ras - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_ashwagandha_capsule', 'pdf_ashwagandha_capsule', '/products/ashwagandha-capsule-pack.webp', 'Ashwagandha Capsule - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
@@ -801,7 +801,7 @@ INSERT INTO "ProductImage" ("id", "productId", "imageUrl", "altText", "sortOrder
   ('pdfimg_thyro_booster', 'pdf_thyro_booster', '/products/thyro-booster-pack.webp', 'Thyro Booster - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_triphala_ras', 'pdf_triphala_ras', '/products/triphala-ras-pack.webp', 'Triphala Ras - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_19_berries', 'pdf_19_berries', '/products/19-berries-pack.webp', '19 Berries - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
-  ('pdfimg_triphala_ashtamrit', 'pdf_triphala_ashtamrit', '/products/pdf-p5-i5.webp', 'Triphala Ashtamrit - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
+  ('pdfimg_triphala_ashtamrit', 'pdf_triphala_ashtamrit', '/products/triphala-ashtamrit-pack.webp', 'Triphala Ashtamrit - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_wheat_grass_with_moringa', 'pdf_wheat_grass_with_moringa', '/products/wheat-grass-with-moringa-pack.webp', 'Wheat Grass with Moringa - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_wheat_grass', 'pdf_wheat_grass', '/products/wheat-grass-pack.webp', 'Wheat Grass - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP),
   ('pdfimg_wonder_berries', 'pdf_wonder_berries', '/products/wonder-berries-pack.webp', 'Wonder Berries - Shlokveda', 0, TRUE, CURRENT_TIMESTAMP);
