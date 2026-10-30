@@ -132,7 +132,7 @@ export function ProductCard({ product, entranceDelay }: ProductCardProps) {
               src={primaryImage}
               alt={primaryImageAlt}
               fill
-              className="object-contain p-3 mix-blend-multiply transition-transform duration-[var(--dur-card)] ease-luxe motion-safe:group-hover:scale-[1.03] sm:p-4"
+              className="object-contain p-3 transition-transform duration-[var(--dur-card)] ease-luxe motion-safe:group-hover:scale-[1.03] sm:p-4"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             />
           ) : (

@@ -48,7 +48,7 @@ export default async function AboutPage() {
       <Reveal>
         <CatalogueShowcase
           productHref="/product/triphala-ras"
-          imageSrc="/products/pdf-p5-i3.webp"
+          imageSrc="/products/triphala-ras-pack.webp"
           imageAlt={customShowcaseImage ? 'Catalogue showcase image selected by the store' : 'Triphala Ras package image from the supplied product brochure'}
           customImageSrc={customShowcaseImage}
         />
