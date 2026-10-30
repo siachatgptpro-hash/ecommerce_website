@@ -89,7 +89,7 @@ export function CatalogueShowcase({
               width={452}
               height={847}
               sizes="(max-width: 1024px) 25vw, 13vw"
-              className="h-auto w-[25%] origin-bottom mix-blend-multiply transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
+              className="h-auto w-[25%] origin-bottom transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
             />
           </span>
             </>

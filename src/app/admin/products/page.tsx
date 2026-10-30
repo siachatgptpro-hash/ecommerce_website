@@ -4,12 +4,15 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Product } from '@/types';
-import { Plus, Search, Edit2, Trash2, CheckCircle2, XCircle, Package, RotateCcw } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, CheckCircle2, XCircle, Package, RotateCcw, X, AlertTriangle } from 'lucide-react';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState<'hide' | 'permanent' | null>(null);
+  const [deleteError, setDeleteError] = useState('');
 
   const fetchProducts = async () => {
     try {
@@ -42,16 +45,48 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete formulation "${name}"?`)) return;
+  const openDelete = (product: Product) => {
+    setDeleteError('');
+    setDeleteTarget(product);
+  };
 
+  const closeDelete = () => {
+    if (deleteBusy) return;
+    setDeleteTarget(null);
+    setDeleteError('');
+  };
+
+  const runDelete = async (mode: 'hide' | 'permanent') => {
+    if (!deleteTarget || deleteBusy) return;
+    setDeleteBusy(mode);
+    setDeleteError('');
     try {
-      const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setProducts(products.filter((p) => p.id !== id));
+      const res = await fetch(
+        `/api/admin/products/${deleteTarget.id}${mode === 'permanent' ? '?permanent=true' : ''}`,
+        { method: 'DELETE' }
+      );
+      const data = await res.json().catch(() => null);
+      if (!res.ok || data?.success === false) {
+        setDeleteError(
+          data?.error?.message ||
+            (mode === 'permanent'
+              ? 'Could not delete this product permanently. Please try again.'
+              : 'Could not hide this product. Please try again.')
+        );
+        return;
+      }
+      if (mode === 'permanent') {
+        setProducts((current) => current.filter((p) => p.id !== deleteTarget.id));
+        setDeleteTarget(null);
+      } else {
+        setDeleteTarget(null);
+        await fetchProducts();
       }
     } catch (err) {
       console.error('Delete product error:', err);
+      setDeleteError('Something went wrong. Check your connection and try again.');
+    } finally {
+      setDeleteBusy(null);
     }
   };
 
@@ -179,15 +214,7 @@ export default function AdminProductsPage() {
                           >
                             <Edit2 className="w-4 h-4" />
                           </Link>
-                          {p.isActive ? (
-                            <button
-                              onClick={() => handleDelete(p.id, p.name)}
-                              className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Soft delete"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          ) : (
+                          {!p.isActive && (
                             <button
                               onClick={() => handleRestore(p.id)}
                               className="p-1.5 text-gray-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
@@ -196,6 +223,14 @@ export default function AdminProductsPage() {
                               <RotateCcw className="w-4 h-4" />
                             </button>
                           )}
+                          <button
+                            onClick={() => openDelete(p)}
+                            className="inline-flex items-center gap-1 px-2 py-1.5 font-bold text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete product"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span>Delete</span>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -206,6 +241,103 @@ export default function AdminProductsPage() {
           </div>
         )}
       </div>
+
+      {/* Delete confirmation */}
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-product-title"
+          onClick={closeDelete}
+        >
+          <div
+            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <h2 id="delete-product-title" className="font-serif text-lg font-bold text-gray-900">
+                Delete product?
+              </h2>
+              <button
+                type="button"
+                onClick={closeDelete}
+                disabled={Boolean(deleteBusy)}
+                className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-40"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mt-3 flex items-center gap-3">
+              <div className="relative w-12 h-12 rounded-xl bg-[#FAF7F2] overflow-hidden shrink-0 border border-gray-100">
+                {(() => {
+                  const img =
+                    deleteTarget.images?.find((i) => i.isPrimary)?.imageUrl ||
+                    deleteTarget.images?.[0]?.imageUrl ||
+                    '';
+                  return img ? (
+                    <Image src={img} alt="" fill className="object-contain" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs">🌿</div>
+                  );
+                })()}
+              </div>
+              <p className="font-bold text-gray-900">{deleteTarget.name}</p>
+            </div>
+
+            <p className="mt-4 text-xs leading-relaxed text-gray-600">
+              <strong className="text-gray-800">Hide from store:</strong> customers will not see
+              this product. You can restore it anytime.
+            </p>
+            <p className="mt-2 flex gap-1.5 text-xs leading-relaxed text-gray-600">
+              <AlertTriangle className="mt-0.5 w-4 h-4 shrink-0 text-red-500" />
+              <span>
+                <strong className="text-red-700">Delete permanently:</strong> removes the product,
+                its pack sizes, photos and stock records forever. This cannot be undone. If
+                customers have ordered this product, permanent delete is not allowed — use Hide
+                instead.
+              </span>
+            </p>
+
+            {deleteError && (
+              <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+                {deleteError}
+              </p>
+            )}
+
+            <div className="mt-5 flex flex-col gap-2">
+              {deleteTarget.isActive && (
+                <button
+                  type="button"
+                  onClick={() => runDelete('hide')}
+                  disabled={Boolean(deleteBusy)}
+                  className="w-full rounded-xl border border-[#1B4332] px-4 py-2.5 text-xs font-bold text-[#1B4332] hover:bg-[#1B4332]/5 disabled:opacity-50"
+                >
+                  {deleteBusy === 'hide' ? 'Hiding...' : 'Hide from store (can restore)'}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => runDelete('permanent')}
+                disabled={Boolean(deleteBusy)}
+                className="w-full rounded-xl bg-red-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleteBusy === 'permanent' ? 'Deleting...' : 'Delete permanently'}
+              </button>
+              <button
+                type="button"
+                onClick={closeDelete}
+                disabled={Boolean(deleteBusy)}
+                className="w-full rounded-xl px-4 py-2 text-xs font-bold text-gray-500 hover:text-gray-800 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
