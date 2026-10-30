@@ -88,6 +88,36 @@ export async function DELETE(
 ) {
   try {
     const admin = await requireAdminPermission(req, PermissionKey.MANAGE_PRODUCTS);
+    // Default: soft delete (hide from store, restorable). With
+    // ?permanent=true the product and its own records are removed for
+    // good; the repository refuses when customer orders reference it.
+    const permanent = req.nextUrl.searchParams.get('permanent') === 'true';
+    const previousProduct = await ProductRepository.findProductById(params.id);
+
+    if (permanent) {
+      if (!previousProduct) {
+        return NextResponse.json(
+          { success: false, error: { code: 'NOT_FOUND', message: 'Product not found' } },
+          { status: 404 }
+        );
+      }
+      const success = await ProductRepository.permanentlyDeleteProduct(params.id);
+      if (success) {
+        await AuditRepository.log(
+          'PRODUCT_PERMANENTLY_DELETED',
+          'Product',
+          params.id,
+          admin.userId,
+          admin.email,
+          { name: previousProduct.name, slug: previousProduct.slug },
+          null
+        );
+        revalidatePath('/');
+        revalidatePath(`/product/${previousProduct.slug}`);
+      }
+      return NextResponse.json({ success, data: { id: params.id } });
+    }
+
     const success = await ProductRepository.deleteProduct(params.id);
 
     if (success) {
@@ -99,6 +129,7 @@ export async function DELETE(
         admin.email
       );
       revalidatePath('/');
+      if (previousProduct?.slug) revalidatePath(`/product/${previousProduct.slug}`);
     }
 
     return NextResponse.json({ success, data: { id: params.id } });

@@ -3,6 +3,7 @@
 // ==============================================================================
 
 import { db } from '@/lib/db';
+import { ConflictError } from '@/lib/errors';
 import { isPostgresConfigured, pgQuery, withPostgresTransaction } from '@/lib/postgres';
 import crypto from 'node:crypto';
 import {
@@ -615,6 +616,62 @@ export class ProductRepository {
     return true;
   }
 
+  /**
+   * Permanently removes a product together with everything that belongs
+   * only to it (variants, images, stock ledger entries, cart and wishlist
+   * entries, reviews). Refused with a ConflictError when any customer
+   * order contains the product — order history must stay intact, so such
+   * products can only be hidden via deleteProduct (soft delete).
+   */
+  public static async permanentlyDeleteProduct(id: string): Promise<boolean> {
+    const ordersMessage =
+      'This product appears in customer orders, so it cannot be deleted permanently. Hide it from the store instead.';
+    if (isPostgresConfigured()) {
+      return withPostgresTransaction(async (client) => {
+        const existing = await client.query('SELECT "id" FROM "Product" WHERE "id" = $1', [id]);
+        if ((existing.rowCount || 0) === 0) return false;
+        const orders = await client.query(
+          'SELECT COUNT(*)::int AS count FROM "OrderItem" WHERE "variantId" IN (SELECT "id" FROM "ProductVariant" WHERE "productId" = $1)',
+          [id]
+        );
+        if (Number(orders.rows[0]?.count || 0) > 0) {
+          throw new ConflictError(ordersMessage);
+        }
+        // Children are removed by ON DELETE CASCADE (variants, images,
+        // inventory ledger, cart items, wishlist items, reviews);
+        // OrderItem is ON DELETE RESTRICT and was checked above.
+        const result = await client.query('DELETE FROM "Product" WHERE "id" = $1', [id]);
+        return (result.rowCount || 0) > 0;
+      });
+    }
+    const product = db.products.get(id);
+    if (!product) return false;
+    const variantIds = new Set(
+      Array.from(db.productVariants.values())
+        .filter((variant) => variant.productId === id)
+        .map((variant) => variant.id)
+    );
+    const hasOrders = Array.from(db.orderItems.values()).some((item) => variantIds.has(item.variantId));
+    if (hasOrders) {
+      throw new ConflictError(ordersMessage);
+    }
+    for (const [itemId, item] of db.cartItems) {
+      if (variantIds.has(item.variantId)) db.cartItems.delete(itemId);
+    }
+    for (const [entryId, entry] of db.inventoryLedgers) {
+      if (variantIds.has(entry.variantId)) db.inventoryLedgers.delete(entryId);
+    }
+    for (const [reviewId, review] of db.reviews) {
+      if (review.productId === id) db.reviews.delete(reviewId);
+    }
+    for (const [imageId, image] of db.productImages) {
+      if (image.productId === id) db.productImages.delete(imageId);
+    }
+    for (const variantId of variantIds) db.productVariants.delete(variantId);
+    db.products.delete(id);
+    return true;
+  }
+
   private static populateProduct(product: Product): Product {
     const category = db.categories.get(product.categoryId);
     const variants = Array.from(db.productVariants.values()).filter((v) => v.productId === product.id && v.isActive);
@@ -659,6 +716,7 @@ export class ProductRepository {
   public createProduct(data: any, variants: any[], images: any[] = []) { return ProductRepository.createProduct(data, variants, images); }
   public updateProduct(id: string, updates: any, variants?: any[], images: any[] = []) { return ProductRepository.updateProduct(id, updates, variants, images); }
   public deleteProduct(id: string) { return ProductRepository.deleteProduct(id); }
+  public permanentlyDeleteProduct(id: string) { return ProductRepository.permanentlyDeleteProduct(id); }
 }
 
 export const productRepository = new ProductRepository();
